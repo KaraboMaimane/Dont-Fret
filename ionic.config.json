@@ -1,7 +1,0 @@
-{
-  "name": "Fretboard Flow",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular-standalone"
-}
