@@ -1,0 +1,115 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons } from '@ionic/angular/standalone';
+import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
+import { ProgressService } from '../../services/progress.service';
+import { AdaptiveService } from '../../services/adaptive.service';
+import { StreakService } from '../../services/streak.service';
+import { MilestoneService } from '../../services/milestone.service';
+
+type BlitzState = 'idle' | 'playing' | 'done';
+
+@Component({
+  selector: 'app-blitz-mode',
+  standalone: true,
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  templateUrl: './blitz-mode.page.html',
+})
+export class BlitzModePage implements OnInit, OnDestroy {
+  state: BlitzState = 'idle';
+  question: IntervalQuestion | null = null;
+  notes: NoteLabel[] = [];
+  timeLeft = 60;
+  score = 0;
+  totalAnswered = 0;
+  lastCorrect: boolean | null = null;
+  lastAnswer: NoteLabel | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private pool: IntervalQuestion[] = [];
+  private poolIdx = 0;
+  private sessionStart = 0;
+  sessionCorrect = 0;
+
+  constructor(
+    private theory: MusicTheoryService,
+    private progress: ProgressService,
+    private adaptive: AdaptiveService,
+    private streak: StreakService,
+    private milestone: MilestoneService,
+  ) {}
+
+  ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
+  ngOnDestroy() { this.clearTimer(); }
+
+  startGame() {
+    this.pool = this.adaptive.buildExamPool(100);
+    this.poolIdx = 0;
+    this.score = 0;
+    this.totalAnswered = 0;
+    this.timeLeft = 60;
+    this.sessionCorrect = 0;
+    this.lastCorrect = null;
+    this.lastAnswer = null;
+    this.sessionStart = Date.now();
+    this.state = 'playing';
+    this.streak.recordActivity();
+    this.nextQuestion();
+    this.startTimer();
+  }
+
+  private startTimer() {
+    this.timer = setInterval(() => {
+      this.timeLeft--;
+      if (this.timeLeft <= 0) { this.clearTimer(); this.endGame(); }
+    }, 1000);
+  }
+
+  nextQuestion() {
+    if (this.poolIdx >= this.pool.length) {
+      this.pool = [...this.adaptive.buildExamPool(100)];
+      this.poolIdx = 0;
+    }
+    this.question = this.pool[this.poolIdx++];
+    this.lastCorrect = null;
+    this.lastAnswer = null;
+  }
+
+  selectNote(note: NoteLabel) {
+    if (this.state !== 'playing' || !this.question) return;
+    const correct = this.theory.areEnharmonicEquals(note, this.question.answer);
+    this.lastCorrect = correct;
+    this.lastAnswer = note;
+    this.totalAnswered++;
+    this.progress.recordAnswer(this.question.key, this.question.intervalName, correct, 0);
+    this.streak.incrementDailyGoal(1);
+    if (correct) {
+      this.score++;
+      this.sessionCorrect++;
+      this.timeLeft = Math.min(this.timeLeft + 2, 90); // +2s, cap at 90
+    }
+    setTimeout(() => this.nextQuestion(), 300);
+  }
+
+  endGame() {
+    this.state = 'done';
+    this.clearTimer();
+    this.progress.recordSession('Blitz', this.sessionCorrect, this.totalAnswered, Date.now() - this.sessionStart);
+    this.milestone.unlock('blitz_debut');
+    this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
+  }
+
+  private clearTimer() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+  }
+
+  get accuracy(): number {
+    if (!this.totalAnswered) return 0;
+    return Math.round(this.sessionCorrect / this.totalAnswered * 100);
+  }
+
+  get timerClass(): string {
+    if (this.timeLeft > 30) return '';
+    if (this.timeLeft > 10) return 'warning';
+    return 'danger';
+  }
+}

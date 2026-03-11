@@ -1,0 +1,89 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Practice Mode 🎯</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- ── Session Stats Bar ── -->
+  <div style="padding: 12px 16px 0; display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-size:0.8rem; color:var(--df-text2);">
+      Session: <strong style="color:var(--df-text);">{{ sessionCorrect }}/{{ sessionTotal }}</strong>
+    </div>
+    <div style="font-size:0.8rem; color:var(--df-text2);">
+      Accuracy: <strong [style.color]="accuracyPct >= 70 ? 'var(--df-green)' : 'var(--df-amber)'">{{ sessionTotal ? accuracyPct + '%' : '—' }}</strong>
+    </div>
+  </div>
+
+  <!-- ── Mistake Replay Prompt ── -->
+  <div *ngIf="showMistakeReplay" style="padding:16px;" class="fade-in-up">
+    <div class="df-card" style="text-align:center; padding:28px 20px;">
+      <div style="font-size:2rem; margin-bottom:12px;">🔂</div>
+      <div style="font-weight:800; font-size:1.1rem; margin-bottom:8px;">Replay Your Mistakes?</div>
+      <div style="font-size:0.85rem; color:var(--df-text2); margin-bottom:20px;">
+        You got {{ mistakes.length }} question{{ mistakes.length !== 1 ? 's' : '' }} wrong. Replay them now to lock in the answers?
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="df-btn df-btn-primary" (click)="startMistakeReplay()">🔂 Replay Mistakes</button>
+        <button class="df-btn df-btn-ghost" (click)="skipMistakeReplay()">Skip →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Question ── -->
+  <div *ngIf="!showMistakeReplay && question" style="padding: 12px 16px 0;" class="fade-in-up">
+
+    <div *ngIf="isReplayMode" style="margin-bottom:8px;">
+      <div style="background:rgba(167,139,250,0.1); border:1px solid var(--df-accent); border-radius:8px; padding:8px 12px; font-size:0.75rem; color:var(--df-accent); font-weight:600;">
+        🔂 Mistake Replay Mode — {{ mistakeQueue.length + 1 }} remaining
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-key">Key of {{ question.key }}</div>
+      <div class="question-text">What is the<br><strong style="color:var(--df-accent);">{{ question.intervalName }}?</strong></div>
+      <div class="question-meta">{{ question.intervalType === 'harmonic' ? 'Harmonic Interval' : 'Diatonic Interval' }}</div>
+    </div>
+
+    <!-- Feedback -->
+    <div *ngIf="answerState !== 'unanswered'"
+         class="feedback-banner"
+         [class.correct]="answerState === 'correct'"
+         [class.incorrect]="answerState === 'incorrect'">
+      {{ feedbackText }}
+    </div>
+
+    <!-- Hint -->
+    <div *ngIf="showHint" class="lesson-card" style="padding:12px 16px; margin-bottom:12px;">
+      <div style="font-size:0.8rem; color:var(--df-text);">🎵 {{ hintText }}</div>
+    </div>
+
+    <!-- Note Grid -->
+    <div class="note-grid">
+      <button *ngFor="let note of notes"
+              class="note-btn"
+              [class]="getNoteClass(note)"
+              (click)="selectNote(note)"
+              [disabled]="answerState !== 'unanswered'">
+        {{ note }}
+      </button>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="df-btn df-btn-ghost" style="flex:1;" (click)="toggleHint()" [disabled]="answerState !== 'unanswered'">
+        {{ showHint ? 'Hide Hint' : '💡 Hint' }}
+      </button>
+      <button class="df-btn df-btn-primary" style="flex:1;"
+              (click)="nextQuestion()"
+              *ngIf="answerState !== 'unanswered'">
+        Next →
+      </button>
+    </div>
+  </div>
+
+  <div style="height:80px;"></div>
+</ion-content>

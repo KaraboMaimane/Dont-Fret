@@ -1,0 +1,72 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Scale Builder 🔨</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Session bar -->
+  <div style="padding:12px 16px 0; display:flex; justify-content:space-between;">
+    <span style="font-size:0.8rem; color:var(--df-text2);">Built: <strong style="color:var(--df-text);">{{ sessionCorrect }}</strong></span>
+    <span style="font-size:0.8rem; color:var(--df-text2);">Attempts: <strong style="color:var(--df-text);">{{ sessionTotal }}</strong></span>
+  </div>
+
+  <div style="padding:16px;" class="fade-in-up">
+    <!-- Challenge Card -->
+    <div class="question-card">
+      <div class="question-key">Build the Scale</div>
+      <div class="question-text" style="font-size:2rem; font-weight:900; letter-spacing:-0.04em; color:var(--df-accent);">
+        {{ currentKey }} Major
+      </div>
+      <div class="question-meta">Select the 7 notes in order</div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar-track" style="margin-bottom:12px;">
+      <div class="progress-bar-fill" [style.width.%]="progress$"></div>
+    </div>
+
+    <!-- Built so far -->
+    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; justify-content:center; min-height:44px;">
+      <span *ngFor="let note of builtScale; let i = index"
+            style="background:rgba(74,222,128,0.15); border:1px solid var(--df-green); color:var(--df-green); font-weight:700; font-size:1rem; padding:6px 12px; border-radius:8px;">
+        {{ note }}
+      </span>
+      <span *ngFor="let _ of [].constructor(7 - builtScale.length)"
+            style="background:var(--df-surface2); border:1px dashed var(--df-border); color:var(--df-text2); font-size:1rem; padding:6px 14px; border-radius:8px;">
+        ?
+      </span>
+    </div>
+
+    <!-- Complete state -->
+    <div *ngIf="state === 'complete'" class="feedback-banner correct" style="margin-bottom:16px;">
+      🎉 Perfect! {{ currentKey }} Major Scale complete!
+    </div>
+
+    <!-- Note grid -->
+    <div class="note-grid" [style.opacity]="state === 'complete' ? '0.4' : '1'">
+      <button *ngFor="let note of notes"
+              class="note-btn"
+              [class]="state !== 'building' ? '' : getNoteState(note)"
+              (click)="selectNote(note)"
+              [disabled]="state === 'complete'">
+        {{ note }}
+      </button>
+    </div>
+
+    <!-- Incorrect flash -->
+    <div *ngIf="lastFeedback === 'incorrect' && state === 'building'" class="feedback-banner incorrect" style="margin-top:12px;">
+      ❌ Wrong note — try again
+    </div>
+
+    <!-- Next button -->
+    <button *ngIf="state === 'complete'" class="df-btn df-btn-primary" style="width:100%; margin-top:16px;" (click)="newChallenge()">
+      Next Key →
+    </button>
+  </div>
+
+  <div style="height:80px;"></div>
+</ion-content>

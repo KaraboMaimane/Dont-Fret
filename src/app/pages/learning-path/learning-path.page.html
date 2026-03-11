@@ -1,0 +1,100 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Learning Path 🗺️</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-header">
+    <p class="page-title">Your Curriculum</p>
+    <p class="page-subtitle">Complete each stage to unlock the next</p>
+  </div>
+
+  <!-- Stage List -->
+  <div style="margin-bottom: 80px;">
+    <div *ngFor="let stage of stages; let i = index"
+         class="stage-item"
+         [class.locked]="!isUnlocked(stage)"
+         (click)="selectStage(stage)">
+
+      <!-- Connector line -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div class="stage-dot"
+             [class.unlocked]="getStageStatus(stage) === 'current'"
+             [class.completed]="getStageStatus(stage) === 'unlocked'">
+          {{ getDotLabel(stage) }}
+        </div>
+        <div *ngIf="i < stages.length - 1"
+             style="width:2px; height:32px; margin-top:4px;"
+             [style.background]="isUnlocked(stage) ? 'var(--df-accent)' : 'var(--df-border)'">
+        </div>
+      </div>
+
+      <div class="stage-info">
+        <div class="stage-title">Stage {{ stage.id }}: {{ stage.title }}</div>
+        <div class="stage-subtitle">{{ stage.subtitle }}</div>
+        <div class="stage-lock" *ngIf="!isUnlocked(stage)">🔒 Complete previous stage to unlock</div>
+        <div *ngIf="isUnlocked(stage)" style="margin-top:6px; font-size:0.75rem; color:var(--df-text2);">{{ stage.description }}</div>
+      </div>
+
+      <div *ngIf="isUnlocked(stage)" style="color:var(--df-accent); font-size:1rem; align-self:center;">›</div>
+    </div>
+  </div>
+
+  <!-- ── Lesson Modal Overlay ── -->
+  <div *ngIf="showLesson && selectedStage"
+       style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200; display:flex; align-items:flex-end; justify-content:center;"
+       (click)="closeLesson()">
+
+    <div class="df-card-glass fade-in-up"
+         style="width:100%; max-width:600px; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none; padding:28px 24px 48px; max-height:85vh; overflow-y:auto;"
+         (click)="$event.stopPropagation()">
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+        <div>
+          <div style="font-size:0.7rem; color:var(--df-accent); font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">Stage {{ selectedStage.id }}</div>
+          <div style="font-size:1.1rem; font-weight:800; color:var(--df-text); letter-spacing:-0.02em; margin-top:2px;">{{ selectedStage.title }}</div>
+        </div>
+        <button (click)="closeLesson()" style="background:none;border:none;color:var(--df-text2);font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">✕</button>
+      </div>
+
+      <!-- Lesson Text -->
+      <div class="lesson-card">
+        <div style="font-size:0.7rem; color:var(--df-accent); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">📖 Lesson</div>
+        <div class="lesson-text">{{ selectedStage.lessonText }}</div>
+      </div>
+
+      <!-- Intervals covered -->
+      <div *ngIf="selectedStage.intervals.length > 0" style="margin-bottom: 16px;">
+        <div style="font-size:0.7rem; color:var(--df-text2); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Intervals Covered</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span *ngFor="let iv of selectedStage.intervals"
+                style="background:rgba(167,139,250,0.12); color:var(--df-accent); font-size:0.75rem; font-weight:600; padding:4px 10px; border-radius:99px; border:1px solid rgba(167,139,250,0.2);">
+            {{ iv }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Keys covered -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:0.7rem; color:var(--df-text2); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Keys</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span *ngFor="let k of selectedStage.keys"
+                style="background:var(--df-surface2); color:var(--df-text); font-size:0.8rem; font-weight:700; padding:4px 10px; border-radius:6px; border:1px solid var(--df-border);">
+            {{ k }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:10px;">
+        <button class="df-btn df-btn-primary" style="flex:1;" (click)="startPractice()">
+          🎯 Start Practice
+        </button>
+        <button class="df-btn df-btn-outline" style="flex:1;" (click)="startScaleBuilder()">
+          🔨 Scale Builder
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>

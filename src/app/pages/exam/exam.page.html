@@ -1,0 +1,116 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Theory Exam 🎓</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Idle -->
+  <div *ngIf="state === 'idle'" style="padding:24px 16px;" class="fade-in-up">
+    <div class="question-card" style="margin-bottom:20px;">
+      <div style="font-size:2.5rem; margin-bottom:12px;">🎓</div>
+      <div class="question-text">Theory Exam</div>
+      <div class="question-meta">20 questions · 10s each · 80% to pass<br>No hints. No mercy.</div>
+    </div>
+    <div class="lesson-card" style="margin-bottom:20px;">
+      <div class="lesson-text">This exam draws from ALL keys and ALL interval types.
+You need 16/20 (80%) to pass and earn the 🏆 Theory Titan badge.
+There is no pause. No hints. You have 10 seconds per question.
+Good luck. 🎵</div>
+    </div>
+    <button class="df-btn df-btn-primary" style="width:100%; font-size:1.05rem; padding:18px;" (click)="startExam()">
+      Begin Exam →
+    </button>
+  </div>
+
+  <!-- Playing / Answered -->
+  <div *ngIf="state === 'playing' || state === 'answered'" style="padding:12px 16px;" class="fade-in-up">
+    <div style="display:flex;justify-content:space-between; margin-bottom:6px;">
+      <span style="font-size:0.8rem; color:var(--df-text2);">Q{{ currentIndex + 1 }}/{{ questions.length }}</span>
+      <span style="font-size:0.8rem; color:var(--df-text2);">{{ correctCount }} correct</span>
+    </div>
+    <div class="progress-bar-track" style="margin-bottom:12px;">
+      <div class="progress-bar-fill" [style.width.%]="(currentIndex / questions.length) * 100"></div>
+    </div>
+
+    <!-- Countdown -->
+    <div *ngIf="state === 'playing'" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div class="countdown-track" style="flex:1;">
+        <div class="countdown-fill" [class]="countdownClass" [style.width.%]="countdownPct"></div>
+      </div>
+      <span style="font-size:1rem;font-weight:800;min-width:24px;" [style.color]="timeLeftSec <= 3 ? 'var(--df-red)' : 'var(--df-text)'">{{ timeLeftSec }}</span>
+    </div>
+
+    <div class="question-card" *ngIf="currentQ">
+      <div class="question-key">Key of {{ currentQ.key }}</div>
+      <div class="question-text">{{ currentQ.intervalName }}?</div>
+    </div>
+
+    <div *ngIf="state === 'answered' && results.length > 0"
+         class="feedback-banner"
+         [class.correct]="results[results.length-1].correct"
+         [class.incorrect]="!results[results.length-1].correct">
+      {{ results[results.length-1].correct
+         ? '✅ Correct! (' + (results[results.length-1].responseMs/1000).toFixed(1) + 's)'
+         : '❌ Answer: ' + currentQ.answer }}
+    </div>
+
+    <div class="note-grid">
+      <button *ngFor="let note of notes"
+              class="note-btn"
+              [class]="getNoteClass(note)"
+              (click)="selectNote(note)"
+              [disabled]="state === 'answered'">
+        {{ note }}
+      </button>
+    </div>
+
+    <button *ngIf="state === 'answered'" class="df-btn df-btn-primary" style="width:100%;margin-top:16px;" (click)="nextQ()">
+      {{ currentIndex + 1 < questions.length ? 'Next →' : 'See Results →' }}
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div *ngIf="state === 'done'" style="padding:24px 16px;" class="fade-in-up">
+    <div class="question-card" style="margin-bottom:20px;"
+         [style.border-color]="passed ? 'var(--df-green)' : 'var(--df-red)'"
+         [style.background]="passed ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)'">
+      <div style="font-size:3rem; margin-bottom:8px;">{{ passed ? '🏆' : '📚' }}</div>
+      <div style="font-size:1.8rem; font-weight:900;" [style.color]="passed ? 'var(--df-green)' : 'var(--df-red)'">
+        {{ passed ? 'PASSED' : 'FAILED' }}
+      </div>
+      <div class="question-text" style="margin-top:8px;">{{ correctCount }} / {{ questions.length }}</div>
+      <div class="question-meta">{{ score }}% · Need {{ Math.round(PASS_THRESHOLD*100) }}% to pass</div>
+    </div>
+
+    <div *ngIf="passed" class="lesson-card" style="text-align:center; margin-bottom:16px;">
+      <div style="font-size:1.5rem;">🏆</div>
+      <div style="font-weight:700; color:var(--df-text); margin-top:4px;">Theory Titan badge unlocked!</div>
+    </div>
+
+    <!-- Breakdown table -->
+    <div class="df-card" style="margin-bottom:16px; overflow-x:auto;">
+      <div style="font-size:0.75rem; font-weight:700; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Question Breakdown</div>
+      <table class="breakdown-table">
+        <thead><tr><th>Key</th><th>Interval</th><th>Answer</th><th>Time</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let r of results">
+            <td>{{ r.question.key }}</td>
+            <td style="font-size:0.72rem">{{ r.question.intervalName }}</td>
+            <td>{{ r.question.answer }}</td>
+            <td>{{ r.selected ? (r.responseMs/1000).toFixed(1)+'s' : 'Timeout' }}</td>
+            <td [style.color]="r.correct ? 'var(--df-green)' : 'var(--df-red)'">{{ r.correct ? '✅' : '❌' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button class="df-btn df-btn-primary" style="width:100%;margin-bottom:10px;" (click)="startExam()">{{ passed ? 'Retake' : 'Try Again' }}</button>
+    <button class="df-btn df-btn-ghost" style="width:100%;" routerLink="/dashboard">← Dashboard</button>
+  </div>
+
+  <div style="height:80px;"></div>
+</ion-content>

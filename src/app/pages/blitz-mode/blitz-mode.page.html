@@ -1,0 +1,80 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Blitz Mode ⚡</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Idle -->
+  <div *ngIf="state === 'idle'" style="padding:24px 16px; text-align:center;" class="fade-in-up">
+    <div class="question-card">
+      <div style="font-size:3rem; margin-bottom:12px;">⚡</div>
+      <div class="question-text">Blitz Mode</div>
+      <div class="question-meta" style="margin-top:8px;">60 seconds. Correct answer = +2s.<br>How many can you name?</div>
+    </div>
+    <button class="df-btn df-btn-primary" style="width:100%; font-size:1.1rem; padding:18px;" (click)="startGame()">
+      ⚡ Start Blitz!
+    </button>
+  </div>
+
+  <!-- Playing -->
+  <div *ngIf="state === 'playing' && question" style="padding:12px 16px;" class="fade-in-up">
+    <!-- Timer -->
+    <div style="text-align:center; margin-bottom:16px;">
+      <div class="timer-display" [class]="timerClass">{{ timeLeft }}<span style="font-size:1.2rem; font-weight:400; color:var(--df-text2);">s</span></div>
+      <div style="font-size:0.75rem; color:var(--df-text2); margin-top:4px;">Score: <strong style="color:var(--df-accent); font-size:1rem;">{{ score }}</strong> · {{ totalAnswered }} answered · {{ accuracy }}% acc</div>
+    </div>
+
+    <!-- Feedback flash -->
+    <div *ngIf="lastCorrect !== null"
+         style="text-align:center; font-size:1.2rem; font-weight:800; margin-bottom:8px;"
+         [style.color]="lastCorrect ? 'var(--df-green)' : 'var(--df-red)'">
+      {{ lastCorrect ? '✅ +2s' : '❌' }}
+    </div>
+
+    <!-- Question -->
+    <div class="question-card" style="margin-bottom:16px;">
+      <div class="question-key">Key of {{ question.key }}</div>
+      <div class="question-text" style="font-size:1.4rem;">{{ question.intervalName }}?</div>
+    </div>
+
+    <!-- Note Grid -->
+    <div class="note-grid">
+      <button *ngFor="let note of notes"
+              class="note-btn"
+              (click)="selectNote(note)">
+        {{ note }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div *ngIf="state === 'done'" style="padding:24px 16px; text-align:center;" class="fade-in-up">
+    <div class="question-card" style="margin-bottom:20px;">
+      <div style="font-size:3rem; margin-bottom:12px;">{{ score >= 20 ? '🏆' : score >= 10 ? '🎯' : '💪' }}</div>
+      <div style="font-size:3rem; font-weight:900; color:var(--df-accent); letter-spacing:-0.04em;">{{ score }}</div>
+      <div class="question-text" style="font-size:1rem; font-weight:400; color:var(--df-text2);">correct answers</div>
+    </div>
+    <div class="stats-row" style="margin-bottom:20px;">
+      <div class="stat-item">
+        <div class="stat-value">{{ totalAnswered }}</div>
+        <div class="stat-label">Attempted</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" [style.color]="accuracy >= 70 ? 'var(--df-green)' : 'var(--df-amber)'">{{ accuracy }}%</div>
+        <div class="stat-label">Accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">+{{ (score * 2) }}s</div>
+        <div class="stat-label">Time Earned</div>
+      </div>
+    </div>
+    <button class="df-btn df-btn-primary" style="width:100%; margin-bottom:10px;" (click)="startGame()">⚡ Play Again</button>
+    <button class="df-btn df-btn-ghost" style="width:100%;" routerLink="/dashboard">← Dashboard</button>
+  </div>
+
+  <div style="height:80px;"></div>
+</ion-content>

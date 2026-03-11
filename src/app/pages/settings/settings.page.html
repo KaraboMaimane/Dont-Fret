@@ -1,0 +1,67 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Settings ⚙️</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div style="padding:16px 0 80px;">
+
+    <div style="padding:0 16px 8px;">
+      <div class="section-title">Preferences</div>
+    </div>
+
+    <div class="df-card" style="margin:0 16px 16px; padding:0;">
+      <ion-list style="background:transparent; padding:0;">
+        <ion-item lines="full" style="--background:transparent; --border-color:var(--df-border);">
+          <ion-label>
+            <div style="font-weight:600; color:var(--df-text); font-size:0.9rem;">Prefer Flat Names</div>
+            <div style="font-size:0.75rem; color:var(--df-text2);">Show Bb instead of A#, Eb instead of D#</div>
+          </ion-label>
+          <ion-toggle [(ngModel)]="preferFlats" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-accent);"></ion-toggle>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <div style="padding:0 16px 8px;">
+      <div class="section-title">About</div>
+    </div>
+
+    <div class="df-card" style="margin:0 16px 16px;">
+      <div style="font-size:0.9rem; font-weight:700; color:var(--df-text); margin-bottom:4px;">Don't Fret 🎸</div>
+      <div style="font-size:0.8rem; color:var(--df-text2); line-height:1.6;">
+        A music theory training app built to take you from zero to Theory Titan. All scale and interval calculations are generated from the W-W-H-W-W-W-H formula — no hard-coded note strings.
+      </div>
+      <div style="font-size:0.7rem; color:var(--df-text2); margin-top:8px;">Version 1.0.0</div>
+    </div>
+
+    <div style="padding:0 16px 8px;">
+      <div class="section-title" style="color:var(--df-red);">Danger Zone</div>
+    </div>
+
+    <div class="df-card" style="margin:0 16px; border-color: rgba(248,113,113,0.2);">
+      <div style="font-size:0.85rem; color:var(--df-text); margin-bottom:12px;">
+        Reset all progress, streaks, milestones, and learning path data.
+      </div>
+
+      <div *ngIf="!confirmReset">
+        <button class="df-btn" style="background:rgba(248,113,113,0.1); color:var(--df-red); border:1px solid var(--df-red); width:100%;" (click)="resetAll()">
+          🗑️ Reset All Progress
+        </button>
+      </div>
+
+      <div *ngIf="confirmReset" style="display:flex; flex-direction:column; gap:8px;">
+        <div style="font-size:0.85rem; font-weight:700; color:var(--df-red); text-align:center; padding:8px;">
+          ⚠️ Are you absolutely sure? This cannot be undone.
+        </div>
+        <button class="df-btn" style="background:var(--df-red); color:#fff; width:100%;" (click)="resetAll()">
+          Yes, Delete Everything
+        </button>
+        <button class="df-btn df-btn-ghost" style="width:100%;" (click)="cancelReset()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</ion-content>

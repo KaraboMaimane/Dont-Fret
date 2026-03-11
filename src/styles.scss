@@ -1,0 +1,707 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ─── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --df-bg:        #0d0d12;
+  --df-surface:   #16161f;
+  --df-surface2:  #1e1e2a;
+  --df-border:    rgba(255,255,255,0.08);
+  --df-accent:    #a78bfa;
+  --df-accent2:   #7c3aed;
+  --df-green:     #4ade80;
+  --df-amber:     #fbbf24;
+  --df-red:       #f87171;
+  --df-blue:      #60a5fa;
+  --df-text:      #f1f0fb;
+  --df-text2:     #a1a1aa;
+  --df-radius:    14px;
+  --df-radius-sm: 8px;
+
+  /* Ionic overrides */
+  --ion-background-color:       var(--df-bg);
+  --ion-text-color:             var(--df-text);
+  --ion-toolbar-background:     var(--df-surface);
+  --ion-tab-bar-background:     var(--df-surface);
+  --ion-tab-bar-border-color:   var(--df-border);
+  --ion-color-primary:          var(--df-accent);
+  --ion-color-primary-contrast: #fff;
+  --ion-color-success:          var(--df-green);
+  --ion-color-danger:           var(--df-red);
+  --ion-color-warning:          var(--df-amber);
+  --ion-font-family:            'Inter', sans-serif;
+}
+
+/* ─── Base reset ────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body, html {
+  font-family: 'Inter', sans-serif;
+  background: var(--df-bg);
+  color: var(--df-text);
+  margin: 0;
+  padding: 0;
+}
+
+ion-content {
+  --background: var(--df-bg);
+}
+
+/* Replaces ion-content on game pages to avoid Ionic shadow DOM intercepting click events */
+.page-scroll-container {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--df-bg);
+  /* Push content below the ion-header (which is ~56px) */
+  top: 56px;
+  /* Push content above the ion-tab-bar (60px) */
+  bottom: 60px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/**
+ * IONIC PAGE FIX: Using animated="false" on ion-router-outlet means only
+ * one page is in the DOM at a time — no stacking, no pointer-event conflicts.
+ */
+.ion-page-hidden,
+.ion-page-invisible {
+  pointer-events: none !important;
+}
+
+/* ── Custom bottom nav bar ─────────────────────────────────────── */
+.custom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--df-surface);
+  border-top: 1px solid var(--df-border);
+  display: flex;
+  align-items: stretch;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-decoration: none;
+  color: var(--df-text2);
+  transition: color 0.15s ease;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--df-accent);
+}
+
+.tab-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.tab-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+ion-header ion-toolbar {
+  --background: var(--df-surface);
+  --border-style: none;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  box-shadow: 0 1px 0 var(--df-border);
+}
+
+ion-header ion-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--df-text);
+  letter-spacing: -0.02em;
+}
+
+ion-tab-bar {
+  --background: var(--df-surface);
+  border-top: 1px solid var(--df-border);
+  height: 60px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+ion-tab-button {
+  --color: var(--df-text2);
+  --color-selected: var(--df-accent);
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+/* ─── Cards ─────────────────────────────────────────────────── */
+.df-card {
+  background: var(--df-surface);
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.df-card-glass {
+  background: rgba(30,30,42,0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+.df-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: var(--df-radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.df-btn-primary {
+  background: linear-gradient(135deg, var(--df-accent), var(--df-accent2));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(167,139,250,0.3);
+}
+
+.df-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(167,139,250,0.45);
+}
+
+.df-btn-outline {
+  background: transparent;
+  color: var(--df-accent);
+  border: 1.5px solid var(--df-accent);
+}
+
+.df-btn-outline:hover {
+  background: rgba(167,139,250,0.1);
+}
+
+.df-btn-ghost {
+  background: var(--df-surface2);
+  color: var(--df-text);
+  border: 1px solid var(--df-border);
+}
+
+.df-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ─── Note Buttons ───────────────────────────────────────────── */
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.note-btn {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--df-surface2);
+  border: 1.5px solid var(--df-border);
+  border-radius: var(--df-radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--df-text);
+  cursor: pointer;
+  transition: all 0.14s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* Remove touch delay on mobile */
+  -webkit-touch-callout: none;
+}
+
+.note-btn:hover, .note-btn:active {
+  background: var(--df-accent);
+  color: #fff;
+  border-color: var(--df-accent);
+  transform: scale(0.96);
+}
+
+.note-btn.correct {
+  background: var(--df-green);
+  border-color: var(--df-green);
+  color: #000;
+  animation: pulse-correct 0.3s ease;
+}
+
+.note-btn.incorrect {
+  background: var(--df-red);
+  border-color: var(--df-red);
+  color: #fff;
+  animation: shake 0.4s ease;
+}
+
+/* ─── Stats ──────────────────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  background: var(--df-surface);
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius-sm);
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--df-text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--df-text2);
+  margin-top: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Page header ─────────────────────────────────────────────── */
+.page-header {
+  padding: 20px 20px 8px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--df-text);
+  margin: 0 0 4px;
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: var(--df-text2);
+  margin: 0;
+}
+
+/* ─── Section headers ─────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px 12px;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--df-text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Progress bar ─────────────────────────────────────────────── */
+.progress-bar-track {
+  background: var(--df-surface2);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--df-accent), var(--df-accent2));
+  transition: width 0.4s ease;
+}
+
+/* ─── Heatmap ──────────────────────────────────────────────────── */
+.heatmap-grid {
+  display: grid;
+  gap: 3px;
+  padding: 0 4px;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+}
+
+.heatmap-cell:hover { transform: scale(1.3); }
+.heatmap-cell.unplayed { background: var(--df-surface2); }
+.heatmap-cell.mastered { background: var(--df-green); }
+.heatmap-cell.needs-work { background: var(--df-amber); }
+.heatmap-cell.focus { background: var(--df-red); }
+
+/* ─── Badges ───────────────────────────────────────────────────── */
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 60px;
+}
+
+.badge-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--df-surface2);
+  border: 2px solid var(--df-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  transition: all 0.2s ease;
+}
+
+.badge-icon.earned {
+  background: rgba(167,139,250,0.15);
+  border-color: var(--df-accent);
+  box-shadow: 0 0 12px rgba(167,139,250,0.3);
+}
+
+.badge-label {
+  font-size: 0.55rem;
+  color: var(--df-text2);
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Animations ──────────────────────────────────────────────── */
+@keyframes pulse-correct {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes confettiFall {
+  to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.35s ease both;
+}
+
+/* ─── Countdown bar ────────────────────────────────────────────── */
+.countdown-track {
+  height: 4px;
+  background: var(--df-surface2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.countdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--df-green);
+  transition: width 0.5s linear, background 0.5s ease;
+}
+
+.countdown-fill.warning { background: var(--df-amber); }
+.countdown-fill.danger  { background: var(--df-red); }
+
+/* ─── Timer display ─────────────────────────────────────────────── */
+.timer-display {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--df-text);
+  text-align: center;
+  line-height: 1;
+}
+
+.timer-display.warning { color: var(--df-amber); }
+.timer-display.danger  { color: var(--df-red); }
+
+/* ─── Lesson card ──────────────────────────────────────────────── */
+.lesson-card {
+  background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(124,58,237,0.08));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: var(--df-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.lesson-text {
+  font-size: 0.9rem;
+  color: var(--df-text);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* ─── Question display ──────────────────────────────────────────── */
+.question-card {
+  background: var(--df-surface);
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.question-key {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--df-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.question-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--df-text);
+  letter-spacing: -0.02em;
+}
+
+.question-meta {
+  font-size: 0.75rem;
+  color: var(--df-text2);
+  margin-top: 8px;
+}
+
+/* ─── Answer feedback ──────────────────────────────────────────── */
+.feedback-banner {
+  border-radius: var(--df-radius-sm);
+  padding: 14px 20px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  animation: fadeInUp 0.2s ease;
+}
+
+.feedback-banner.correct {
+  background: rgba(74,222,128,0.15);
+  border: 1px solid var(--df-green);
+  color: var(--df-green);
+}
+
+.feedback-banner.incorrect {
+  background: rgba(248,113,113,0.15);
+  border: 1px solid var(--df-red);
+  color: var(--df-red);
+}
+
+/* ─── Stage item (learning-path) ────────────────────────────────── */
+.stage-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--df-border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stage-item:hover { background: var(--df-surface2); }
+
+.stage-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--df-border);
+  background: var(--df-surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  color: var(--df-text2);
+  margin-top: 2px;
+}
+
+.stage-dot.unlocked {
+  border-color: var(--df-accent);
+  color: var(--df-accent);
+  background: rgba(167,139,250,0.1);
+}
+
+.stage-dot.completed {
+  border-color: var(--df-green);
+  background: rgba(74,222,128,0.15);
+  color: var(--df-green);
+}
+
+.stage-info { flex: 1; min-width: 0; }
+.stage-title { font-weight: 700; font-size: 0.95rem; color: var(--df-text); margin-bottom: 2px; }
+.stage-subtitle { font-size: 0.75rem; color: var(--df-text2); }
+.stage-lock { font-size: 0.8rem; color: var(--df-text2); margin-top: 4px; }
+
+/* ─── Streak ring ──────────────────────────────────────────────── */
+.streak-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.streak-ring svg {
+  transform: rotate(-90deg);
+}
+
+.streak-ring .ring-bg { fill: none; stroke: var(--df-surface2); stroke-width: 5; }
+.streak-ring .ring-fill {
+  fill: none;
+  stroke: var(--df-amber);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.streak-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--df-text);
+  line-height: 1;
+}
+
+/* ─── Mode cards ───────────────────────────────────────────────── */
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.mode-card {
+  background: var(--df-surface);
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-card:hover { transform: translateY(-2px); border-color: var(--df-accent); }
+.mode-card.locked { opacity: 0.4; cursor: not-allowed; }
+
+.mode-icon {
+  font-size: 1.8rem;
+  display: block;
+}
+
+.mode-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--df-text);
+  letter-spacing: -0.01em;
+}
+
+.mode-desc {
+  font-size: 0.7rem;
+  color: var(--df-text2);
+}
+
+.mode-tag {
+  background: rgba(167,139,250,0.15);
+  color: var(--df-accent);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.mode-tag.locked-tag {
+  background: rgba(161,161,170,0.15);
+  color: var(--df-text2);
+}
+
+/* ─── Session breakdown table ──────────────────────────────────── */
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.breakdown-table th {
+  color: var(--df-text2);
+  font-weight: 600;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--df-border);
+}
+
+.breakdown-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--df-text);
+}
+
+/* ─── Confetti canvas ──────────────────────────────────────────── */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
