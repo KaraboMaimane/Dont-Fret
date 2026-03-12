@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { LearningPathService, Stage } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { MusicTheoryService } from '../../services/music-theory.service';
 import { ProgressService } from '../../services/progress.service';
@@ -44,6 +45,8 @@ export class ProfilePage {
   dueCount = 0;
   xpPoints = 0;
   rankLabel = 'Rookie';
+  placementCompleted = false;
+  placementStage: Stage | null = null;
 
   readonly Math = Math;
 
@@ -71,6 +74,7 @@ export class ProfilePage {
     private streakService: StreakService,
     private milestone: MilestoneService,
     private theory: MusicTheoryService,
+    private learningPath: LearningPathService,
     public router: Router,
   ) {}
 
@@ -96,6 +100,8 @@ export class ProfilePage {
     this.dailyGoalPct = this.streakService.getDailyGoalPercent();
 
     this.dueCount = this.progress.getDueCount();
+    this.placementCompleted = this.learningPath.hasPlacementCompleted();
+    this.placementStage = this.learningPath.getPlacementResultStage();
 
     this.recentSessions = this.progress.getRecentSessions(12);
     this.sparklineData = [...this.recentSessions]
@@ -212,5 +218,11 @@ export class ProfilePage {
     if (xp < 1000) return 'Pathfinder';
     if (xp < 2500) return 'Fret Hunter';
     return 'Theory Titan';
+  }
+
+  getPlacementLabel(): string {
+    if (!this.placementCompleted || !this.placementStage) return 'Not started';
+    const stage = this.learningPath.getStage(this.placementStage);
+    return `Stage ${this.placementStage}: ${stage.title}`;
   }
 }

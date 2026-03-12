@@ -24,6 +24,16 @@ export interface DueReviewCell {
   accuracy: number;
   total: number;
   nextReviewAt: number;
+  avgResponseMs: number;
+  priorityScore: number;
+}
+
+export interface MistakeEntry {
+  date: number;
+  key: string;
+  intervalName: string;
+  responseMs: number;
+  mode: string;
 }
 
 export interface ProgressState {
@@ -32,6 +42,7 @@ export interface ProgressState {
   totalResponseMs: number;
   cells: Record<string, CellRecord>;   // key: `${key}|${intervalName}`
   sessions: SessionRecord[];
+  mistakeLog: MistakeEntry[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -53,8 +64,13 @@ export class ProgressService {
         correctAnswers: 0,
         totalResponseMs: 0,
         cells: {},
-        sessions: []
+        sessions: [],
+        mistakeLog: [],
       };
+    }
+
+    if (!this.state.mistakeLog) {
+      this.state.mistakeLog = [];
     }
   }
 
@@ -66,7 +82,7 @@ export class ProgressService {
     return `${key}|${intervalName}`;
   }
 
-  recordAnswer(key: string, intervalName: string, isCorrect: boolean, responseMs: number) {
+  recordAnswer(key: string, intervalName: string, isCorrect: boolean, responseMs: number, mode = 'General') {
     const k = this.cellKey(key, intervalName);
     if (!this.state.cells[k]) {
       this.state.cells[k] = { correct: 0, total: 0, totalResponseMs: 0 };
@@ -85,6 +101,15 @@ export class ProgressService {
         : acc >= 0.5 ? 3
         : 1;
       this.state.cells[k].nextReviewAt = Date.now() + intervalDays * dayMs;
+    } else {
+      this.state.mistakeLog.unshift({
+        date: Date.now(),
+        key,
+        intervalName,
+        responseMs,
+        mode,
+      });
+      this.state.mistakeLog = this.state.mistakeLog.slice(0, 400);
     }
     this.state.totalQuestions++;
     this.state.totalResponseMs += responseMs;
@@ -155,15 +180,18 @@ export class ProgressService {
       .filter(([, cell]) => !!cell.nextReviewAt && cell.nextReviewAt <= now)
       .map(([k, cell]) => {
         const [key, intervalName] = k.split('|');
+        const avgResponseMs = cell.total > 0 ? cell.totalResponseMs / cell.total : 0;
         return {
           key,
           intervalName,
           accuracy: cell.total > 0 ? cell.correct / cell.total : 0,
           total: cell.total,
           nextReviewAt: cell.nextReviewAt!,
+          avgResponseMs,
+          priorityScore: this.getReviewPriorityScore(cell, now),
         };
       })
-      .sort((a, b) => a.nextReviewAt - b.nextReviewAt || a.accuracy - b.accuracy)
+      .sort((a, b) => b.priorityScore - a.priorityScore || a.nextReviewAt - b.nextReviewAt)
       .slice(0, limit);
   }
 
@@ -186,15 +214,66 @@ export class ProgressService {
       .slice(0, limit);
   }
 
+  getRecentMistakes(count = 40): MistakeEntry[] {
+    return this.state.mistakeLog.slice(0, count);
+  }
+
+  getTopMistakePairs(limit = 8): {
+    key: string;
+    intervalName: string;
+    misses: number;
+    avgResponseMs: number;
+    lastSeen: number;
+  }[] {
+    const grouped = new Map<string, { misses: number; totalResponseMs: number; lastSeen: number }>();
+
+    for (const entry of this.state.mistakeLog) {
+      const id = `${entry.key}|${entry.intervalName}`;
+      const prev = grouped.get(id) ?? { misses: 0, totalResponseMs: 0, lastSeen: 0 };
+      grouped.set(id, {
+        misses: prev.misses + 1,
+        totalResponseMs: prev.totalResponseMs + entry.responseMs,
+        lastSeen: Math.max(prev.lastSeen, entry.date),
+      });
+    }
+
+    return Array.from(grouped.entries())
+      .map(([id, value]) => {
+        const [key, intervalName] = id.split('|');
+        return {
+          key,
+          intervalName,
+          misses: value.misses,
+          avgResponseMs: value.misses > 0 ? Math.round(value.totalResponseMs / value.misses) : 0,
+          lastSeen: value.lastSeen,
+        };
+      })
+      .sort((a, b) => b.misses - a.misses || b.lastSeen - a.lastSeen)
+      .slice(0, limit);
+  }
+
   resetProgress() {
     this.state = {
       totalQuestions: 0,
       correctAnswers: 0,
       totalResponseMs: 0,
       cells: {},
-      sessions: []
+      sessions: [],
+      mistakeLog: [],
     };
     this.save();
+  }
+
+  private getReviewPriorityScore(cell: CellRecord, now: number): number {
+    const accuracy = cell.total > 0 ? cell.correct / cell.total : 0;
+    const accuracyRisk = 1 - accuracy;
+    const avgResponseMs = cell.total > 0 ? cell.totalResponseMs / cell.total : 0;
+    const speedRisk = Math.min(avgResponseMs / 6000, 1);
+    const daysSinceSeen = cell.lastSeen ? (now - cell.lastSeen) / 86_400_000 : 10;
+    const recencyRisk = Math.min(daysSinceSeen / 7, 1);
+    const overdueDays = cell.nextReviewAt ? Math.max((now - cell.nextReviewAt) / 86_400_000, 0) : 0;
+    const overdueRisk = Math.min(overdueDays / 7, 1);
+    return Math.round((accuracyRisk * 0.45 + overdueRisk * 0.25 + speedRisk * 0.2 + recencyRisk * 0.1) * 100);
   }
 
   getState(): ProgressState { return this.state; }

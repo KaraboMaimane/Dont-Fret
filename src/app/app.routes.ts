@@ -54,4 +54,16 @@ export const routes: Routes = [
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage)
   },
+  {
+    path: 'placement-test',
+    loadComponent: () => import('./pages/placement-test/placement-test.page').then(m => m.PlacementTestPage)
+  },
+  {
+    path: 'challenge-calendar',
+    loadComponent: () => import('./pages/challenge-calendar/challenge-calendar.page').then(m => m.ChallengeCalendarPage)
+  },
+  {
+    path: 'mistake-journal',
+    loadComponent: () => import('./pages/mistake-journal/mistake-journal.page').then(m => m.MistakeJournalPage)
+  },
 ];

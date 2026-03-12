@@ -97,6 +97,37 @@
     </div>
 
     <div class="section-header">
+      <span class="section-title">Smart Tools</span>
+    </div>
+    <div style="padding:0 16px 8px;">
+      <div class="df-card" style="padding:12px 14px; display:grid; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:var(--df-text);">Placement Test</div>
+            <div style="font-size:0.68rem; color:var(--df-text2);">Current level: <strong style="color:var(--df-accent);">{{ getPlacementLabel() }}</strong></div>
+          </div>
+          <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset;" (click)="router.navigateByUrl('/placement-test')">Open</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:var(--df-text);">Challenge Calendar</div>
+            <div style="font-size:0.68rem; color:var(--df-text2);">Track completed daily challenge missions.</div>
+          </div>
+          <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset;" (click)="router.navigateByUrl('/challenge-calendar')">Open</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:var(--df-text);">Mistake Journal</div>
+            <div style="font-size:0.68rem; color:var(--df-text2);">Replay your most-missed key + interval pairs.</div>
+          </div>
+          <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset;" (click)="router.navigateByUrl('/mistake-journal')">Open</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
       <span class="section-title">Weekly Challenge</span>
     </div>
     <div style="padding:0 16px 8px;">

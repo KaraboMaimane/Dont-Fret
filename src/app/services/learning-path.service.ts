@@ -28,6 +28,9 @@ export interface LearningPathState {
   unlockedStages: Stage[];
   stageProgress: Record<Stage, { correct: number; total: number }>;
   bossResults: Record<Stage, { passed: boolean; attempts: number }>;
+  placementCompleted: boolean;
+  placementResultStage?: Stage;
+  placementTakenAt?: number;
   lastRoute?: string;
 }
 
@@ -258,6 +261,7 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
         6: { passed: false, attempts: 0 },
         7: { passed: false, attempts: 0 },
       },
+      placementCompleted: false,
     };
   }
 
@@ -278,6 +282,9 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
       remapped.currentStage  = remap(this.state.currentStage);
       remapped.unlockedStages = this.state.unlockedStages.map(s => remap(s));
       if (!remapped.unlockedStages.includes(1)) remapped.unlockedStages.unshift(1);
+      remapped.placementCompleted = this.progressService.getTotalQuestions() > 0;
+      remapped.placementResultStage = remapped.currentStage;
+      remapped.placementTakenAt = remapped.placementCompleted ? Date.now() : undefined;
       remapped.lastRoute = this.state.lastRoute;
 
       this.state = remapped;
@@ -295,6 +302,14 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
     }
     if (!this.state.unlockedStages.includes(1)) {
       this.state.unlockedStages.unshift(1);
+    }
+
+    if (typeof this.state.placementCompleted !== 'boolean') {
+      this.state.placementCompleted = this.progressService.getTotalQuestions() > 0;
+    }
+
+    if (this.state.placementCompleted && !this.state.placementResultStage) {
+      this.state.placementResultStage = this.state.currentStage;
     }
   }
 
@@ -358,4 +373,31 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
   }
 
   getLastRoute(): string { return this.state.lastRoute ?? '/dashboard'; }
+
+  hasPlacementCompleted(): boolean {
+    return this.state.placementCompleted;
+  }
+
+  getPlacementResultStage(): Stage | null {
+    return this.state.placementResultStage ?? null;
+  }
+
+  getPlacementTakenAt(): number | null {
+    return this.state.placementTakenAt ?? null;
+  }
+
+  applyPlacement(stage: Stage) {
+    const currentMax = this.state.unlockedStages.length > 0
+      ? Math.max(...this.state.unlockedStages)
+      : 1;
+    const targetStage = Math.max(stage, currentMax) as Stage;
+    const unlocked = Array.from({ length: targetStage }, (_, i) => (i + 1) as Stage);
+
+    this.state.currentStage = targetStage;
+    this.state.unlockedStages = unlocked;
+    this.state.placementCompleted = true;
+    this.state.placementResultStage = targetStage;
+    this.state.placementTakenAt = Date.now();
+    this.save();
+  }
 }

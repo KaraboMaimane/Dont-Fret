@@ -1,0 +1,83 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Placement Test 🧪</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="activity-shell" style="padding:16px 16px 88px;">
+    <div *ngIf="state === 'intro'" class="fade-in-up">
+      <div class="df-card dashboard-quest-card" style="padding:18px;">
+        <div style="font-size:0.68rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Smart Start</div>
+        <div style="font-size:1.12rem; font-weight:900; color:var(--df-text); margin-bottom:8px;">Find your best starting stage</div>
+        <div style="font-size:0.82rem; color:var(--df-text2); line-height:1.55; margin-bottom:16px;">
+          This quick test runs {{ totalQuestions }} interval prompts across easy, medium, and advanced tiers.
+          Your result sets your stage path automatically.
+        </div>
+        <button class="df-btn df-btn-primary" style="width:100%;" (click)="startTest()">
+          Start Placement Test →
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="state === 'playing' && currentQuestion" class="fade-in-up">
+      <div class="mission-hud mission-hud-compact" style="margin-bottom:10px;">
+        <div>
+          <div class="mission-hud-label">Placement Progress</div>
+          <div class="mission-hud-title">Question {{ currentIndex + 1 }} / {{ totalQuestions }}</div>
+        </div>
+        <span class="mission-chip">{{ progressPct }}%</span>
+      </div>
+
+      <div class="progress-bar-track" style="margin-bottom:14px;">
+        <div class="progress-bar-fill" [style.width.%]="progressPct"></div>
+      </div>
+
+      <div class="question-card">
+        <div class="question-key">Key of {{ currentQuestion.key }}</div>
+        <div class="question-text">What is the <strong style="color:var(--df-accent);">{{ currentQuestion.intervalName }}</strong>?</div>
+      </div>
+
+      <div *ngIf="feedback" class="feedback-banner" [class.correct]="feedback.startsWith('✅')" [class.incorrect]="feedback.startsWith('❌')">
+        {{ feedback }}
+      </div>
+
+      <div class="note-grid">
+        <button
+          *ngFor="let note of notes"
+          class="note-btn"
+          [disabled]="!!feedback"
+          (click)="select(note)">
+          {{ note }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="state === 'done'" class="fade-in-up">
+      <div class="df-card" style="padding:20px;">
+        <div style="font-size:2rem; text-align:center; margin-bottom:8px;">🏁</div>
+        <div style="font-size:1.05rem; font-weight:900; color:var(--df-text); text-align:center; margin-bottom:6px;">Placement Complete</div>
+        <div style="font-size:0.82rem; color:var(--df-text2); text-align:center; margin-bottom:14px;">
+          Score {{ scorePct }}% · Advanced Tier {{ tier3Pct }}%
+        </div>
+
+        <div class="lesson-card" style="margin-bottom:14px;">
+          <div style="font-size:0.7rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Recommended Stage</div>
+          <div style="font-size:1rem; font-weight:800; color:var(--df-text);">Stage {{ recommendedStage }}: {{ recommendedStageName }}</div>
+        </div>
+
+        <div style="display:grid; gap:10px;">
+          <button class="df-btn df-btn-primary" style="width:100%;" (click)="continue()">
+            Continue Training →
+          </button>
+          <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/dashboard')">
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/profile"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mistake Journal 🧠</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-shell" style="padding:12px 16px 88px;">
+    <div class="df-card dashboard-quest-card" style="padding:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+        <div>
+          <div style="font-size:0.7rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em;">Replay Center</div>
+          <div style="font-size:1rem; font-weight:800; color:var(--df-text);">Turn misses into mastery runs</div>
+        </div>
+        <span style="font-size:1.4rem;">🔂</span>
+      </div>
+      <button class="df-btn df-btn-primary" style="width:100%;" (click)="startWeakReplay()">
+        Start Weak-Spot Replay →
+      </button>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Top Trouble Pairs</span>
+    </div>
+    <div class="df-card" style="padding:10px 14px;" *ngIf="topPairs.length > 0">
+      <div *ngFor="let pair of topPairs" style="display:flex; justify-content:space-between; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--df-border);">
+        <div>
+          <div style="font-size:0.86rem; font-weight:700; color:var(--df-text);">{{ pair.key }} — {{ pair.intervalName }}</div>
+          <div style="font-size:0.72rem; color:var(--df-text2);">{{ pair.misses }} misses · avg {{ (pair.avgResponseMs / 1000).toFixed(1) }}s · {{ formatTime(pair.lastSeen) }}</div>
+        </div>
+        <button class="df-btn df-btn-ghost" style="padding:8px 12px; min-height:unset;" (click)="replayPair(pair)">Drill</button>
+      </div>
+    </div>
+
+    <div class="df-card" *ngIf="topPairs.length === 0" style="text-align:center; color:var(--df-text2);">
+      No mistakes logged yet. Play a few rounds and this journal will fill automatically.
+    </div>
+
+    <div class="section-header" *ngIf="recentMistakes.length > 0">
+      <span class="section-title">Recent Misses</span>
+    </div>
+    <div class="df-card" style="padding:10px 14px;" *ngIf="recentMistakes.length > 0">
+      <div *ngFor="let miss of recentMistakes" style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--df-border);">
+        <div>
+          <div style="font-size:0.8rem; color:var(--df-text);">{{ miss.key }} {{ miss.intervalName }}</div>
+          <div style="font-size:0.68rem; color:var(--df-text2);">{{ miss.mode }} · {{ formatTime(miss.date) }}</div>
+        </div>
+        <span style="font-size:0.68rem; color:var(--df-amber);">{{ (miss.responseMs / 1000).toFixed(1) }}s</span>
+      </div>
+    </div>
+  </div>
+</ion-content>

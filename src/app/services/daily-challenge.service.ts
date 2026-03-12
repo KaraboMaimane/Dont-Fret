@@ -5,6 +5,12 @@ interface DailyChallengeState {
   completedByDate: Record<string, string[]>;
 }
 
+export interface DailyChallengeCalendarEntry {
+  dateKey: string;
+  challengeId: string | null;
+  completed: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DailyChallengeService {
   private readonly STORAGE_KEY = 'dont-fret-daily-challenges';
@@ -39,8 +45,16 @@ export class DailyChallengeService {
     return assigned;
   }
 
+  getChallengeForDate(dateKey: string): string | null {
+    return this.state.challengeByDate[dateKey] ?? null;
+  }
+
   isCompleted(dateKey: string, challengeId: string): boolean {
     return (this.state.completedByDate[dateKey] ?? []).includes(challengeId);
+  }
+
+  isAnyCompletedForDate(dateKey: string): boolean {
+    return (this.state.completedByDate[dateKey] ?? []).length > 0;
   }
 
   markCompleted(dateKey: string, challengeId: string) {
@@ -50,6 +64,33 @@ export class DailyChallengeService {
     this.state.completedByDate[dateKey] = [...current, challengeId];
     this.pruneOldEntries();
     this.save();
+  }
+
+  getCalendarEntries(days = 35, fromDate = new Date()): DailyChallengeCalendarEntry[] {
+    const out: DailyChallengeCalendarEntry[] = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(fromDate);
+      date.setDate(fromDate.getDate() - i);
+      const dateKey = this.todayKey(date);
+      out.push({
+        dateKey,
+        challengeId: this.getChallengeForDate(dateKey),
+        completed: this.isAnyCompletedForDate(dateKey),
+      });
+    }
+
+    return out;
+  }
+
+  getCompletionStreak(days = 35): number {
+    const entries = this.getCalendarEntries(days).reverse();
+    let streak = 0;
+    for (const entry of entries) {
+      if (!entry.completed) break;
+      streak++;
+    }
+    return streak;
   }
 
   private load() {
@@ -73,7 +114,7 @@ export class DailyChallengeService {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
   }
 
-  private pruneOldEntries(daysToKeep = 45) {
+  private pruneOldEntries(daysToKeep = 90) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - daysToKeep);
     const cutoffKey = this.todayKey(cutoff);

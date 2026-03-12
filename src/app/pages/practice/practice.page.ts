@@ -1,10 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar
 } from '@ionic/angular/standalone';
 import { AdaptiveService } from '../../services/adaptive.service';
+import { DrillPreset, DrillPresetService } from '../../services/drill-preset.service';
 import { LearningPathService, Stage } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
@@ -13,12 +15,12 @@ import { StreakService } from '../../services/streak.service';
 
 type AnswerState = 'unanswered' | 'correct' | 'incorrect';
 type PracticeGoal = 'warmup' | 'accuracy' | 'review' | 'weak-spots';
-type SessionMode = 'recommended' | 'custom' | 'due' | 'weak' | 'focus';
+type SessionMode = 'recommended' | 'custom' | 'due' | 'weak' | 'focus' | 'preset';
 
 @Component({
   selector: 'app-practice',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
   templateUrl: './practice.page.html',
 })
 export class PracticePage implements OnInit, OnDestroy {
@@ -52,6 +54,8 @@ export class PracticePage implements OnInit, OnDestroy {
   availableIntervals: string[] = [];
   selectedKeys: NoteLabel[] = [];
   selectedIntervals: string[] = [];
+  presetName = '';
+  presets: DrillPreset[] = [];
   private questionStart = 0;
   private pool: IntervalQuestion[] = [];
   private poolIndex = 0;
@@ -66,6 +70,7 @@ export class PracticePage implements OnInit, OnDestroy {
     private streak: StreakService,
     public milestone: MilestoneService,
     private learningPath: LearningPathService,
+    private presetStore: DrillPresetService,
     private router: Router,
     private route: ActivatedRoute,
   ) {}
@@ -89,6 +94,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.availableIntervals = this.getPracticeIntervalsForStage(stage.id);
     this.selectedKeys = [...this.availableKeys];
     this.selectedIntervals = [...this.availableIntervals];
+    this.presets = this.presetStore.getAll();
     this.applyGoal('warmup');
 
     const focusKey = this.route.snapshot.queryParams['key'] as string | undefined;
@@ -205,6 +211,44 @@ export class PracticePage implements OnInit, OnDestroy {
     );
   }
 
+  saveCurrentAsPreset() {
+    const preset = this.presetStore.savePreset({
+      name: this.presetName,
+      keys: this.selectedKeys,
+      intervals: this.selectedIntervals,
+      questionCount: this.setupQuestionCount,
+    });
+    this.presets = this.presetStore.getAll();
+    this.presetName = '';
+    this.loadPreset(preset);
+  }
+
+  loadPreset(preset: DrillPreset) {
+    this.selectedKeys = [...preset.keys];
+    this.selectedIntervals = [...preset.intervals];
+    this.setupQuestionCount = preset.questionCount;
+    this.showBuilder = true;
+  }
+
+  playPreset(preset: DrillPreset) {
+    this.loadPreset(preset);
+    this.sessionMode = 'preset';
+    this.beginSession(
+      this.adaptive.buildCustomQuestionPool({
+        keys: preset.keys,
+        intervals: preset.intervals,
+        count: preset.questionCount,
+      }),
+      `Preset: ${preset.name}`,
+      `${preset.keys.length} keys · ${preset.intervals.length} intervals`,
+    );
+  }
+
+  removePreset(id: string) {
+    this.presetStore.deletePreset(id);
+    this.presets = this.presetStore.getAll();
+  }
+
   startFocusedSession(key: NoteLabel, interval: string) {
     const answer = this.theory.getIntervalAnswer(key, interval);
     const intervalType: 'diatonic' | 'harmonic' = this.isDiatonic(interval) ? 'diatonic' : 'harmonic';
@@ -308,7 +352,7 @@ export class PracticePage implements OnInit, OnDestroy {
       this.feedbackText = `❌ Wrong${clue} — the ${this.question.intervalName} of ${this.question.key} is ${this.question.answer}`;
     }
 
-    this.progress.recordAnswer(this.question.key, this.question.intervalName, correct, this.responseMs);
+    this.progress.recordAnswer(this.question.key, this.question.intervalName, correct, this.responseMs, this.sessionLabel);
     this.sessionTotal++;
     if (correct) {
       this.sessionCorrect++;
@@ -357,6 +401,9 @@ export class PracticePage implements OnInit, OnDestroy {
       case 'weak':
         this.setupGoal = 'weak-spots';
         this.startRecommendedSession();
+        break;
+      case 'preset':
+        this.startCustomSession();
         break;
       default:
         this.startRecommendedSession();

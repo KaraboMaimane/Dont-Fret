@@ -83,6 +83,34 @@
           </div>
         </div>
 
+        <div class="mini-visual-card" style="margin-top:12px;">
+          <div style="font-size:0.7rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Save As Loadout</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input
+              [(ngModel)]="presetName"
+              placeholder="e.g. Jazz Warmup"
+              maxlength="28"
+              style="flex:1; background:var(--df-surface); color:var(--df-text); border:1px solid var(--df-border); border-radius:10px; padding:9px 10px; font-size:0.82rem;"
+            />
+            <button class="df-btn df-btn-ghost" style="padding:8px 12px; min-height:unset;" (click)="saveCurrentAsPreset()">Save</button>
+          </div>
+        </div>
+
+        <div class="mini-visual-card" style="margin-top:12px;" *ngIf="presets.length > 0">
+          <div style="font-size:0.7rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Saved Loadouts</div>
+          <div *ngFor="let preset of presets" style="display:flex; justify-content:space-between; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--df-border);">
+            <div>
+              <div style="font-size:0.82rem; font-weight:700; color:var(--df-text);">{{ preset.name }}</div>
+              <div style="font-size:0.7rem; color:var(--df-text2);">{{ preset.keys.length }} keys · {{ preset.intervals.length }} intervals · {{ preset.questionCount }} Qs</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="df-btn df-btn-primary" style="padding:7px 10px; min-height:unset; font-size:0.7rem;" (click)="playPreset(preset)">Play</button>
+              <button class="df-btn df-btn-ghost" style="padding:7px 10px; min-height:unset; font-size:0.7rem;" (click)="loadPreset(preset)">Load</button>
+              <button class="df-btn df-btn-ghost" style="padding:7px 10px; min-height:unset; font-size:0.7rem; color:var(--df-red);" (click)="removePreset(preset.id)">✕</button>
+            </div>
+          </div>
+        </div>
+
         <button class="df-btn df-btn-primary" style="width:100%; margin-top:14px;" (click)="startCustomSession()">Start Custom Drill →</button>
       </div>
     </div>

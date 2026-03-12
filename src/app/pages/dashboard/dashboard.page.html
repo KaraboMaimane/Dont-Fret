@@ -1,6 +1,101 @@
 <ion-content>
   <div class="page-shell" style="padding: 12px 0 0;">
 
+  <!-- ── Contextual welcome banner ── -->
+  <div *ngIf="welcomeBanner" style="padding: 0 16px 12px;" class="fade-in-up">
+
+    <!-- NEW USER: no sessions yet -->
+    <div *ngIf="welcomeBanner.type === 'new-user'"
+         class="df-card"
+         style="text-align:center; padding:24px 20px; border-color:var(--df-accent); background:rgba(167,139,250,0.06);">
+      <div style="font-size:2.4rem; margin-bottom:8px;">🎸</div>
+      <div style="font-weight:900; font-size:1.1rem; color:var(--df-text); margin-bottom:6px;">Welcome to Don't Fret!</div>
+      <div style="font-size:0.82rem; color:var(--df-text2); line-height:1.55; margin-bottom:18px;" *ngIf="needsPlacement">
+        Take a quick placement check so the app starts you exactly where you need to be.
+      </div>
+      <div style="font-size:0.82rem; color:var(--df-text2); line-height:1.55; margin-bottom:18px;" *ngIf="!needsPlacement">
+        You've been placed — jump into your first training stage now.
+      </div>
+      <div style="display:grid; gap:10px;" *ngIf="needsPlacement">
+        <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigateByUrl('/placement-test')">
+          🧪 Take Placement Test →
+        </button>
+        <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/foundations')">
+          Skip — Start Foundations
+        </button>
+      </div>
+      <button class="df-btn df-btn-primary" style="width:100%;" *ngIf="!needsPlacement"
+              (click)="router.navigateByUrl(learningPath.getDrillRoute(learningPath.getCurrentStage()))">
+        🎵 Begin Stage Training →
+      </button>
+    </div>
+
+    <!-- JUST PLACED: first sessions after placement test -->
+    <div *ngIf="welcomeBanner.type === 'just-placed'"
+         class="df-card"
+         style="padding:16px; border-color:rgba(74,222,128,0.45); background:rgba(74,222,128,0.06);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
+        <div>
+          <div style="font-size:0.66rem; font-weight:800; color:var(--df-green); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px;">Placement Complete</div>
+          <div style="font-size:0.9rem; font-weight:800; color:var(--df-text);">🎯 Placed at Stage {{ welcomeBanner.stageId }}</div>
+          <div style="font-size:0.76rem; color:var(--df-text2); margin-top:4px;">{{ welcomeBanner.stageName }} — your training starts here.</div>
+        </div>
+        <button class="df-btn df-btn-ghost" style="padding:6px 8px; min-height:unset; font-size:0.78rem;" (click)="dismissWelcomeBanner()">✕</button>
+      </div>
+      <button class="df-btn df-btn-primary" style="width:100%;"
+              (click)="router.navigateByUrl(learningPath.getDrillRoute(learningPath.getCurrentStage())); dismissWelcomeBanner()">
+        Start Stage Training →
+      </button>
+    </div>
+
+    <!-- LONG BREAK: 5+ days since last session -->
+    <div *ngIf="welcomeBanner.type === 'long-break'"
+         class="df-card"
+         style="padding:16px; border-color:rgba(251,191,36,0.4); background:rgba(251,191,36,0.06);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
+        <div>
+          <div style="font-size:0.66rem; font-weight:800; color:var(--df-amber); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px;">Back in Action</div>
+          <div style="font-size:0.9rem; font-weight:800; color:var(--df-text);">👋 {{ welcomeBanner.daysAway }}-day break — welcome back!</div>
+          <div style="font-size:0.76rem; color:var(--df-text2); margin-top:4px;">A quick warmup gets the fingers moving again. No pressure.</div>
+        </div>
+        <button class="df-btn df-btn-ghost" style="padding:6px 8px; min-height:unset; font-size:0.78rem;" (click)="dismissWelcomeBanner()">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button class="df-btn df-btn-primary" style="width:100%;"
+                (click)="router.navigateByUrl('/practice'); dismissWelcomeBanner()">
+          Quick Warmup →
+        </button>
+        <button class="df-btn df-btn-ghost" style="width:100%;" (click)="dismissWelcomeBanner()">
+          I'm good
+        </button>
+      </div>
+    </div>
+
+    <!-- DAILY SWEEP: all quests done today -->
+    <div *ngIf="welcomeBanner.type === 'daily-sweep'"
+         class="df-card"
+         style="padding:16px; border-color:rgba(74,222,128,0.45); background:rgba(74,222,128,0.06);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
+        <div>
+          <div style="font-size:0.66rem; font-weight:800; color:var(--df-green); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px;">Daily Sweep</div>
+          <div style="font-size:0.9rem; font-weight:800; color:var(--df-text);">🏁 All daily quests complete!</div>
+          <div style="font-size:0.76rem; color:var(--df-text2); margin-top:4px;">You're locked in today. Keep the momentum rolling.</div>
+        </div>
+        <button class="df-btn df-btn-ghost" style="padding:6px 8px; min-height:unset; font-size:0.78rem;" (click)="dismissWelcomeBanner()">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button class="df-btn df-btn-primary" style="width:100%;"
+                (click)="router.navigateByUrl('/practice'); dismissWelcomeBanner()">
+          Bonus Practice →
+        </button>
+        <button class="df-btn df-btn-ghost" style="width:100%;" (click)="dismissWelcomeBanner()">
+          Done for today
+        </button>
+      </div>
+    </div>
+
+  </div>
+
     <div style="padding: 0 16px 12px;" class="fade-in-up">
       <div class="df-card dashboard-quest-card" style="padding:18px 16px 16px;">
         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px;">
@@ -68,20 +163,6 @@
         </div>
       </div>
     </div>
-
-  <!-- ── First-visit onboarding CTA ── -->
-  <div *ngIf="totalQuestions === 0" style="padding: 12px 16px 0;" class="fade-in-up">
-    <div class="df-card" style="text-align:center; padding:24px 20px; margin-bottom:12px; border-color:var(--df-accent); background:rgba(167,139,250,0.06);">
-      <div style="font-size:2.4rem; margin-bottom:8px;">🎸</div>
-      <div style="font-weight:900; font-size:1.1rem; color:var(--df-text); margin-bottom:6px;">Welcome to Don't Fret!</div>
-      <div style="font-size:0.82rem; color:var(--df-text2); line-height:1.55; margin-bottom:18px;">
-        Start with <strong style="color:var(--df-accent);">Foundations</strong> to learn major scales and key signatures — the building blocks of music theory.
-      </div>
-      <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigateByUrl('/foundations')">
-        🎵 Start Foundations →
-      </button>
-    </div>
-  </div>
 
   <!-- ── Continue hero card (returning users only) ── -->
   <div *ngIf="continueCard" style="padding: 12px 16px 0;" class="fade-in-up">

@@ -43,6 +43,13 @@ interface RewardDrop {
   unlocked: boolean;
 }
 
+interface WelcomeBanner {
+  type: 'new-user' | 'just-placed' | 'long-break' | 'daily-sweep';
+  daysAway?: number;
+  stageName?: string;
+  stageId?: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -80,6 +87,9 @@ export class DashboardPage implements OnInit {
   rewardDrops: RewardDrop[] = [];
   streakMultiplier = 1;
   nextUnlockCard: ModeCard | null = null;
+  needsPlacement = false;
+  welcomeBanner: WelcomeBanner | null = null;
+  welcomeBannerDismissed = false;
 
   ngOnInit() {
     this.loadData();
@@ -116,6 +126,7 @@ export class DashboardPage implements OnInit {
     this.recentSessions = this.progress.getRecentSessions(5);
     this.dailyQuests = this.buildDailyQuests();
     this.streakMultiplier = this.getStreakMultiplier(this.streak);
+    this.needsPlacement = this.totalQuestions === 0 && !this.learningPath.hasPlacementCompleted();
 
     if (this.recentSessions.length > 0) {
       const last = this.recentSessions[0];
@@ -144,10 +155,47 @@ export class DashboardPage implements OnInit {
     this.nextUnlockCard = this.modeCards.find(card => card.locked) ?? null;
     this.dailySpotlight = this.buildRotatingChallenge();
     this.rewardDrops = this.buildRewardDrops();
+    this.welcomeBanner = this.computeWelcomeBanner();
   }
 
   navigateTo(card: ModeCard) {
     if (!card.locked) this.router.navigateByUrl(card.route);
+  }
+
+  dismissWelcomeBanner() {
+    this.welcomeBannerDismissed = true;
+    this.welcomeBanner = null;
+  }
+
+  private computeWelcomeBanner(): WelcomeBanner | null {
+    // Always show for brand-new users regardless of dismissed state
+    if (this.totalQuestions === 0) {
+      return { type: 'new-user' };
+    }
+
+    if (this.welcomeBannerDismissed) return null;
+
+    // Show briefly after placement test (within 24h, still early in journey)
+    const placementAt = this.learningPath.getPlacementTakenAt();
+    if (placementAt && Date.now() - placementAt < 24 * 60 * 60 * 1000 && this.totalQuestions < 15) {
+      const stage = this.learningPath.getCurrentStage();
+      return { type: 'just-placed', stageName: stage.title, stageId: stage.id };
+    }
+
+    // Returning after a long break (5+ days since last session)
+    if (this.recentSessions.length > 0) {
+      const daysSince = (Date.now() - this.recentSessions[0].date) / 86_400_000;
+      if (daysSince >= 5) {
+        return { type: 'long-break', daysAway: Math.floor(daysSince) };
+      }
+    }
+
+    // All daily quests complete — surface a quick celebration
+    if (this.questsDoneCount >= 3) {
+      return { type: 'daily-sweep' };
+    }
+
+    return null;
   }
 
   timeAgo(ts: number): string {

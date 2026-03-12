@@ -1,0 +1,39 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/profile"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Challenge Calendar 📅</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-shell" style="padding:12px 16px 88px;">
+    <div class="df-card dashboard-quest-card" style="padding:16px;">
+      <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:10px;">
+        <div>
+          <div style="font-size:0.7rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em;">Last 42 Days</div>
+          <div style="font-size:1rem; font-weight:800; color:var(--df-text);">Completion streak: {{ completionStreak }} day{{ completionStreak === 1 ? '' : 's' }}</div>
+        </div>
+        <span style="font-size:1.4rem;">🏅</span>
+      </div>
+      <div style="font-size:0.8rem; color:var(--df-text2);">Each tile shows whether that day’s challenge was completed.</div>
+    </div>
+
+    <div class="df-card" style="padding:12px;">
+      <div style="display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px;">
+        <div *ngFor="let entry of entries"
+             [title]="entry.dateKey + ' · ' + entry.challengeLabel"
+             [style.background]="entry.completed ? 'rgba(74,222,128,0.18)' : entry.challengeId ? 'rgba(251,191,36,0.15)' : 'var(--df-surface2)'"
+             [style.border]="entry.completed ? '1px solid var(--df-green)' : entry.challengeId ? '1px solid var(--df-amber)' : '1px solid var(--df-border)'"
+             style="border-radius:8px; padding:8px 6px; text-align:center; min-height:52px; display:flex; flex-direction:column; justify-content:center;">
+          <span style="font-size:0.7rem; color:var(--df-text2);">{{ entry.monthLabel }}</span>
+          <span style="font-size:0.86rem; font-weight:800; color:var(--df-text); line-height:1.1;">{{ entry.dayLabel }}</span>
+          <span style="font-size:0.6rem; font-weight:700;" [style.color]="entry.completed ? 'var(--df-green)' : 'var(--df-amber)'">
+            {{ entry.completed ? 'DONE' : entry.challengeId ? 'OPEN' : '—' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>
