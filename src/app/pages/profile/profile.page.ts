@@ -169,6 +169,10 @@ export class ProfilePage {
     return (7 - day) % 7;
   }
 
+  get unlockedBadgesCount(): number {
+    return this.badges.filter(badge => badge.unlocked).length;
+  }
+
   private buildWeeklyChallenge(): WeeklyChallenge {
     const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
     const weeklySessions = this.progress.getRecentSessions(80).filter(session => session.date >= weekAgo);

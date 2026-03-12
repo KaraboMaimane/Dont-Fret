@@ -20,11 +20,11 @@
     </div>
 
     <div class="df-card" style="padding:12px;">
-      <div class="choice-chip-row" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px;">
-        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'bests'" (click)="setTab('bests')">Bests</button>
-        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'timed'" (click)="setTab('timed')">Timed</button>
-        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'blitz'" (click)="setTab('blitz')">Blitz</button>
-        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'exam'" (click)="setTab('exam')">Exam</button>
+      <div class="choice-chip-row" style="display:flex; flex-wrap:wrap; gap:8px;">
+        <button class="choice-chip" style="flex:1 1 calc(50% - 8px); min-width:0; justify-content:center;" [class.active]="activeTab === 'bests'" (click)="setTab('bests')">Bests</button>
+        <button class="choice-chip" style="flex:1 1 calc(50% - 8px); min-width:0; justify-content:center;" [class.active]="activeTab === 'timed'" (click)="setTab('timed')">Timed</button>
+        <button class="choice-chip" style="flex:1 1 calc(50% - 8px); min-width:0; justify-content:center;" [class.active]="activeTab === 'blitz'" (click)="setTab('blitz')">Blitz</button>
+        <button class="choice-chip" style="flex:1 1 calc(50% - 8px); min-width:0; justify-content:center;" [class.active]="activeTab === 'exam'" (click)="setTab('exam')">Exam</button>
       </div>
     </div>
 
@@ -41,7 +41,7 @@
             <div style="font-size:0.74rem; color:var(--df-text2);">{{ formatDate(bestTimed.date) }}</div>
           </div>
         </div>
-        <div class="hero-stat-grid" style="grid-template-columns:repeat(4, minmax(0, 1fr));">
+        <div class="hero-stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));">
           <div class="hero-stat-pill">
             <span class="hero-stat-value">{{ bestTimed.correct }}/{{ bestTimed.total }}</span>
             <span class="hero-stat-label">correct</span>
@@ -76,7 +76,7 @@
             <div style="font-size:0.74rem; color:var(--df-text2);">{{ formatDate(bestBlitz.date) }}</div>
           </div>
         </div>
-        <div class="hero-stat-grid" style="grid-template-columns:repeat(4, minmax(0, 1fr));">
+        <div class="hero-stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));">
           <div class="hero-stat-pill">
             <span class="hero-stat-value">{{ bestBlitz.correct }}</span>
             <span class="hero-stat-label">correct</span>
@@ -111,7 +111,7 @@
             <div style="font-size:0.74rem; color:var(--df-text2);">{{ totalExamRuns }} runs total</div>
           </div>
         </div>
-        <div *ngIf="totalExamRuns > 0; else noExamRuns" class="hero-stat-grid" style="grid-template-columns:repeat(4, minmax(0, 1fr));">
+        <div *ngIf="totalExamRuns > 0; else noExamRuns" class="hero-stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));">
           <div class="hero-stat-pill">
             <span class="hero-stat-value">{{ examPassRate }}%</span>
             <span class="hero-stat-label">pass rate</span>

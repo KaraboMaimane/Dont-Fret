@@ -227,15 +227,14 @@
 
     <div class="section-header">
       <span class="section-title">Milestones</span>
+      <span style="font-size:0.68rem; color:var(--df-text2); font-weight:700;">{{ unlockedBadgesCount }}/{{ badges.length }} unlocked</span>
     </div>
     <div style="padding: 0 16px; margin-bottom:16px;">
-      <div class="df-card">
-        <div class="badge-grid">
-          <div *ngFor="let badge of badges" class="badge-item">
-            <div class="badge-icon" [class.earned]="badge.unlocked" [title]="badge.description">
-              {{ badge.emoji }}
-            </div>
-            <div class="badge-label">{{ badge.title }}</div>
+      <div class="df-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+          <div *ngFor="let badge of badges" class="badge-tile" [class.earned]="badge.unlocked" [title]="badge.description">
+            <div class="badge-tile-icon">{{ badge.emoji }}</div>
+            <div class="badge-tile-label">{{ badge.title }}</div>
           </div>
         </div>
       </div>
