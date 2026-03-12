@@ -29,6 +29,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Resolve version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          echo "name=${BASE}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+          echo "code=${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Inject version into build.gradle
+        run: |
+          sed -i "s/versionCode .*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
+
       - name: Build Angular app
         run: npm run build
 
@@ -42,9 +54,14 @@ jobs:
         run: ./gradlew assembleDebug
         working-directory: android
 
+      - name: Rename APK with version
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk \
+             android/app/build/outputs/apk/debug/dont-fret-${{ steps.version.outputs.name }}.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dont-fret-debug-${{ github.sha }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: dont-fret-${{ steps.version.outputs.name }}
+          path: android/app/build/outputs/apk/debug/dont-fret-${{ steps.version.outputs.name }}.apk
           retention-days: 30
