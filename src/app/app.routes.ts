@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/practice/practice.page').then(m => m.PracticePage)
   },
   {
+    path: 'arcade',
+    loadComponent: () => import('./pages/arcade/arcade.page').then(m => m.ArcadePage)
+  },
+  {
     path: 'scale-builder',
     loadComponent: () => import('./pages/scale-builder/scale-builder.page').then(m => m.ScaleBuilderPage)
   },
@@ -45,5 +49,9 @@ export const routes: Routes = [
   {
     path: 'settings',
     loadComponent: () => import('./pages/settings/settings.page').then(m => m.SettingsPage)
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage)
   },
 ];

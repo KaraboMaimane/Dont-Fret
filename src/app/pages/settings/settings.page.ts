@@ -2,11 +2,9 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons,
-         IonList, IonItem, IonLabel, IonToggle, IonButton, IonNote } from '@ionic/angular/standalone';
+         IonList, IonItem, IonLabel, IonToggle } from '@ionic/angular/standalone';
 import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
-import { LearningPathService } from '../../services/learning-path.service';
-import { MilestoneService } from '../../services/milestone.service';
 import { MusicTheoryService } from '../../services/music-theory.service';
 
 const PREFS_KEY = 'dont-fret-prefs';
@@ -15,7 +13,7 @@ const PREFS_KEY = 'dont-fret-prefs';
   selector: 'app-settings',
   standalone: true,
   imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton,
-            IonButtons, IonList, IonItem, IonLabel, IonToggle, IonButton, IonNote],
+            IonButtons, IonList, IonItem, IonLabel, IonToggle],
   templateUrl: './settings.page.html',
 })
 export class SettingsPage {
@@ -28,8 +26,6 @@ export class SettingsPage {
   constructor(
     private progress: ProgressService,
     private streak: StreakService,
-    private learningPath: LearningPathService,
-    private milestone: MilestoneService,
     private theory: MusicTheoryService,
   ) {
     // Load persisted preferences

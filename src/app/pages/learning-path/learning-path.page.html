@@ -5,6 +5,7 @@
 </ion-header>
 
 <ion-content>
+  <div class="page-shell">
 
   <!-- Stage List -->
   <div style="margin-bottom: 80px;">
@@ -52,6 +53,16 @@
           <div style="font-size:1.1rem; font-weight:800; color:var(--df-text); letter-spacing:-0.02em; margin-top:2px;">{{ selectedStage.title }}</div>
         </div>
         <button (click)="closeLesson()" style="background:none;border:none;color:var(--df-text2);font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">✕</button>
+      </div>
+
+      <div class="mini-visual-grid" style="margin-bottom:16px;">
+        <div *ngFor="let card of getVisualCards(selectedStage)" class="mini-visual-card">
+          <div style="font-size:0.68rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px;">{{ card.title }}</div>
+          <div style="font-size:0.76rem; color:var(--df-text2);">{{ card.caption }}</div>
+          <div class="mini-visual-items">
+            <span *ngFor="let token of card.tokens" class="mini-visual-token">{{ token }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- Lesson Text -->
@@ -115,5 +126,6 @@
         </ng-container>
       </div>
     </div>
+  </div>
   </div>
 </ion-content>

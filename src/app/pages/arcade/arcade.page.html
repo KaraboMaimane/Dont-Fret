@@ -1,0 +1,85 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Arcade 🎮</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-shell" style="padding:12px 0 88px;">
+    <div style="padding:0 16px;" class="fade-in-up">
+      <div class="df-card dashboard-quest-card" style="padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.66rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.09em;">Mode Select</div>
+            <div style="font-size:1.05rem; font-weight:900; color:var(--df-text); margin-top:6px;">Choose your next run</div>
+            <div style="font-size:0.76rem; color:var(--df-text2); margin-top:4px;">Due queue: {{ dueCount }} card{{ dueCount === 1 ? '' : 's' }}</div>
+          </div>
+          <span style="font-size:1.8rem; line-height:1;">🕹️</span>
+        </div>
+        <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigate(['/practice'], { queryParams: { mode: 'due' } })">
+          Quick Review Queue →
+        </button>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Game Modes</span>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px;">
+      <div *ngFor="let card of modeCards"
+           (click)="navigateTo(card)"
+           [style.opacity]="card.locked ? '0.55' : '1'"
+           style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
+          <span style="font-size:1.8rem; line-height:1;">{{ card.icon }}</span>
+          <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
+                       padding:2px 7px; border-radius:20px; white-space:nowrap;"
+                [style.background]="card.locked ? 'var(--df-surface2)' : 'rgba(167,139,250,0.18)'"
+                [style.color]="card.locked ? 'var(--df-text2)' : 'var(--df-accent)'">
+            {{ card.locked ? '🔒' : card.tag }}
+          </span>
+        </div>
+        <div style="font-weight:800; font-size:0.88rem; color:var(--df-text); line-height:1.2;">{{ card.title }}</div>
+        <div style="font-size:0.72rem; color:var(--df-text2); line-height:1.4; flex:1;">
+          {{ card.locked && card.unlockHint ? card.unlockHint : card.desc }}
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="dueReviews.length > 0">
+      <div class="section-header">
+        <span class="section-title">Due Cards</span>
+      </div>
+      <div style="padding:0 16px 8px;">
+        <div class="df-card" style="padding:12px 16px;">
+          <div *ngFor="let cell of dueReviews"
+               (click)="router.navigate(['/practice'], { queryParams: { key: cell.key, interval: cell.intervalName } })"
+               style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--df-border); cursor:pointer;">
+            <span style="font-size:0.84rem; color:var(--df-text);">{{ cell.key }} — {{ cell.intervalName }}</span>
+            <span [style.color]="cell.accuracy < 0.5 ? 'var(--df-red)' : 'var(--df-amber)'" style="font-size:0.8rem; font-weight:700;">
+              {{ Math.round(cell.accuracy * 100) }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="weakCells.length > 0">
+      <div class="section-header">
+        <span class="section-title">Weak Areas</span>
+      </div>
+      <div style="padding:0 16px;">
+        <div class="df-card" style="padding:12px 16px;">
+          <div *ngFor="let cell of weakCells"
+               (click)="router.navigate(['/practice'], { queryParams: { key: cell.key, interval: cell.intervalName } })"
+               style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--df-border); cursor:pointer;">
+            <span style="font-size:0.84rem; color:var(--df-text);">{{ cell.key }} — {{ cell.intervalName }}</span>
+            <span [style.color]="cell.accuracy < 0.5 ? 'var(--df-red)' : 'var(--df-amber)'" style="font-size:0.8rem; font-weight:700;">
+              {{ Math.round(cell.accuracy * 100) }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</ion-content>

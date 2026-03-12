@@ -1,0 +1,221 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Profile 🧑</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-shell" style="padding:12px 0 88px;">
+    <div style="padding:0 16px;" class="fade-in-up">
+      <div class="df-card dashboard-quest-card" style="padding:18px 16px 16px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;">
+          <div>
+            <div style="font-size:0.66rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">Player Identity</div>
+            <div style="font-size:1.12rem; font-weight:900; color:var(--df-text);">{{ selectedAvatar }} {{ draftName || 'Player One' }}</div>
+            <div style="font-size:0.78rem; color:var(--df-text2); margin-top:5px;">Title: {{ selectedTitle }} · Rank: {{ rankLabel }} · XP {{ xpPoints }}</div>
+          </div>
+          <span style="font-size:2rem; line-height:1;">{{ selectedAvatar }}</span>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+          <input
+            [(ngModel)]="draftName"
+            placeholder="Enter your player name"
+            maxlength="24"
+            style="flex:1; background:var(--df-surface2); color:var(--df-text); border:1px solid var(--df-border); border-radius:10px; padding:10px 12px; font-size:0.9rem;"
+          />
+          <button class="df-btn df-btn-primary" style="padding:10px 14px; min-height:unset;" (click)="saveName()">Save</button>
+        </div>
+
+        <div *ngIf="savedToast" style="font-size:0.74rem; font-weight:700; color:var(--df-green);">✅ Name saved</div>
+
+        <div style="font-size:0.66rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin:14px 0 8px;">Avatar</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <button
+            *ngFor="let avatar of avatarOptions"
+            class="df-btn"
+            [class.df-btn-primary]="selectedAvatar === avatar"
+            [class.df-btn-ghost]="selectedAvatar !== avatar"
+            style="padding:8px 10px; min-height:unset; font-size:1.1rem;"
+            (click)="selectAvatar(avatar)">
+            {{ avatar }}
+          </button>
+        </div>
+
+        <div style="font-size:0.66rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Title</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button
+            *ngFor="let title of titleOptions"
+            class="df-btn"
+            [class.df-btn-primary]="selectedTitle === title"
+            [class.df-btn-ghost]="selectedTitle !== title"
+            style="padding:8px 12px; min-height:unset; font-size:0.72rem;"
+            (click)="selectTitle(title)">
+            {{ title }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Quick Stats</span>
+    </div>
+    <div style="padding:0 16px 8px;">
+      <div class="hero-stat-grid">
+        <div class="hero-stat-pill">
+          <span class="hero-stat-value">{{ accuracy }}%</span>
+          <span class="hero-stat-label">accuracy</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span class="hero-stat-value">{{ totalQuestions }}</span>
+          <span class="hero-stat-label">answers</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span class="hero-stat-value">{{ avgResponseSec }}s</span>
+          <span class="hero-stat-label">speed</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span class="hero-stat-value">🔥 {{ streak }}</span>
+          <span class="hero-stat-label">streak</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span class="hero-stat-value">🏆 {{ bestStreak }}</span>
+          <span class="hero-stat-label">best</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span class="hero-stat-value">{{ dueCount }}</span>
+          <span class="hero-stat-label">due now</span>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="progress-bar-track" style="height:6px;">
+          <div class="progress-bar-fill" [style.width.%]="dailyGoalPct * 100"></div>
+        </div>
+        <div style="font-size:0.72rem; color:var(--df-text2); margin-top:5px; text-align:right;">{{ Math.round(dailyGoalPct * 100) }}% daily goal</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Weekly Challenge</span>
+    </div>
+    <div style="padding:0 16px 8px;">
+      <div class="df-card" style="padding:14px 16px; border-color:rgba(167,139,250,0.4); background:rgba(167,139,250,0.08);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.92rem; font-weight:800; color:var(--df-text);">{{ weeklyChallenge.title }}</div>
+            <div style="font-size:0.76rem; color:var(--df-text2); margin-top:3px;">{{ weeklyChallenge.subtitle }}</div>
+          </div>
+          <div style="font-size:1.2rem;">{{ weeklyChallenge.completed ? '🏁' : '🗓️' }}</div>
+        </div>
+
+        <div style="display:grid; gap:8px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.76rem; color:var(--df-text2);">
+            <span>Sessions</span>
+            <strong style="color:var(--df-text);">{{ weeklyChallenge.sessionsDone }}/{{ weeklyChallenge.sessionsTarget }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.76rem; color:var(--df-text2);">
+            <span>Average Accuracy</span>
+            <strong [style.color]="weeklyChallenge.avgAccuracy >= weeklyChallenge.accuracyTarget ? 'var(--df-green)' : 'var(--df-amber)'">{{ weeklyChallenge.avgAccuracy }}%</strong>
+          </div>
+        </div>
+
+        <div class="progress-bar-track" style="height:7px; margin-bottom:8px;">
+          <div class="progress-bar-fill" [style.width.%]="weeklyChallenge.progressPct"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--df-text2);">
+          <span>Reward: <strong style="color:var(--df-accent);">{{ weeklyChallenge.reward }}</strong></span>
+          <span>{{ weekDaysRemaining }} day{{ weekDaysRemaining === 1 ? '' : 's' }} left</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="sparklineData.length > 0">
+      <div class="section-header">
+        <span class="section-title">Last {{ sparklineData.length }} Sessions</span>
+      </div>
+      <div style="padding: 0 16px; margin-bottom:12px;">
+        <div class="df-card" style="padding:12px 16px;">
+          <div style="display:flex; align-items:flex-end; gap:5px; height:48px;">
+            <div *ngFor="let s of sparklineData"
+                 [title]="s.mode + ': ' + s.accuracy + '%'"
+                 [style.height.%]="s.accuracy === 0 ? 8 : s.accuracy"
+                 [style.background]="s.accuracy >= 70 ? 'var(--df-green)' : s.accuracy >= 50 ? 'var(--df-amber)' : 'var(--df-red)'"
+                 style="flex:1; border-radius:3px 3px 0 0; min-height:4px; transition:height 0.3s;">
+            </div>
+          </div>
+          <div style="display:flex; gap:5px; margin-top:4px;">
+            <span *ngFor="let s of sparklineData"
+                  style="flex:1; text-align:center; font-size:0.6rem; color:var(--df-text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              {{ s.accuracy }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="section-header">
+      <span class="section-title">Mastery Heatmap</span>
+    </div>
+    <div style="padding: 0 16px; margin-bottom:16px;">
+      <div class="df-card" style="padding:12px;">
+           <div style="display:grid; gap:2px; margin-bottom:4px;"
+             [style.grid-template-columns]="'32px repeat(' + heatmapIntervals.length + ', 1fr)'">
+          <span></span>
+          <span *ngFor="let iv of heatmapIntervals" style="font-size:0.45rem; color:var(--df-text2); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ iv.split(' ')[1]?.[0] ?? iv[0] }}{{ iv.split(' ').length > 1 ? iv.split(' ')[0][0] : '' }}</span>
+        </div>
+           <div *ngFor="let key of heatmapKeys"
+             style="display:grid; gap:2px; margin-bottom:2px;"
+             [style.grid-template-columns]="'32px repeat(' + heatmapIntervals.length + ', 1fr)'">
+          <span style="font-size:0.65rem; color:var(--df-text2); display:flex; align-items:center; font-weight:600;">{{ key }}</span>
+          <div *ngFor="let iv of heatmapIntervals"
+               class="heatmap-cell"
+               [class]="'heatmap-cell ' + progress.getMasteryLevel(key, iv)"
+               [title]="key + ' ' + iv + ': ' + Math.round(progress.getAccuracy(key, iv)*100) + '%'"
+               style="height: 16px;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Milestones</span>
+    </div>
+    <div style="padding: 0 16px; margin-bottom:16px;">
+      <div class="df-card">
+        <div class="badge-grid">
+          <div *ngFor="let badge of badges" class="badge-item">
+            <div class="badge-icon" [class.earned]="badge.unlocked" [title]="badge.description">
+              {{ badge.emoji }}
+            </div>
+            <div class="badge-label">{{ badge.title }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="recentSessions.length > 0">
+      <div class="section-header">
+        <span class="section-title">Recent Sessions</span>
+      </div>
+      <div style="padding: 0 16px 12px;">
+        <div class="df-card" style="padding: 12px 16px;">
+          <div *ngFor="let s of recentSessions" style="display:flex; justify-content:space-between; padding:6px 0; border-bottom: 1px solid var(--df-border);">
+            <div>
+              <div style="font-size:0.85rem; color:var(--df-text); font-weight:600;">{{ getModeText(s) }}</div>
+              <div style="font-size:0.7rem; color:var(--df-text2);">{{ formatDate(s.date) }} · {{ formatDuration(s.durationMs) }}</div>
+            </div>
+            <div style="font-size:0.9rem; font-weight:700;" [style.color]="s.correct/s.total >= 0.7 ? 'var(--df-green)' : 'var(--df-amber)'">
+              {{ s.correct }}/{{ s.total }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div style="padding:0 16px;">
+      <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/settings')">Open Settings →</button>
+    </div>
+  </div>
+</ion-content>

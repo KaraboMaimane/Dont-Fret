@@ -8,123 +8,210 @@
 </ion-header>
 
 <ion-content>
-  <!-- ── Session Stats Bar ── -->
-  <div style="padding: 12px 16px 0; display:flex; justify-content:space-between; align-items:center;">
-    <div style="font-size:0.8rem; color:var(--df-text2);">
-      Session: <strong style="color:var(--df-text);">{{ sessionCorrect }}/{{ sessionTotal }}</strong>
-    </div>
-    <div style="font-size:0.8rem; color:var(--df-text2);">
-      Accuracy: <strong [style.color]="accuracyPct >= 70 ? 'var(--df-green)' : 'var(--df-amber)'">{{ sessionTotal ? accuracyPct + '%' : '—' }}</strong>
-    </div>
-  </div>
-
-  <!-- ── Mistake Replay Prompt ── -->
-  <div *ngIf="showMistakeReplay" style="padding:16px;" class="fade-in-up">
-
-  <!-- ── Round Summary ── -->
-  <div *ngIf="showRoundSummary" style="padding:16px;" class="fade-in-up">
-    <div class="df-card" style="text-align:center; padding:28px 20px;">
-      <div style="font-size:2.2rem; margin-bottom:8px;">
-        {{ roundAccuracy >= 80 ? '🏅' : roundAccuracy >= 60 ? '💪' : '📚' }}
+  <div class="activity-shell">
+    <div *ngIf="showSetup" style="padding: 12px 16px 96px;" class="fade-in-up">
+      <div class="df-card dashboard-quest-card" style="padding:18px 16px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.66rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">Recommended For You</div>
+            <div style="font-size:1.08rem; font-weight:900; color:var(--df-text);">Stage {{ currentStageId }}: {{ currentStageName }}</div>
+            <div style="font-size:0.8rem; color:var(--df-text2); margin-top:6px;">Practice now stays inside your current understanding level instead of throwing advanced intervals at you.</div>
+          </div>
+          <div style="font-size:2rem; line-height:1;">🎮</div>
+        </div>
+        <div class="hero-stat-grid">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ availableKeys.length }}</span>
+            <span class="hero-stat-label">keys</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ availableIntervals.length }}</span>
+            <span class="hero-stat-label">intervals</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ dueCount }}</span>
+            <span class="hero-stat-label">due cards</span>
+          </div>
+        </div>
       </div>
-      <div style="font-weight:900; font-size:1.2rem; color:var(--df-text); margin-bottom:4px;">Round Complete</div>
-      <div style="font-size:2.5rem; font-weight:900; margin:10px 0;"
-           [style.color]="roundAccuracy >= 80 ? 'var(--df-green)' : roundAccuracy >= 60 ? 'var(--df-amber)' : 'var(--df-red)'">
-        {{ roundAccuracy }}%
+
+      <div class="df-card" style="padding:16px;">
+        <div style="font-size:0.72rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Session Goal</div>
+        <div class="choice-chip-row" style="margin-bottom:10px;">
+          <button class="choice-chip" [class.active]="setupGoal === 'warmup'" (click)="applyGoal('warmup')">Warm-up</button>
+          <button class="choice-chip" [class.active]="setupGoal === 'accuracy'" (click)="applyGoal('accuracy')">Accuracy</button>
+          <button class="choice-chip" [class.active]="setupGoal === 'review'" (click)="applyGoal('review')">Due Now</button>
+          <button class="choice-chip" [class.active]="setupGoal === 'weak-spots'" (click)="applyGoal('weak-spots')">Weak Spots</button>
+        </div>
+        <div style="font-size:0.8rem; color:var(--df-text2); margin-bottom:16px;">{{ goalDescription }}</div>
+
+        <div class="choice-chip-row" style="margin-bottom:16px;">
+          <button class="choice-chip" [class.active]="setupQuestionCount === 8" (click)="setQuestionCount(8)">8 Qs</button>
+          <button class="choice-chip" [class.active]="setupQuestionCount === 10" (click)="setQuestionCount(10)">10 Qs</button>
+          <button class="choice-chip" [class.active]="setupQuestionCount === 12" (click)="setQuestionCount(12)">12 Qs</button>
+          <button class="choice-chip" [class.active]="setupQuestionCount === 16" (click)="setQuestionCount(16)">16 Qs</button>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="df-btn df-btn-primary" style="flex:1;" (click)="startRecommendedSession()">Play Recommended →</button>
+          <button class="df-btn df-btn-ghost" style="flex:1;" (click)="toggleBuilder()">{{ showBuilder ? 'Hide Builder' : 'Custom Drill' }}</button>
+        </div>
       </div>
-      <div *ngIf="prevSessionAccuracy > 0" style="font-size:0.8rem; color:var(--df-text2); margin-bottom:4px;">
-        vs last session: {{ prevSessionAccuracy }}%
-        <span [style.color]="accuracyDelta >= 0 ? 'var(--df-green)' : 'var(--df-red)'"
-              style="font-weight:700; margin-left:4px;">
-          {{ accuracyDelta >= 0 ? '▲' : '▼' }} {{ accuracyDelta | number:'1.0-0' }}%
-        </span>
-      </div>
-      <div style="font-size:0.8rem; color:var(--df-text2); margin-bottom:20px;">
-        {{ sessionCorrect }} / {{ sessionTotal }} correct
-      </div>
-      <button class="df-btn df-btn-primary" style="width:100%;" (click)="continueAfterSummary()">
-        Keep Practising →
-      </button>
-    </div>
-  </div>
-    <div class="df-card" style="text-align:center; padding:28px 20px;">
-      <div style="font-size:2rem; margin-bottom:12px;">🔂</div>
-      <div style="font-weight:800; font-size:1.1rem; margin-bottom:8px;">Replay Your Mistakes?</div>
-      <div style="font-size:0.85rem; color:var(--df-text2); margin-bottom:20px;">
-        You got {{ mistakes.length }} question{{ mistakes.length !== 1 ? 's' : '' }} wrong. Replay them now to lock in the answers?
-      </div>
-      <div style="display:flex; gap:10px; justify-content:center;">
-        <button class="df-btn df-btn-primary" (click)="startMistakeReplay()">🔂 Replay Mistakes</button>
-        <button class="df-btn df-btn-ghost" (click)="skipMistakeReplay()">Skip →</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ── Question ── -->
-  <div *ngIf="!showMistakeReplay && question" style="padding: 12px 16px 0;" class="fade-in-up">
+      <div *ngIf="showBuilder" class="df-card fade-in-up" style="padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+          <div>
+            <div style="font-size:0.72rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px;">Custom Drill Builder</div>
+            <div style="font-size:0.8rem; color:var(--df-text2);">Choose the exact keys and intervals you want, while still staying inside your unlocked theory level.</div>
+          </div>
+          <div style="font-size:1.6rem;">🧩</div>
+        </div>
 
-    <div *ngIf="isReplayMode" style="margin-bottom:8px;">
-      <div style="background:rgba(167,139,250,0.1); border:1px solid var(--df-accent); border-radius:8px; padding:8px 12px; font-size:0.75rem; color:var(--df-accent); font-weight:600;">
-        🔂 Mistake Replay Mode — {{ mistakeQueue.length + 1 }} remaining
+        <div class="builder-grid">
+          <div class="mini-visual-card">
+            <div style="font-size:0.7rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em;">Keys</div>
+            <div class="choice-chip-row" style="margin-top:10px;">
+              <button *ngFor="let key of availableKeys" class="choice-chip" [class.active]="selectedKeys.includes(key)" (click)="toggleKey(key)">{{ key }}</button>
+            </div>
+          </div>
+
+          <div class="mini-visual-card">
+            <div style="font-size:0.7rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em;">Intervals</div>
+            <div class="choice-chip-row" style="margin-top:10px;">
+              <button *ngFor="let interval of availableIntervals" class="choice-chip" [class.active]="selectedIntervals.includes(interval)" (click)="toggleInterval(interval)">{{ interval }}</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="df-btn df-btn-primary" style="width:100%; margin-top:14px;" (click)="startCustomSession()">Start Custom Drill →</button>
       </div>
     </div>
 
-    <div class="question-card">
-      <div class="question-key">Key of {{ question.key }}</div>
-      <div class="question-text">What is the<br><strong style="color:var(--df-accent);">{{ question.intervalName }}?</strong></div>
-      <div class="question-meta">{{ question.intervalType === 'harmonic' ? 'Harmonic Interval' : 'Diatonic Interval' }}</div>
+    <div *ngIf="!showSetup" style="padding:12px 16px 0;" class="fade-in-up">
+      <div class="df-card" style="padding:16px;">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:12px;">
+          <div>
+            <div style="font-size:0.66rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">{{ sessionLabel }}</div>
+            <div style="font-size:1rem; font-weight:800; color:var(--df-text);">{{ sessionSubtitle }}</div>
+          </div>
+          <button class="df-btn df-btn-ghost" style="padding:8px 12px; min-height:unset;" (click)="backToSetup()">Exit</button>
+        </div>
+
+        <div class="hero-stat-grid">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ sessionCorrect }}/{{ sessionTotal }}</span>
+            <span class="hero-stat-label">score</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ sessionTotal ? accuracyPct + '%' : '—' }}</span>
+            <span class="hero-stat-label">accuracy</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ questionsLeft }}</span>
+            <span class="hero-stat-label">left</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Feedback -->
-    <div *ngIf="answerState !== 'unanswered'"
-         class="feedback-banner"
-         [class.correct]="answerState === 'correct'"
-         [class.incorrect]="answerState === 'incorrect'">
-      {{ feedbackText }}
+    <div *ngIf="showMistakeReplay" style="padding:16px;" class="fade-in-up">
+      <div class="df-card" style="text-align:center; padding:28px 20px;">
+        <div style="font-size:2rem; margin-bottom:12px;">🔂</div>
+        <div style="font-weight:800; font-size:1.1rem; margin-bottom:8px;">Replay Your Mistakes?</div>
+        <div style="font-size:0.85rem; color:var(--df-text2); margin-bottom:20px;">
+          You got {{ mistakes.length }} question{{ mistakes.length !== 1 ? 's' : '' }} wrong. Replay them now to lock in the answers?
+        </div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button class="df-btn df-btn-primary" (click)="startMistakeReplay()">🔂 Replay Mistakes</button>
+          <button class="df-btn df-btn-ghost" (click)="skipMistakeReplay()">Skip →</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Hint -->
-    <div *ngIf="showHint" class="lesson-card" style="padding:12px 16px; margin-bottom:12px;">
-      <div style="font-size:0.8rem; color:var(--df-text);">🎵 {{ hintText }}</div>
+    <div *ngIf="showRoundSummary" style="padding:16px;" class="fade-in-up">
+      <div class="df-card" style="text-align:center; padding:28px 20px;">
+        <div style="font-size:2.2rem; margin-bottom:8px;">
+          {{ roundAccuracy >= 80 ? '🏅' : roundAccuracy >= 60 ? '💪' : '📚' }}
+        </div>
+        <div style="font-weight:900; font-size:1.2rem; color:var(--df-text); margin-bottom:4px;">Round Complete</div>
+        <div style="font-size:2.5rem; font-weight:900; margin:10px 0;"
+             [style.color]="roundAccuracy >= 80 ? 'var(--df-green)' : roundAccuracy >= 60 ? 'var(--df-amber)' : 'var(--df-red)'">
+          {{ roundAccuracy }}%
+        </div>
+        <div *ngIf="prevSessionAccuracy > 0" style="font-size:0.8rem; color:var(--df-text2); margin-bottom:4px;">
+          vs last session: {{ prevSessionAccuracy }}%
+          <span [style.color]="accuracyDelta >= 0 ? 'var(--df-green)' : 'var(--df-red)'" style="font-weight:700; margin-left:4px;">
+            {{ accuracyDelta >= 0 ? '▲' : '▼' }} {{ accuracyDelta | number:'1.0-0' }}%
+          </span>
+        </div>
+        <div style="font-size:0.8rem; color:var(--df-text2); margin-bottom:20px;">
+          {{ sessionCorrect }} / {{ sessionTotal }} correct
+        </div>
+        <button class="df-btn df-btn-primary" style="width:100%;" (click)="continueAfterSummary()">
+          Keep Practising →
+        </button>
+      </div>
     </div>
 
-    <!-- Note Grid -->
-    <div class="note-grid">
-      <button *ngFor="let note of notes"
-              class="note-btn"
-              [class]="getNoteClass(note)"
-              (click)="selectNote(note)"
-              [disabled]="answerState !== 'unanswered'">
-        {{ note }}
-      </button>
+    <div *ngIf="!showSetup && !showMistakeReplay && !showRoundSummary && question" style="padding: 12px 16px 0;" class="fade-in-up">
+      <div *ngIf="isReplayMode" style="margin-bottom:8px;">
+        <div style="background:rgba(167,139,250,0.1); border:1px solid var(--df-accent); border-radius:8px; padding:8px 12px; font-size:0.75rem; color:var(--df-accent); font-weight:600;">
+          🔂 Mistake Replay Mode — {{ questionsLeft }} remaining
+        </div>
+      </div>
+
+      <div class="question-card">
+        <div class="question-key">Key of {{ question.key }}</div>
+        <div class="question-text">What is the<br><strong style="color:var(--df-accent);">{{ question.intervalName }}?</strong></div>
+        <div class="question-meta">{{ question.intervalType === 'harmonic' ? 'Harmonic Interval' : 'Diatonic Interval' }}</div>
+      </div>
+
+      <div *ngIf="answerState !== 'unanswered'"
+           class="feedback-banner"
+           [class.correct]="answerState === 'correct'"
+           [class.incorrect]="answerState === 'incorrect'">
+        {{ feedbackText }}
+      </div>
+
+      <div *ngIf="showHint" class="lesson-card" style="padding:12px 16px; margin-bottom:12px;">
+        <div style="font-size:0.8rem; color:var(--df-text);">🎵 {{ hintText }}</div>
+      </div>
+
+      <div class="note-grid">
+        <button *ngFor="let note of notes"
+                class="note-btn"
+                [class]="getNoteClass(note)"
+                (click)="selectNote(note)"
+                [disabled]="answerState !== 'unanswered'">
+          {{ note }}
+        </button>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button class="df-btn df-btn-ghost" style="flex:1;" (click)="toggleHint()" [disabled]="answerState !== 'unanswered'">
+          {{ showHint ? 'Hide Hint' : '💡 Hint' }}
+        </button>
+        <button class="df-btn df-btn-primary" style="flex:1;"
+                (click)="nextQuestion()"
+                *ngIf="answerState !== 'unanswered'">
+          Next →
+        </button>
+      </div>
     </div>
 
-    <!-- Action buttons -->
-    <div style="display:flex; gap:10px; margin-top:16px;">
-      <button class="df-btn df-btn-ghost" style="flex:1;" (click)="toggleHint()" [disabled]="answerState !== 'unanswered'">
-        {{ showHint ? 'Hide Hint' : '💡 Hint' }}
-      </button>
-      <button class="df-btn df-btn-primary" style="flex:1;"
-              (click)="nextQuestion()"
-              *ngIf="answerState !== 'unanswered'">
-        Next →
-      </button>
-    </div>
-  </div>
+    <div style="height:80px;"></div>
 
-  <div style="height:80px;"></div>
-
-  <!-- ── Badge Celebration Toast ── -->
-  <div *ngIf="milestone.justUnlocked" class="fade-in-up"
-       style="position:fixed; bottom:90px; left:16px; right:16px; z-index:9999;
-              background:var(--df-surface); border:1.5px solid var(--df-accent);
-              border-radius:16px; padding:14px 18px; display:flex;
-              align-items:center; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-    <span style="font-size:2.2rem; line-height:1;">{{ milestone.justUnlocked.emoji }}</span>
-    <div>
-      <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px;">Badge Unlocked!</div>
-      <div style="font-weight:800; font-size:0.95rem; color:var(--df-text);">{{ milestone.justUnlocked.title }}</div>
-      <div style="font-size:0.75rem; color:var(--df-text2);">{{ milestone.justUnlocked.description }}</div>
+    <div *ngIf="milestone.justUnlocked" class="fade-in-up"
+         style="position:fixed; bottom:90px; left:16px; right:16px; z-index:9999;
+                background:var(--df-surface); border:1.5px solid var(--df-accent);
+                border-radius:16px; padding:14px 18px; display:flex;
+                align-items:center; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+      <span style="font-size:2.2rem; line-height:1;">{{ milestone.justUnlocked.emoji }}</span>
+      <div>
+        <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px;">Badge Unlocked!</div>
+        <div style="font-weight:800; font-size:0.95rem; color:var(--df-text);">{{ milestone.justUnlocked.title }}</div>
+        <div style="font-size:0.75rem; color:var(--df-text2);">{{ milestone.justUnlocked.description }}</div>
+      </div>
     </div>
   </div>
 </ion-content>

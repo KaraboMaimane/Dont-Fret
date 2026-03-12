@@ -9,7 +9,16 @@
 
 <ion-content>
   <!-- Idle -->
-  <div *ngIf="state === 'idle'" style="padding:24px 16px; text-align:center;" class="fade-in-up">
+  <div *ngIf="state === 'idle'" style="padding:24px 16px; text-align:center;" class="fade-in-up activity-shell">
+    <div class="mission-hud" style="margin-bottom:16px; text-align:left;">
+      <div>
+        <div class="mission-hud-label">Mission Brief</div>
+        <div class="mission-hud-title">Lightning Recall</div>
+        <div class="mission-hud-subtitle">60 seconds of rapid interval naming with time bonuses.</div>
+      </div>
+      <span class="mission-hud-icon">⚡</span>
+    </div>
+
     <div class="question-card">
       <div style="font-size:3rem; margin-bottom:12px;">⚡</div>
       <div class="question-text">Blitz Mode</div>
@@ -21,7 +30,15 @@
   </div>
 
   <!-- Playing -->
-  <div *ngIf="state === 'playing' && question" style="padding:12px 16px;" class="fade-in-up">
+  <div *ngIf="state === 'playing' && question" style="padding:12px 16px;" class="fade-in-up activity-shell">
+    <div class="mission-hud mission-hud-compact" style="margin-bottom:10px;">
+      <div>
+        <div class="mission-hud-label">Live Blitz</div>
+        <div class="mission-hud-title">Keep the chain alive</div>
+      </div>
+      <span class="mission-chip">+2s per hit</span>
+    </div>
+
     <!-- Timer -->
     <div style="text-align:center; margin-bottom:16px;">
       <div class="timer-display" [class]="timerClass">{{ timeLeft }}<span style="font-size:1.2rem; font-weight:400; color:var(--df-text2);">s</span></div>
@@ -52,7 +69,15 @@
   </div>
 
   <!-- Results -->
-  <div *ngIf="state === 'done'" style="padding:24px 16px; text-align:center;" class="fade-in-up">
+  <div *ngIf="state === 'done'" style="padding:24px 16px; text-align:center;" class="fade-in-up activity-shell">
+    <div class="mission-hud mission-hud-compact" style="margin-bottom:14px; text-align:left;">
+      <div>
+        <div class="mission-hud-label">Run Complete</div>
+        <div class="mission-hud-title">Blitz Debrief</div>
+      </div>
+      <span class="mission-chip">{{ accuracy }}% acc</span>
+    </div>
+
     <div class="question-card" style="margin-bottom:20px;">
       <div style="font-size:3rem; margin-bottom:12px;">{{ score >= 20 ? '🏆' : score >= 10 ? '🎯' : '💪' }}</div>
       <div style="font-size:3rem; font-weight:900; color:var(--df-accent); letter-spacing:-0.04em;">{{ score }}</div>

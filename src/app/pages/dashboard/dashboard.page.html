@@ -1,15 +1,73 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Don't Fret 🎸</ion-title>
-    <ion-buttons slot="end">
-      <ion-button routerLink="/settings">
-        <ion-icon name="settings-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content>
+  <div class="page-shell" style="padding: 12px 0 0;">
+
+    <div style="padding: 0 16px 12px;" class="fade-in-up">
+      <div class="df-card dashboard-quest-card" style="padding:18px 16px 16px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div>
+            <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">Mission Control</div>
+            <div style="font-size:1.15rem; font-weight:900; line-height:1.15; color:var(--df-text);">Welcome back, {{ playerName }}!</div>
+            <div style="font-size:0.78rem; color:var(--df-text2); margin-top:5px;">{{ currentStageName }} · {{ stageProgressLabel }}</div>
+          </div>
+          <div style="font-size:2rem; line-height:1; text-align:right;">
+            🏆
+            <div style="font-size:0.62rem; color:var(--df-accent); font-weight:800; letter-spacing:0.08em; margin-top:4px;">{{ rankLabel }}</div>
+          </div>
+        </div>
+
+        <div class="progress-bar-track" style="height:8px; margin-bottom:8px; background:rgba(255,255,255,0.07);">
+          <div class="progress-bar-fill" [style.width.%]="xpProgressPct"></div>
+        </div>
+        <div style="font-size:0.72rem; color:var(--df-text2); margin-bottom:14px;">
+          XP: <strong style="color:var(--df-text);">{{ xpPoints }}</strong>
+          <span *ngIf="xpToNext !== null"> · {{ xpToNext }} to next rank</span>
+          <span *ngIf="xpToNext === null"> · Max rank reached</span>
+        </div>
+
+        <div class="hero-stat-grid" style="margin-bottom:14px;">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">🔥 {{ streak }}</span>
+            <span class="hero-stat-label">streak</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ dueCount }}</span>
+            <span class="hero-stat-label">due now</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ questsDoneCount }}/3</span>
+            <span class="hero-stat-label">quests</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:0.68rem; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Daily Quests</div>
+          <div class="progress-bar-track" style="height:5px; background:rgba(255,255,255,0.06);">
+            <div class="progress-bar-fill" [style.width.%]="questsPct"></div>
+          </div>
+        </div>
+
+        <div style="display:grid; gap:8px; margin-bottom:14px;">
+          <div *ngFor="let quest of dailyQuests" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 10px;">
+            <div>
+              <div style="font-size:0.78rem; font-weight:700; color:var(--df-text);">{{ quest.title }}</div>
+              <div style="font-size:0.68rem; color:var(--df-text2);">{{ quest.subtitle }}</div>
+            </div>
+            <div style="font-size:0.72rem; font-weight:800;" [style.color]="quest.done ? 'var(--df-green)' : 'var(--df-amber)'">
+              {{ quest.done ? 'Done' : quest.progressText }}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="df-btn df-btn-primary" style="flex:1; padding:12px 16px;" (click)="router.navigateByUrl(learningPath.getDrillRoute(learningPath.getCurrentStage()))">
+            Start Mission →
+          </button>
+          <button class="df-btn df-btn-ghost" style="flex:1; padding:12px 16px;" (click)="router.navigateByUrl('/arcade')">
+            Open Arcade
+          </button>
+        </div>
+      </div>
+    </div>
 
   <!-- ── First-visit onboarding CTA ── -->
   <div *ngIf="totalQuestions === 0" style="padding: 12px 16px 0;" class="fade-in-up">
@@ -46,194 +104,81 @@
     </div>
   </div>
 
-  <!-- ── Slim stats strip (only when data exists) ── -->
-  <div *ngIf="totalQuestions > 0"
-       style="display:flex; align-items:center; gap:0; padding:8px 16px 4px;">
-    <span style="font-size:0.88rem; font-weight:800; margin-right:14px;">🔥 {{ streak }}</span>
-    <span style="font-size:0.88rem; font-weight:800; margin-right:14px;"
-          [style.color]="accuracy >= 70 ? 'var(--df-green)' : accuracy >= 50 ? 'var(--df-amber)' : 'var(--df-red)'">{{ accuracy }}%</span>
-    <div style="flex:1; min-width:40px;">
-      <ng-container *ngIf="dailyGoalPct < 1">
-        <div class="progress-bar-track" style="height:4px;">
-          <div class="progress-bar-fill" [style.width.%]="dailyGoalPct * 100"></div>
+  <div class="section-header">
+    <span class="section-title">🎲 Daily Spotlight</span>
+  </div>
+  <div style="padding:0 16px;" *ngIf="dailySpotlight">
+    <div class="df-card" style="padding:14px 16px; border-color:rgba(96,165,250,0.45); background:linear-gradient(180deg, rgba(96,165,250,0.12), rgba(22,22,31,0.98));">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+        <div>
+          <div style="font-size:0.95rem; font-weight:800; color:var(--df-text);">{{ dailySpotlight.title }}</div>
+          <div style="font-size:0.76rem; color:var(--df-text2); margin-top:4px;">{{ dailySpotlight.subtitle }}</div>
         </div>
-        <div style="font-size:0.6rem; color:var(--df-text2); margin-top:2px; text-align:right;">{{ Math.round(dailyGoalPct * 100) }}% goal</div>
-      </ng-container>
-      <div *ngIf="dailyGoalPct >= 1" style="font-size:0.72rem; font-weight:700; color:var(--df-green); text-align:right;">✅ Goal done!</div>
+        <span style="font-size:1.25rem;">{{ dailySpotlight.done ? '✅' : '🎯' }}</span>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; font-size:0.74rem; margin-bottom:12px;">
+        <span style="color:var(--df-text2);">Progress: <strong style="color:var(--df-text);">{{ dailySpotlight.progressText }}</strong></span>
+        <span style="color:var(--df-accent); font-weight:700;">{{ dailySpotlight.reward }}</span>
+      </div>
+
+      <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigateByUrl(dailySpotlight.route)">
+        {{ dailySpotlight.cta }} →
+      </button>
     </div>
   </div>
 
-  <!-- ── Game Modes grid ── -->
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 16px 16px;">
-    <div *ngFor="let card of modeCards"
-         (click)="navigateTo(card)"
-         [style.opacity]="card.locked ? '0.55' : '1'"
-         style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:5px;">
-      <!-- Icon + tag row -->
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
-        <span style="font-size:1.8rem; line-height:1;">{{ card.icon }}</span>
-        <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
-                     padding:2px 7px; border-radius:20px; white-space:nowrap;"
-              [style.background]="card.locked ? 'var(--df-surface2)' : 'rgba(167,139,250,0.18)'"
-              [style.color]="card.locked ? 'var(--df-text2)' : 'var(--df-accent)'">
-          {{ card.locked ? '🔒' : card.tag }}
+  <div class="section-header">
+    <span class="section-title">🎁 Reward Loop</span>
+  </div>
+  <div style="padding:0 16px;">
+    <div class="df-card" style="padding:10px 14px;">
+      <div *ngFor="let reward of rewardDrops"
+           style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--df-border);">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span style="font-size:1.05rem; line-height:1; margin-top:2px;">{{ reward.icon }}</span>
+          <div>
+            <div style="font-size:0.84rem; font-weight:700; color:var(--df-text);">{{ reward.title }}</div>
+            <div style="font-size:0.72rem; color:var(--df-text2); margin-top:2px;">{{ reward.subtitle }}</div>
+          </div>
+        </div>
+        <span style="font-size:0.72rem; font-weight:800;"
+              [style.color]="reward.unlocked ? 'var(--df-green)' : 'var(--df-amber)'">
+          {{ reward.unlocked ? 'LIVE' : 'LOCKED' }}
         </span>
       </div>
-      <!-- Title -->
-      <div style="font-weight:800; font-size:0.88rem; color:var(--df-text); line-height:1.2;">{{ card.title }}</div>
-      <!-- Description or unlock hint -->
-      <div style="font-size:0.72rem; color:var(--df-text2); line-height:1.4; flex:1;">
-        {{ card.locked && card.unlockHint ? card.unlockHint : card.desc }}
+      <div style="font-size:0.68rem; color:var(--df-text2); text-align:right; margin-top:8px;">
+        Current streak boost: <strong style="color:var(--df-accent);">x{{ streakMultiplier.toFixed(1) }}</strong>
       </div>
     </div>
   </div>
 
-  <!-- ── Current Stage compact row ── -->
-  <div style="padding: 0 16px 12px;">
-    <div class="df-card" style="cursor:pointer; padding:12px 16px; display:flex; align-items:center; gap:12px;"
-         (click)="router.navigateByUrl(learningPath.getDrillRoute(learningPath.getCurrentStage()))" role="button">
-      <div style="flex:1; min-width:0;">
-        <div style="font-size:0.62rem; font-weight:700; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.09em; margin-bottom:3px;">Current Stage</div>
-        <div style="font-weight:800; font-size:0.92rem; color:var(--df-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ currentStageName }}</div>
-      </div>
-      <button class="df-btn df-btn-ghost" style="font-size:0.7rem; padding:4px 10px; min-height:unset; flex-shrink:0;"
-              (click)="$event.stopPropagation(); router.navigateByUrl('/learning-path')">View Path →</button>
-    </div>
-  </div>
-
-  <!-- ── Needs Work ── -->
-  <ng-container *ngIf="weakCells.length > 0">
+  <ng-container *ngIf="nextUnlockCard">
     <div class="section-header">
-      <span class="section-title">🟠 Needs Work</span>
+      <span class="section-title">🔓 Next Unlock</span>
     </div>
     <div style="padding: 0 16px;">
-      <div class="df-card" style="padding:12px 16px;">
-        <div *ngFor="let cell of weakCells"
-             (click)="router.navigate(['/practice'], { queryParams: { key: cell.key, interval: cell.intervalName } })"
-             style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid var(--df-border); cursor:pointer;">
-          <span style="font-size:0.85rem; color:var(--df-text);">{{ cell.key }} — {{ cell.intervalName }}</span>
-          <span [style.color]="cell.accuracy < 0.5 ? 'var(--df-red)' : 'var(--df-amber)'" style="font-weight:700; font-size:0.85rem;">
-            {{ Math.round(cell.accuracy * 100) }}% →
-          </span>
+      <div class="df-card" style="padding:14px 16px; border-color:rgba(167,139,250,0.45);">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <div style="font-size:0.95rem; font-weight:800; color:var(--df-text);">{{ nextUnlockCard.icon }} {{ nextUnlockCard.title }}</div>
+            <div style="font-size:0.78rem; color:var(--df-text2); margin-top:5px;">{{ nextUnlockCard.unlockHint }}</div>
+          </div>
+          <span style="font-size:1.4rem; line-height:1;">🎁</span>
         </div>
       </div>
     </div>
   </ng-container>
 
-  <!-- ── Stats & History toggle ── -->
-  <div (click)="showHistory = !showHistory"
-       style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; margin-top:4px; cursor:pointer; border-top:1px solid var(--df-border); border-bottom:1px solid var(--df-border);">
-    <span style="font-size:0.72rem; font-weight:700; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.09em;">Stats &amp; History</span>
-    <span style="font-size:0.8rem; color:var(--df-text2); display:inline-block; transition:transform 0.2s;"
-          [style.transform]="showHistory ? 'rotate(180deg)' : 'rotate(0deg)'">▼</span>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px;">
+    <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/arcade')">
+      Browse Modes
+    </button>
+    <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/profile')">
+      Profile & Stats
+    </button>
   </div>
 
-  <!-- ── Collapsible: Sparkline + Heatmap + Milestones + Recent Sessions ── -->
-  <ng-container *ngIf="showHistory">
-
-    <!-- Last-7 sparkline -->
-    <ng-container *ngIf="sparklineData.length > 0">
-      <div class="section-header">
-        <span class="section-title">Last {{ sparklineData.length }} Sessions</span>
-      </div>
-      <div style="padding: 0 16px; margin-bottom:12px;">
-        <div class="df-card" style="padding:12px 16px;">
-          <div style="display:flex; align-items:flex-end; gap:5px; height:48px;">
-            <div *ngFor="let s of sparklineData"
-                 [title]="s.mode + ': ' + s.accuracy + '%'"
-                 [style.height.%]="s.accuracy === 0 ? 8 : s.accuracy"
-                 [style.background]="s.accuracy >= 70 ? 'var(--df-green)' : s.accuracy >= 50 ? 'var(--df-amber)' : 'var(--df-red)'"
-                 style="flex:1; border-radius:3px 3px 0 0; min-height:4px; transition:height 0.3s;">
-            </div>
-          </div>
-          <div style="display:flex; gap:5px; margin-top:4px;">
-            <span *ngFor="let s of sparklineData"
-                  style="flex:1; text-align:center; font-size:0.6rem; color:var(--df-text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-              {{ s.accuracy }}%
-            </span>
-          </div>
-        </div>
-      </div>
-    </ng-container>
-
-    <div class="section-header">
-      <span class="section-title">Mastery Heatmap</span>
-    </div>
-    <div style="padding: 0 16px; margin-bottom:16px;">
-      <div class="df-card" style="padding:12px;">
-        <div style="display:grid; grid-template-columns: 32px repeat({{ heatmapIntervals.length }}, 1fr); gap:2px; margin-bottom:4px;">
-          <span></span>
-          <span *ngFor="let iv of heatmapIntervals" style="font-size:0.45rem; color:var(--df-text2); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ iv.split(' ')[1]?.[0] ?? iv[0] }}{{ iv.split(' ').length > 1 ? iv.split(' ')[0][0] : '' }}</span>
-        </div>
-        <div *ngFor="let key of heatmapKeys"
-             style="display:grid; grid-template-columns: 32px repeat({{ heatmapIntervals.length }}, 1fr); gap:2px; margin-bottom:2px;">
-          <span style="font-size:0.65rem; color:var(--df-text2); display:flex; align-items:center; font-weight:600;">{{ key }}</span>
-          <div *ngFor="let iv of heatmapIntervals"
-               class="heatmap-cell"
-               [class]="'heatmap-cell ' + progress.getMasteryLevel(key, iv)"
-               [title]="key + ' ' + iv + ': ' + Math.round(progress.getAccuracy(key, iv)*100) + '%'"
-               style="height: 16px;">
-          </div>
-        </div>
-        <div style="display:flex; gap:12px; margin-top:10px; flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:4px;font-size:0.65rem;color:var(--df-text2);">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--df-surface2);"></div>Unplayed
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:0.65rem;color:var(--df-text2);">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--df-red);"></div>Focus
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:0.65rem;color:var(--df-text2);">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--df-amber);"></div>Needs Work
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:0.65rem;color:var(--df-text2);">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--df-green);"></div>Mastered
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <span class="section-title">Milestones</span>
-    </div>
-    <div style="padding: 0 16px; margin-bottom:16px;">
-      <div class="df-card">
-        <div class="badge-grid">
-          <div *ngFor="let badge of badges" class="badge-item">
-            <div class="badge-icon" [class.earned]="badge.unlocked" [title]="badge.description">
-              {{ badge.emoji }}
-            </div>
-            <div class="badge-label">{{ badge.title }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <ng-container *ngIf="recentSessions.length > 0">
-      <div class="section-header">
-        <span class="section-title">Recent Sessions</span>
-      </div>
-      <div style="padding: 0 16px 24px;">
-        <div class="df-card" style="padding: 12px 16px;">
-          <div *ngFor="let s of recentSessions" style="display:flex; justify-content:space-between; padding:6px 0; border-bottom: 1px solid var(--df-border);">
-            <div>
-              <div style="font-size:0.85rem; color:var(--df-text); font-weight:600;">{{ getModeText(s) }}</div>
-              <div style="font-size:0.7rem; color:var(--df-text2);">{{ formatDate(s.date) }} · {{ formatDuration(s.durationMs) }}</div>
-            </div>
-            <div style="font-size:0.9rem; font-weight:700;" [style.color]="s.correct/s.total >= 0.7 ? 'var(--df-green)' : 'var(--df-amber)'">
-              {{ s.correct }}/{{ s.total }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </ng-container>
-
-    <div *ngIf="recentSessions.length === 0" style="padding: 0 16px 24px;">
-      <div class="df-card" style="text-align:center; color:var(--df-text2); font-size:0.9rem; padding:32px;">
-        No sessions yet. Start with <strong style="color:var(--df-accent);">Practice Mode</strong> to begin! 🎵
-      </div>
-    </div>
-
-  </ng-container>
-
   <div style="height: 80px;"></div>
+  </div>
 </ion-content>

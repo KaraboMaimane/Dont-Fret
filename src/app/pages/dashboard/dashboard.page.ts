@@ -1,17 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import {
-  IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButtons, IonButton, IonIcon
-} from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { settingsOutline, flameOutline, trophyOutline } from 'ionicons/icons';
-import { MusicTheoryService } from '../../services/music-theory.service';
-import { ProgressService, MasteryLevel } from '../../services/progress.service';
+import { IonContent } from '@ionic/angular/standalone';
+import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
-import { MilestoneService } from '../../services/milestone.service';
 import { LearningPathService } from '../../services/learning-path.service';
+import { UserProfileService } from '../../services/user-profile.service';
+import { DailyChallengeService } from '../../services/daily-challenge.service';
 
 interface ModeCard {
   title: string;
@@ -23,45 +18,68 @@ interface ModeCard {
   unlockHint?: string;
 }
 
+interface DailyQuest {
+  title: string;
+  subtitle: string;
+  progressText: string;
+  done: boolean;
+}
+
+interface RotatingChallenge {
+  id: string;
+  title: string;
+  subtitle: string;
+  reward: string;
+  route: string;
+  cta: string;
+  progressText: string;
+  done: boolean;
+}
+
+interface RewardDrop {
+  icon: string;
+  title: string;
+  subtitle: string;
+  unlocked: boolean;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon],
+  imports: [CommonModule, IonContent],
   templateUrl: './dashboard.page.html',
 })
 export class DashboardPage implements OnInit {
+  public progress = inject(ProgressService);
+  private streak$ = inject(StreakService);
+  public learningPath = inject(LearningPathService);
+  private profile = inject(UserProfileService);
+  private dailyChallenge = inject(DailyChallengeService);
+  public router = inject(Router);
+
+  readonly Math = Math;
+  playerName = 'Player One';
+  rankLabel = 'Rookie';
+  xpPoints = 0;
+  xpProgressPct = 0;
+  xpToNext: number | null = null;
+
   accuracy = 0;
   totalQuestions = 0;
-  avgResponseSec = 0;
   streak = 0;
-  bestStreak = 0;
-  dailyGoalPct = 0;
   currentStageName = '';
   stageProgress = 0;
-  readonly Math = Math;
-  recentSessions: any[] = [];
-  badges: any[] = [];
-  heatmapKeys: string[] = [];
-  heatmapIntervals: string[] = [];
-  heatmapCells: { key: string; interval: string; level: MasteryLevel }[] = [];
-  modeCards: ModeCard[] = [];
-  weakCells: { key: string; intervalName: string; accuracy: number }[] = [];
-  foundationStage1Keys: string[] = [];
-  foundationStage2Keys: string[] = [];
-  showHistory = false;
-  sparklineData: { accuracy: number; mode: string }[] = [];
-  continueCard: { label: string; icon: string; route: string; acc: number; timeAgo: string } | null = null;
 
-  constructor(
-    public progress: ProgressService,
-    private streak$: StreakService,
-    private milestone: MilestoneService,
-    public learningPath: LearningPathService,
-    private theory: MusicTheoryService,
-    public router: Router,
-  ) {
-    addIcons({ settingsOutline, flameOutline, trophyOutline });
-  }
+  recentSessions: { date: number; mode: string; correct: number; total: number; durationMs: number }[] = [];
+  modeCards: ModeCard[] = [];
+  dueCount = 0;
+  continueCard: { label: string; icon: string; route: string; acc: number; timeAgo: string } | null = null;
+  dailyGoalRemaining = 0;
+  dailyQuests: DailyQuest[] = [];
+  dailySpotlight: RotatingChallenge | null = null;
+  rewardDrops: RewardDrop[] = [];
+  streakMultiplier = 1;
+  nextUnlockCard: ModeCard | null = null;
 
   ngOnInit() {
     this.loadData();
@@ -72,41 +90,33 @@ export class DashboardPage implements OnInit {
   }
 
   loadData() {
-    // Stats
+    this.playerName = this.profile.getName();
+
     this.accuracy = Math.round(this.progress.getOverallAccuracy() * 100);
     this.totalQuestions = this.progress.getTotalQuestions();
-    this.avgResponseSec = +(this.progress.getAverageResponseMs() / 1000).toFixed(1);
-
-    // Streak
     const streakState = this.streak$.getState();
     this.streak = streakState.currentStreak;
-    this.bestStreak = streakState.bestStreak;
-    this.dailyGoalPct = this.streak$.getDailyGoalPercent();
+    this.dailyGoalRemaining = Math.max(streakState.dailyGoalTarget - streakState.dailyGoalProgress, 0);
 
-    // Learning Path
+    this.xpPoints = (this.totalQuestions * 5) + (this.accuracy * 3) + (this.streak * 20);
+    const rank = this.getRankMeta(this.xpPoints);
+    this.rankLabel = rank.label;
+    this.xpProgressPct = rank.progressPct;
+    this.xpToNext = rank.toNext;
+
     const stage = this.learningPath.getCurrentStage();
     this.currentStageName = stage.title;
+    const stageProgress = this.learningPath.getState().stageProgress[stage.id];
+    this.stageProgress = stageProgress.total > 0
+      ? Math.round((stageProgress.correct / stageProgress.total) * 100)
+      : 0;
 
-    // Heatmap
-    this.heatmapKeys = this.theory.ALL_KEYS;
-    this.heatmapIntervals = this.theory.ALL_INTERVALS;
-    this.heatmapCells = [];
-    for (const key of this.heatmapKeys) {
-      for (const interval of this.heatmapIntervals) {
-        this.heatmapCells.push({ key, interval, level: this.progress.getMasteryLevel(key, interval) });
-      }
-    }
+    this.dueCount = this.progress.getDueCount();
 
-    // Badges
-    this.badges = this.milestone.getAllBadges();
-
-    // Weak cells
-    this.weakCells = this.progress.getWeakestCells(2);
-
-    // Recent sessions
     this.recentSessions = this.progress.getRecentSessions(5);
+    this.dailyQuests = this.buildDailyQuests();
+    this.streakMultiplier = this.getStreakMultiplier(this.streak);
 
-    // Continue card
     if (this.recentSessions.length > 0) {
       const last = this.recentSessions[0];
       const modeMap: Record<string, { route: string; icon: string }> = {
@@ -130,19 +140,74 @@ export class DashboardPage implements OnInit {
       this.continueCard = null;
     }
 
-    // Sparkline (last 7 sessions, oldest → newest)
-    const last7 = this.progress.getRecentSessions(7).reverse();
-    this.sparklineData = last7.map(s => ({
-      accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
-      mode: s.mode || 'Practice',
-    }));
+    this.modeCards = this.buildModeCards();
+    this.nextUnlockCard = this.modeCards.find(card => card.locked) ?? null;
+    this.dailySpotlight = this.buildRotatingChallenge();
+    this.rewardDrops = this.buildRewardDrops();
+  }
 
-    // Foundation stage keys
-    this.foundationStage1Keys = this.learningPath.getStage(1).keys;
-    this.foundationStage2Keys = this.learningPath.getStage(2).keys;
+  navigateTo(card: ModeCard) {
+    if (!card.locked) this.router.navigateByUrl(card.route);
+  }
 
-    // Mode cards
-    this.modeCards = [
+  timeAgo(ts: number): string {
+    const diffMins = Math.floor((Date.now() - ts) / 60000);
+    if (diffMins < 2)  return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffH = Math.floor(diffMins / 60);
+    if (diffH < 24)    return diffH === 1 ? '1h ago' : `${diffH}h ago`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD === 1)   return 'yesterday';
+    if (diffD < 7)     return `${diffD} days ago`;
+    return new Date(ts).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
+  }
+
+  get stageProgressLabel(): string {
+    if (this.stageProgress === 0) return 'Fresh stage';
+    if (this.stageProgress >= 80) return 'Boss-ready run';
+    if (this.stageProgress >= 60) return 'Dialing it in';
+    return 'Building momentum';
+  }
+
+  get questsDoneCount(): number {
+    return this.dailyQuests.filter(quest => quest.done).length;
+  }
+
+  get questsPct(): number {
+    if (this.dailyQuests.length === 0) return 0;
+    return Math.round((this.questsDoneCount / this.dailyQuests.length) * 100);
+  }
+
+  private buildDailyQuests(): DailyQuest[] {
+    const streakState = this.streak$.getState();
+    const lastSessionToday = this.recentSessions.length > 0
+      ? this.isToday(this.recentSessions[0].date)
+      : false;
+
+    return [
+      {
+        title: 'Daily Goal',
+        subtitle: 'Answer your daily target questions',
+        progressText: `${streakState.dailyGoalProgress}/${streakState.dailyGoalTarget}`,
+        done: this.dailyGoalRemaining === 0,
+      },
+      {
+        title: 'Review Queue',
+        subtitle: 'Clear due cards before they pile up',
+        progressText: `${this.dueCount} left`,
+        done: this.dueCount === 0,
+      },
+      {
+        title: 'Stay Active',
+        subtitle: 'Play at least one session today',
+        progressText: lastSessionToday ? 'Done' : 'Pending',
+        done: lastSessionToday,
+      },
+    ];
+  }
+
+  private buildModeCards(): ModeCard[] {
+    return [
       {
         title: 'Foundations',
         icon: '🎵',
@@ -206,52 +271,126 @@ export class DashboardPage implements OnInit {
     ];
   }
 
-  getFoundationChipColor(key: string, cellName: string): string {
-    const acc = this.progress.getAccuracy(key, cellName);
-    if (acc >= 0.8) return 'var(--df-green)';
-    if (acc >= 0.5) return 'var(--df-amber)';
-    if (acc > 0)   return 'var(--df-red)';
-    return 'var(--df-surface2)';
+  private buildRotatingChallenge(): RotatingChallenge {
+    const todayKey = this.dailyChallenge.todayKey();
+
+    const challengePool: RotatingChallenge[] = [
+      {
+        id: 'queue-sweeper',
+        title: 'Queue Sweeper',
+        subtitle: 'Clear your due review queue today',
+        reward: '+35 XP and focus boost',
+        route: '/practice?mode=due',
+        cta: 'Clear Queue',
+        progressText: `${this.dueCount} due`,
+        done: this.dueCount === 0,
+      },
+      {
+        id: 'boss-prep-sprint',
+        title: 'Boss Prep Sprint',
+        subtitle: 'Push your current stage to 80%+',
+        reward: '+1.5x stage XP',
+        route: this.learningPath.getDrillRoute(this.learningPath.getCurrentStage()),
+        cta: 'Train Stage',
+        progressText: `${this.stageProgress}%`,
+        done: this.stageProgress >= 80,
+      },
+      {
+        id: 'streak-guardian',
+        title: 'Streak Guardian',
+        subtitle: 'Complete your daily question target',
+        reward: `Streak multiplier x${this.getStreakMultiplier(this.streak).toFixed(1)}`,
+        route: '/practice',
+        cta: 'Protect Streak',
+        progressText: this.dailyGoalRemaining === 0 ? 'Complete' : `${this.dailyGoalRemaining} to go`,
+        done: this.dailyGoalRemaining === 0,
+      },
+    ];
+
+    const selectedId = this.dailyChallenge.getOrAssignChallenge(
+      todayKey,
+      challengePool.map(challenge => challenge.id),
+    );
+
+    const selected = challengePool.find(challenge => challenge.id === selectedId)
+      ?? challengePool[0];
+
+    if (selected.done) {
+      this.dailyChallenge.markCompleted(todayKey, selected.id);
+    }
+
+    return {
+      ...selected,
+      done: selected.done || this.dailyChallenge.isCompleted(todayKey, selected.id),
+    };
   }
 
-  navigateTo(card: ModeCard) {
-    if (!card.locked) this.router.navigateByUrl(card.route);
+  private buildRewardDrops(): RewardDrop[] {
+    return [
+      {
+        icon: '🔥',
+        title: `Streak Multiplier x${this.streakMultiplier.toFixed(1)}`,
+        subtitle: this.streak >= 7 ? 'Active on your current run' : 'Reach a 7-day streak to activate',
+        unlocked: this.streak >= 7,
+      },
+      {
+        icon: '🎁',
+        title: this.questsDoneCount >= 3 ? 'Daily Crate Unlocked' : 'Daily Crate Progress',
+        subtitle: `${this.questsDoneCount}/3 quests complete`,
+        unlocked: this.questsDoneCount >= 3,
+      },
+      {
+        icon: '🛡️',
+        title: this.dueCount === 0 ? 'Review Shield Active' : 'Review Shield Offline',
+        subtitle: this.dueCount === 0 ? 'Queue cleared, decay paused for today' : `${this.dueCount} due card${this.dueCount === 1 ? '' : 's'} waiting`,
+        unlocked: this.dueCount === 0,
+      },
+    ];
   }
 
-  getHeatmapColumn(intervalIndex: number): { key: string; interval: string; level: MasteryLevel }[] {
-    return this.heatmapCells.filter((_, i) => i % this.heatmapIntervals.length === intervalIndex);
+  private getStreakMultiplier(streak: number): number {
+    if (streak >= 30) return 3;
+    if (streak >= 21) return 2.5;
+    if (streak >= 14) return 2;
+    if (streak >= 7) return 1.5;
+    return 1;
   }
 
-  getModeText(session: any): string {
-    return session.mode || 'Practice';
+  private isToday(ts: number): boolean {
+    const d = new Date(ts).toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    return d === today;
   }
 
-  formatDuration(ms: number): string {
-    const s = Math.floor(ms / 1000);
-    if (s < 60) return `${s}s`;
-    return `${Math.floor(s / 60)}m ${s % 60}s`;
-  }
+  private getRankMeta(xp: number): { label: string; progressPct: number; toNext: number | null } {
+    if (xp < 300) {
+      return {
+        label: 'Rookie',
+        progressPct: Math.round((xp / 300) * 100),
+        toNext: 300 - xp,
+      };
+    }
 
-  formatDate(ts: number): string {
-    const d = new Date(ts);
-    return d.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
-  }
+    if (xp < 1000) {
+      return {
+        label: 'Pathfinder',
+        progressPct: Math.round(((xp - 300) / 700) * 100),
+        toNext: 1000 - xp,
+      };
+    }
 
-  timeAgo(ts: number): string {
-    const diffMins = Math.floor((Date.now() - ts) / 60000);
-    if (diffMins < 2)  return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffH = Math.floor(diffMins / 60);
-    if (diffH < 24)    return diffH === 1 ? '1h ago' : `${diffH}h ago`;
-    const diffD = Math.floor(diffH / 24);
-    if (diffD === 1)   return 'yesterday';
-    if (diffD < 7)     return `${diffD} days ago`;
-    return new Date(ts).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
-  }
+    if (xp < 2500) {
+      return {
+        label: 'Fret Hunter',
+        progressPct: Math.round(((xp - 1000) / 1500) * 100),
+        toNext: 2500 - xp,
+      };
+    }
 
-  // 12 positions for the streak ring circumference
-  get ringCircumference() { return 2 * Math.PI * 26; }
-  get ringDashOffset() {
-    return this.ringCircumference * (1 - this.dailyGoalPct);
+    return {
+      label: 'Theory Titan',
+      progressPct: 100,
+      toNext: null,
+    };
   }
 }

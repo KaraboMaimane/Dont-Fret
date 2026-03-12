@@ -18,6 +18,14 @@ export interface SessionRecord {
   durationMs: number;
 }
 
+export interface DueReviewCell {
+  key: string;
+  intervalName: string;
+  accuracy: number;
+  total: number;
+  nextReviewAt: number;
+}
+
 export interface ProgressState {
   totalQuestions: number;
   correctAnswers: number;
@@ -138,6 +146,32 @@ export class ProgressService {
 
   getRecentSessions(count = 5): SessionRecord[] {
     return this.state.sessions.slice(0, count);
+  }
+
+  getDueCells(limit = 6): DueReviewCell[] {
+    const now = Date.now();
+
+    return Object.entries(this.state.cells)
+      .filter(([, cell]) => !!cell.nextReviewAt && cell.nextReviewAt <= now)
+      .map(([k, cell]) => {
+        const [key, intervalName] = k.split('|');
+        return {
+          key,
+          intervalName,
+          accuracy: cell.total > 0 ? cell.correct / cell.total : 0,
+          total: cell.total,
+          nextReviewAt: cell.nextReviewAt!,
+        };
+      })
+      .sort((a, b) => a.nextReviewAt - b.nextReviewAt || a.accuracy - b.accuracy)
+      .slice(0, limit);
+  }
+
+  getDueCount(): number {
+    const now = Date.now();
+    return Object.values(this.state.cells)
+      .filter(cell => !!cell.nextReviewAt && cell.nextReviewAt <= now)
+      .length;
   }
 
   /** Returns the 3 worst key×interval pairs (min 3 attempts) */

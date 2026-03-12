@@ -85,13 +85,192 @@ ion-content {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+.page-shell {
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.activity-shell {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.mission-hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.22), transparent 42%),
+    linear-gradient(180deg, rgba(30, 30, 42, 0.94), rgba(22, 22, 31, 0.96));
+}
+
+.mission-hud-compact {
+  padding: 10px 12px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 30, 42, 0.72);
+}
+
+.mission-hud-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--df-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mission-hud-title {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--df-text);
+  margin-top: 3px;
+}
+
+.mission-hud-subtitle {
+  font-size: 0.72rem;
+  color: var(--df-text2);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.mission-hud-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.mission-chip {
+  border: 1px solid rgba(167, 139, 250, 0.36);
+  background: rgba(167, 139, 250, 0.16);
+  color: var(--df-text);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.floating-settings-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--df-border);
+  background: rgba(22, 22, 31, 0.9);
+  color: var(--df-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-quest-card {
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(167, 139, 250, 0.08), rgba(22, 22, 31, 0.96));
+}
+
+.hero-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hero-stat-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.hero-stat-value {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--df-text);
+}
+
+.hero-stat-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--df-text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.choice-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice-chip {
+  border: 1px solid var(--df-border);
+  background: var(--df-surface2);
+  color: var(--df-text2);
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.choice-chip.active {
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(167, 139, 250, 0.18);
+  color: var(--df-text);
+}
+
+.builder-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-visual-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-visual-card {
+  border: 1px solid var(--df-border);
+  background: var(--df-surface2);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.mini-visual-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mini-visual-token {
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  background: rgba(167, 139, 250, 0.1);
+  color: var(--df-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .tab-btn {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   text-decoration: none;
   color: var(--df-text2);
   transition: color 0.15s ease;
@@ -103,15 +282,22 @@ ion-content {
 }
 
 .tab-icon {
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
 .tab-label {
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+@media (max-width: 390px) {
+  .tab-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
+  }
 }
 
 ion-header ion-toolbar {
@@ -704,4 +890,26 @@ ion-tab-button {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
+}
+
+@media (min-width: 768px) {
+  .custom-tab-bar {
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100%, 860px);
+    border-left: 1px solid var(--df-border);
+    border-right: 1px solid var(--df-border);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    overflow: hidden;
+  }
+
+  .note-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .builder-grid,
+  .mini-visual-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

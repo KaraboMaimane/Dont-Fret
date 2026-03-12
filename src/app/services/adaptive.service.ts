@@ -8,6 +8,14 @@ import {
 import { ProgressService } from './progress.service';
 import { LearningPathService, Stage } from './learning-path.service';
 
+export interface PracticePoolOptions {
+  keys?: NoteLabel[];
+  intervals?: string[];
+  count?: number;
+  dueOnly?: boolean;
+  weakOnly?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdaptiveService {
   constructor(
@@ -94,6 +102,83 @@ export class AdaptiveService {
     return this.shuffle(questions).slice(0, count);
   }
 
+  buildDueReviewPool(count = 10): IntervalQuestion[] {
+    const due = this.progress.getDueCells(Math.max(count, 6));
+    if (due.length === 0) return this.buildQuestionPool(undefined, count);
+
+    const questions: IntervalQuestion[] = [];
+    for (const cell of due) {
+      try {
+        const answer = this.theory.getIntervalAnswer(cell.key, cell.intervalName);
+        const intervalType = this.getIntervalType(cell.intervalName);
+        const weight = cell.accuracy < 0.5 ? 3 : 2;
+        for (let i = 0; i < weight; i++) {
+          questions.push({
+            key: cell.key,
+            intervalName: cell.intervalName,
+            intervalType,
+            answer,
+          });
+        }
+      } catch (_) {
+        // Skip anything that no longer maps cleanly.
+      }
+    }
+
+    return this.shuffle(questions).slice(0, count);
+  }
+
+  buildCustomQuestionPool(options: PracticePoolOptions): IntervalQuestion[] {
+    const count = options.count ?? 12;
+    const stage = this.learningPath.getCurrentStage();
+    const keys = options.keys?.length ? options.keys : stage.keys;
+    const intervals = options.intervals?.length
+      ? options.intervals
+      : stage.intervals.length > 0
+        ? stage.intervals
+        : this.theory.DIATONIC_INTERVALS.map(interval => interval.name);
+
+    const dueLookup = new Set(
+      this.progress.getDueCells(100).map(cell => `${cell.key}|${cell.intervalName}`)
+    );
+    const weakLookup = new Set(
+      this.progress.getWeakestCells(20).map(cell => `${cell.key}|${cell.intervalName}`)
+    );
+
+    const pool: IntervalQuestion[] = [];
+    for (const key of keys) {
+      for (const intervalName of intervals) {
+        const answer = this.theory.getIntervalAnswer(key, intervalName);
+        const pairKey = `${key}|${intervalName}`;
+
+        if (options.dueOnly && !dueLookup.has(pairKey)) continue;
+        if (options.weakOnly && !weakLookup.has(pairKey)) continue;
+
+        const accuracy = this.progress.getAccuracy(key, intervalName);
+        const weight = dueLookup.has(pairKey) ? 4 : accuracy < 0.5 ? 3 : 1;
+
+        for (let i = 0; i < weight; i++) {
+          pool.push({
+            key,
+            intervalName,
+            intervalType: this.getIntervalType(intervalName),
+            answer,
+          });
+        }
+      }
+    }
+
+    if (pool.length === 0) {
+      return options.weakOnly
+        ? this.buildStrugglePool(count)
+        : options.dueOnly
+          ? this.buildDueReviewPool(count)
+          : this.buildQuestionPool(undefined, count);
+    }
+
+    return this.shuffle(pool).slice(0, count);
+  }
+
   /**
    * Get a pool of all-stage questions for the exam
    */
@@ -111,6 +196,12 @@ export class AdaptiveService {
       }
     }
     return this.shuffle(pool).slice(0, count);
+  }
+
+  private getIntervalType(intervalName: string): 'diatonic' | 'harmonic' {
+    return this.theory.DIATONIC_INTERVALS.some(interval => interval.name === intervalName)
+      ? 'diatonic'
+      : 'harmonic';
   }
 
   private shuffle<T>(arr: T[]): T[] {
