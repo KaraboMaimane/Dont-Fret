@@ -66,4 +66,16 @@ export const routes: Routes = [
     path: 'mistake-journal',
     loadComponent: () => import('./pages/mistake-journal/mistake-journal.page').then(m => m.MistakeJournalPage)
   },
+  {
+    path: 'reference',
+    loadComponent: () => import('./pages/reference/reference.page').then(m => m.ReferencePage)
+  },
+  {
+    path: 'interval-id',
+    loadComponent: () => import('./pages/interval-id/interval-id.page').then(m => m.IntervalIdPage)
+  },
+  {
+    path: 'records',
+    loadComponent: () => import('./pages/records/records.page').then(m => m.RecordsPage)
+  },
 ];

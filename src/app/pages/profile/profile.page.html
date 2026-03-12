@@ -18,6 +18,7 @@
         </div>
 
         <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+
           <input
             [(ngModel)]="draftName"
             placeholder="Enter your player name"
@@ -123,6 +124,20 @@
             <div style="font-size:0.68rem; color:var(--df-text2);">Replay your most-missed key + interval pairs.</div>
           </div>
           <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset;" (click)="router.navigateByUrl('/mistake-journal')">Open</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:var(--df-text);">Personal Records</div>
+            <div style="font-size:0.68rem; color:var(--df-text2);">Your best Timed, Blitz &amp; Exam scores.</div>
+          </div>
+          <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset;" (click)="router.navigateByUrl('/records')">Open</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:var(--df-text);">Theory Reference</div>
+            <div style="font-size:0.68rem; color:var(--df-text2);">Key sigs, intervals &amp; scale formula cheat sheet.</div>
+          </div>
+          <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset;" (click)="router.navigateByUrl('/reference')">Open</button>
         </div>
       </div>
     </div>

@@ -1,0 +1,233 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/profile"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Personal Records 🏅</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-shell" style="padding:12px 16px 88px;">
+
+    <div class="mission-hud fade-in-up" style="margin-bottom:12px;">
+      <div>
+        <div class="mission-hud-label">Performance Journal</div>
+        <div class="mission-hud-title">Track your best runs</div>
+        <div class="mission-hud-subtitle">Compare Timed, Blitz and Exam results over time.</div>
+      </div>
+      <span class="mission-hud-icon">📈</span>
+    </div>
+
+    <div class="df-card" style="padding:12px;">
+      <div class="choice-chip-row" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px;">
+        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'bests'" (click)="setTab('bests')">Bests</button>
+        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'timed'" (click)="setTab('timed')">Timed</button>
+        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'blitz'" (click)="setTab('blitz')">Blitz</button>
+        <button class="choice-chip" style="width:100%; justify-content:center;" [class.active]="activeTab === 'exam'" (click)="setTab('exam')">Exam</button>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'bests'" class="fade-in-up">
+      <div class="section-header" style="padding:2px 0 10px;">
+        <span class="section-title">Personal Bests</span>
+      </div>
+
+      <div class="df-card" *ngIf="bestTimed; else noTimedBest" style="padding:14px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <span style="font-size:1.5rem;">⏱️</span>
+          <div>
+            <div style="font-size:0.92rem; font-weight:800; color:var(--df-text);">Best Timed Run</div>
+            <div style="font-size:0.74rem; color:var(--df-text2);">{{ formatDate(bestTimed.date) }}</div>
+          </div>
+        </div>
+        <div class="hero-stat-grid" style="grid-template-columns:repeat(4, minmax(0, 1fr));">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ bestTimed.correct }}/{{ bestTimed.total }}</span>
+            <span class="hero-stat-label">correct</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ bestTimed.accuracy }}%</span>
+            <span class="hero-stat-label">accuracy</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ starsLabel(bestTimed.stars) }}</span>
+            <span class="hero-stat-label">stars</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ bestTimed.timeLimitSec }}s</span>
+            <span class="hero-stat-label">limit</span>
+          </div>
+        </div>
+      </div>
+      <ng-template #noTimedBest>
+        <div class="df-card" style="padding:18px; text-align:center;">
+          <div style="font-size:1.8rem; margin-bottom:8px;">⏱️</div>
+          <div style="font-size:0.84rem; color:var(--df-text2); margin-bottom:12px;">No Timed Challenge runs yet.</div>
+          <button class="df-btn df-btn-primary" (click)="router.navigate(['/timed-challenge'])">Play now →</button>
+        </div>
+      </ng-template>
+
+      <div class="df-card" *ngIf="bestBlitz; else noBlitzBest" style="padding:14px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <span style="font-size:1.5rem;">⚡</span>
+          <div>
+            <div style="font-size:0.92rem; font-weight:800; color:var(--df-text);">Best Blitz Run</div>
+            <div style="font-size:0.74rem; color:var(--df-text2);">{{ formatDate(bestBlitz.date) }}</div>
+          </div>
+        </div>
+        <div class="hero-stat-grid" style="grid-template-columns:repeat(4, minmax(0, 1fr));">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ bestBlitz.correct }}</span>
+            <span class="hero-stat-label">correct</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ bestBlitz.totalAnswered }}</span>
+            <span class="hero-stat-label">answered</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ bestBlitz.accuracy }}%</span>
+            <span class="hero-stat-label">accuracy</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ formatDuration(bestBlitz.durationMs) }}</span>
+            <span class="hero-stat-label">duration</span>
+          </div>
+        </div>
+      </div>
+      <ng-template #noBlitzBest>
+        <div class="df-card" style="padding:18px; text-align:center;">
+          <div style="font-size:1.8rem; margin-bottom:8px;">⚡</div>
+          <div style="font-size:0.84rem; color:var(--df-text2); margin-bottom:12px;">No Blitz Mode runs yet.</div>
+          <button class="df-btn df-btn-primary" (click)="router.navigate(['/blitz-mode'])">Play now →</button>
+        </div>
+      </ng-template>
+
+      <div class="df-card" style="padding:14px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <span style="font-size:1.5rem;">🎓</span>
+          <div>
+            <div style="font-size:0.92rem; font-weight:800; color:var(--df-text);">Theory Exam</div>
+            <div style="font-size:0.74rem; color:var(--df-text2);">{{ totalExamRuns }} runs total</div>
+          </div>
+        </div>
+        <div *ngIf="totalExamRuns > 0; else noExamRuns" class="hero-stat-grid" style="grid-template-columns:repeat(4, minmax(0, 1fr));">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ examPassRate }}%</span>
+            <span class="hero-stat-label">pass rate</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ examPassCount }}</span>
+            <span class="hero-stat-label">passes</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ totalExamRuns - examPassCount }}</span>
+            <span class="hero-stat-label">fails</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ totalExamRuns }}</span>
+            <span class="hero-stat-label">runs</span>
+          </div>
+        </div>
+        <ng-template #noExamRuns>
+          <div style="font-size:0.84rem; color:var(--df-text2);">
+            No exam runs yet.
+            <button class="df-btn df-btn-ghost" style="padding:8px 10px; min-height:unset; margin-left:8px;" (click)="router.navigate(['/exam'])">Take exam →</button>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="df-card" style="padding:12px;">
+        <div class="hero-stat-grid" style="grid-template-columns:repeat(3, minmax(0, 1fr));">
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ totalTimedRuns }}</span>
+            <span class="hero-stat-label">timed runs</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ totalBlitzRuns }}</span>
+            <span class="hero-stat-label">blitz runs</span>
+          </div>
+          <div class="hero-stat-pill">
+            <span class="hero-stat-value">{{ totalExamRuns }}</span>
+            <span class="hero-stat-label">exam runs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'timed'" class="fade-in-up">
+      <div class="section-header" style="padding:2px 0 10px;">
+        <span class="section-title">Timed Run History</span>
+      </div>
+      <div class="df-card" style="padding:12px; margin-bottom:12px; font-size:0.8rem; color:var(--df-text2);">Last {{ timedHistory.length }} Timed Challenge runs</div>
+
+      <div *ngIf="timedHistory.length === 0" class="df-card" style="padding:18px; text-align:center;">
+        <div style="font-size:0.84rem; color:var(--df-text2); margin-bottom:12px;">No runs yet.</div>
+        <button class="df-btn df-btn-primary" (click)="router.navigate(['/timed-challenge'])">Play now →</button>
+      </div>
+
+      <div class="df-card" *ngIf="timedHistory.length > 0" style="padding:6px 14px;">
+        <div *ngFor="let r of timedHistory; let i = index"
+             style="display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--df-border);">
+          <span style="font-size:0.75rem; font-weight:800; color:var(--df-text2); min-width:28px;">#{{ i + 1 }}</span>
+          <div style="flex:1;">
+            <div style="font-size:0.86rem; font-weight:700; color:var(--df-text);">{{ r.correct }}/{{ r.total }} · {{ r.accuracy }}% · {{ starsLabel(r.stars) }}</div>
+            <div style="font-size:0.74rem; color:var(--df-text2); margin-top:2px;">{{ r.timeLimitSec }}s limit · {{ formatDate(r.date) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigate(['/timed-challenge'])">▶ New Run</button>
+    </div>
+
+    <div *ngIf="activeTab === 'blitz'" class="fade-in-up">
+      <div class="section-header" style="padding:2px 0 10px;">
+        <span class="section-title">Blitz Run History</span>
+      </div>
+      <div class="df-card" style="padding:12px; margin-bottom:12px; font-size:0.8rem; color:var(--df-text2);">Last {{ blitzHistory.length }} Blitz Mode runs</div>
+
+      <div *ngIf="blitzHistory.length === 0" class="df-card" style="padding:18px; text-align:center;">
+        <div style="font-size:0.84rem; color:var(--df-text2); margin-bottom:12px;">No runs yet.</div>
+        <button class="df-btn df-btn-primary" (click)="router.navigate(['/blitz-mode'])">Play now →</button>
+      </div>
+
+      <div class="df-card" *ngIf="blitzHistory.length > 0" style="padding:6px 14px;">
+        <div *ngFor="let r of blitzHistory; let i = index"
+             style="display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--df-border);">
+          <span style="font-size:0.75rem; font-weight:800; color:var(--df-text2); min-width:28px;">#{{ i + 1 }}</span>
+          <div style="flex:1;">
+            <div style="font-size:0.86rem; font-weight:700; color:var(--df-text);">{{ r.correct }}/{{ r.totalAnswered }} · {{ r.accuracy }}%</div>
+            <div style="font-size:0.74rem; color:var(--df-text2); margin-top:2px;">{{ formatDuration(r.durationMs) }} · {{ formatDate(r.date) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigate(['/blitz-mode'])">▶ New Run</button>
+    </div>
+
+    <div *ngIf="activeTab === 'exam'" class="fade-in-up">
+      <div class="section-header" style="padding:2px 0 10px;">
+        <span class="section-title">Exam History</span>
+      </div>
+      <div class="df-card" style="padding:12px; margin-bottom:12px; font-size:0.8rem; color:var(--df-text2);">Last {{ examHistory.length }} Theory Exam runs</div>
+
+      <div *ngIf="examHistory.length === 0" class="df-card" style="padding:18px; text-align:center;">
+        <div style="font-size:0.84rem; color:var(--df-text2); margin-bottom:12px;">No exam runs yet.</div>
+        <button class="df-btn df-btn-primary" (click)="router.navigate(['/exam'])">Take exam →</button>
+      </div>
+
+      <div class="df-card" *ngIf="examHistory.length > 0" style="padding:6px 14px;">
+        <div *ngFor="let r of examHistory; let i = index"
+             style="display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--df-border);">
+          <span style="font-size:0.85rem; min-width:28px;" [style.color]="r.passed ? 'var(--df-green)' : 'var(--df-red)'">{{ r.passed ? '✅' : '❌' }}</span>
+          <div style="flex:1;">
+            <div style="font-size:0.86rem; font-weight:700; color:var(--df-text);">{{ r.correct }}/{{ r.total }} · {{ r.accuracy }}%</div>
+            <div style="font-size:0.74rem; color:var(--df-text2); margin-top:2px;">{{ r.passed ? 'PASS' : 'FAIL' }} · {{ formatDate(r.date) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigate(['/exam'])">▶ New Run</button>
+    </div>
+  </div>
+</ion-content>

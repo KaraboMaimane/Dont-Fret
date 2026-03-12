@@ -7,6 +7,7 @@ import { ProgressService } from '../../services/progress.service';
 import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
+import { PersonalRecordsService } from '../../services/personal-records.service';
 
 type ExamState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -49,6 +50,7 @@ export class ExamPage implements OnInit, OnDestroy {
     private streak: StreakService,
     private milestone: MilestoneService,
     private router: Router,
+    private records: PersonalRecordsService,
   ) {}
 
   ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
@@ -119,6 +121,7 @@ export class ExamPage implements OnInit, OnDestroy {
     const correct = this.results.filter(r => r.correct).length;
     this.passed = correct / this.questions.length >= this.PASS_THRESHOLD;
     this.progress.recordSession('Theory Exam', correct, this.questions.length, Date.now() - this.sessionStart);
+    this.records.recordExamRun(correct, this.questions.length, this.passed);
     if (this.passed) {
       this.milestone.unlock('theory_titan');
     }

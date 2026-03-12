@@ -1,0 +1,137 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/arcade"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Theory Reference 📖</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="page-shell" style="padding:12px 16px 88px;">
+
+    <!-- ── Scale Formula ────────────────────────────────────────── -->
+    <div class="section-header">
+      <span class="section-title">Major Scale Formula</span>
+    </div>
+    <div class="df-card" style="padding:14px 16px;">
+      <div style="font-size:0.7rem; color:var(--df-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">
+        W – W – H – W – W – W – H &nbsp;(Whole = 2 semitones, Half = 1)
+      </div>
+      <div style="font-size:0.68rem; color:var(--df-text2); margin-bottom:8px;">
+        Reference chart only: notes here are not clickable.
+      </div>
+      <div style="display:flex; align-items:center; gap:0; overflow-x:auto; padding-bottom:4px;">
+        <div *ngFor="let s of scaleSteps; let i = index" style="display:flex; align-items:center; flex-shrink:0;">
+          <div *ngIf="i > 0" style="display:flex; flex-direction:column; align-items:center; margin:0 4px;">
+            <span style="font-size:0.6rem; font-weight:900; color:var(--df-text2);">{{ s.step }}</span>
+            <span style="font-size:0.6rem; color:var(--df-text2);">→</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:800;"
+                 [style.background]="s.isRoot ? 'var(--df-accent)' : 'var(--df-surface2)'"
+                 [style.color]="s.isRoot ? '#fff' : 'var(--df-text)'">
+              {{ s.note }}
+            </div>
+            <span style="font-size:0.55rem; color:var(--df-text2); margin-top:2px;">{{ i + 1 === 8 ? '8' : i + 1 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Intervals ─────────────────────────────────────────────── -->
+    <div class="section-header">
+      <span class="section-title">Intervals (from C)</span>
+    </div>
+    <div class="df-card" style="padding:0;">
+      <div style="display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:0;">
+
+        <!-- Header row -->
+        <div style="padding:8px 12px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--df-border);">Interval</div>
+        <div style="padding:8px 8px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--df-border);">Name</div>
+        <div style="padding:8px 8px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--df-border); text-align:center;">Semi</div>
+        <div style="padding:8px 12px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--df-border); text-align:center;">C→</div>
+
+        <ng-container *ngFor="let row of intervalRows; let last = last">
+          <div style="padding:9px 12px; font-size:0.7rem; font-weight:700; color:var(--df-accent); white-space:nowrap;"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">
+            {{ row.shorthand }}
+          </div>
+          <div style="padding:9px 8px; font-size:0.76rem; color:var(--df-text);"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">
+            {{ row.name }}
+            <span *ngIf="row.type === 'harmonic'" style="font-size:0.6rem; color:var(--df-amber); font-weight:700; margin-left:4px;">non-diatonic</span>
+          </div>
+          <div style="padding:9px 8px; font-size:0.78rem; font-weight:700; color:var(--df-text); text-align:center;"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">
+            {{ row.semitones }}
+          </div>
+          <div style="padding:9px 12px; font-size:0.82rem; font-weight:800; color:var(--df-green); text-align:center;"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">
+            {{ row.fromC }}
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- ── Key Signatures ─────────────────────────────────────────── -->
+    <div class="section-header">
+      <span class="section-title">Key Signatures</span>
+    </div>
+    <div class="df-card" style="padding:0;">
+      <div style="display:grid; grid-template-columns:auto auto auto 1fr; align-items:center; gap:0;">
+
+        <div style="padding:8px 10px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; border-bottom:1px solid var(--df-border);">Key</div>
+        <div style="padding:8px 8px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; border-bottom:1px solid var(--df-border); text-align:center;">Type</div>
+        <div style="padding:8px 8px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; border-bottom:1px solid var(--df-border); text-align:center;">#</div>
+        <div style="padding:8px 10px; font-size:0.62rem; font-weight:800; color:var(--df-text2); text-transform:uppercase; border-bottom:1px solid var(--df-border);">Accidentals</div>
+
+        <ng-container *ngFor="let row of keySigRows; let last = last">
+          <div style="padding:8px 10px; font-size:0.82rem; font-weight:800; color:var(--df-text);"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">{{ row.key }}</div>
+          <div style="padding:8px 8px; font-size:0.86rem; font-weight:700; text-align:center;"
+               [style.color]="row.symbol === '♯' ? 'var(--df-amber)' : row.symbol === '♭' ? 'var(--df-blue)' : 'var(--df-text2)'"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">{{ row.symbol }}</div>
+          <div style="padding:8px 8px; font-size:0.8rem; font-weight:700; color:var(--df-text); text-align:center;"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">{{ row.count }}</div>
+          <div style="padding:8px 10px; font-size:0.74rem; color:var(--df-text2);"
+               [style.border-bottom]="last ? 'none' : '1px solid var(--df-border)'">{{ row.accidentals }}</div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- ── Mnemonics ───────────────────────────────────────────────── -->
+    <div class="section-header">
+      <span class="section-title">Memory Tricks</span>
+    </div>
+    <div class="df-card" style="padding:14px 16px; display:grid; gap:12px;">
+      <div>
+        <div style="font-size:0.66rem; font-weight:800; color:var(--df-amber); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:5px;">♯ Sharp Order</div>
+        <div style="font-size:0.8rem; color:var(--df-text); line-height:1.5; white-space:pre-line;">{{ sharpMnemonic }}</div>
+      </div>
+      <div style="border-top:1px solid var(--df-border); padding-top:12px;">
+        <div style="font-size:0.66rem; font-weight:800; color:var(--df-blue); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:5px;">♭ Flat Order</div>
+        <div style="font-size:0.8rem; color:var(--df-text); line-height:1.5; white-space:pre-line;">{{ flatMnemonic }}</div>
+      </div>
+    </div>
+
+    <!-- ── Practice Shortcuts ─────────────────────────────────────── -->
+    <div class="section-header">
+      <span class="section-title">Jump Into Practice</span>
+    </div>
+    <div class="df-card" style="padding:12px 14px; display:grid; gap:10px;">
+      <button class="df-btn df-btn-primary" style="width:100%;" (click)="router.navigateByUrl('/interval-id')">
+        🎯 Interval ID — Reverse Drill →
+      </button>
+      <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/practice')">
+        Open Practice →
+      </button>
+      <button class="df-btn df-btn-ghost" style="width:100%;" (click)="router.navigateByUrl('/foundations')">
+        Go to Foundations →
+      </button>
+    </div>
+
+  </div>
+</ion-content>

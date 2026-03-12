@@ -107,6 +107,14 @@ export class ArcadePage {
         locked: !this.learningPath.isExamUnlocked(),
         unlockHint: 'Unlock by completing Stage 7 – Combined Mastery',
       },
+      {
+        title: 'Interval ID',
+        icon: '🎵',
+        desc: 'Hear root + target — name the interval.',
+        tag: 'REVERSE',
+        route: '/interval-id',
+        locked: false,
+      },
     ];
 
     this.dueCount = this.progress.getDueCount();

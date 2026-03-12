@@ -7,6 +7,7 @@ import { ProgressService } from '../../services/progress.service';
 import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
+import { PersonalRecordsService } from '../../services/personal-records.service';
 
 type BlitzState = 'idle' | 'playing' | 'done';
 
@@ -39,6 +40,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     private adaptive: AdaptiveService,
     private streak: StreakService,
     private milestone: MilestoneService,
+    private records: PersonalRecordsService,
   ) {}
 
   ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
@@ -101,6 +103,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     this.clearTimer();
     this.isNewBest = this.score > this.blitzBestScore;
     this.progress.recordSession('Blitz', this.sessionCorrect, this.totalAnswered, Date.now() - this.sessionStart);
+    this.records.recordBlitzRun(this.score, this.totalAnswered, Date.now() - this.sessionStart);
     this.milestone.unlock('blitz_debut');
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
   }

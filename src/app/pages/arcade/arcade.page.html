@@ -46,6 +46,37 @@
       </div>
     </div>
 
+    <div class="section-header">
+      <span class="section-title">Study Tools</span>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px;">
+      <div (click)="router.navigateByUrl('/reference')"
+           style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
+          <span style="font-size:1.8rem; line-height:1;">📖</span>
+          <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
+                       padding:2px 7px; border-radius:20px; white-space:nowrap; background:rgba(59,130,246,0.18); color:var(--df-blue);">
+            STUDY
+          </span>
+        </div>
+        <div style="font-weight:800; font-size:0.88rem; color:var(--df-text); line-height:1.2;">Theory Reference</div>
+        <div style="font-size:0.72rem; color:var(--df-text2); line-height:1.4; flex:1;">Key signatures, intervals and scale formula quick guide.</div>
+      </div>
+
+      <div (click)="router.navigateByUrl('/records')"
+           style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
+          <span style="font-size:1.8rem; line-height:1;">🏅</span>
+          <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
+                       padding:2px 7px; border-radius:20px; white-space:nowrap; background:rgba(34,197,94,0.18); color:var(--df-green);">
+            TRACK
+          </span>
+        </div>
+        <div style="font-weight:800; font-size:0.88rem; color:var(--df-text); line-height:1.2;">Personal Records</div>
+        <div style="font-size:0.72rem; color:var(--df-text2); line-height:1.4; flex:1;">Review your best Timed, Blitz and Exam performance.</div>
+      </div>
+    </div>
+
     <ng-container *ngIf="dueReviews.length > 0">
       <div class="section-header">
         <span class="section-title">Due Cards</span>

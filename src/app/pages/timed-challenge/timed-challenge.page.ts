@@ -8,6 +8,7 @@ import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
+import { PersonalRecordsService } from '../../services/personal-records.service';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -48,6 +49,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     private streak: StreakService,
     private learningPath: LearningPathService,
     private milestone: MilestoneService,
+    private records: PersonalRecordsService,
   ) {}
 
   ngOnInit() {
@@ -129,6 +131,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.state = 'done';
     const correct = this.results.filter(r => r.correct).length;
     this.progress.recordSession('Timed Challenge', correct, this.results.length, Date.now() - this.sessionStart);
+    this.records.recordTimedRun(correct, this.results.length, this.timeLimitSec, this.stars, Date.now() - this.sessionStart);
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
   }
 
