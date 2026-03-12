@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { MusicTheoryService } from './music-theory.service';
 import { ProgressService } from './progress.service';
 
-export type Stage = 1 | 2 | 3 | 4 | 5;
+export type Stage = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface LearningStage {
   id: Stage;
@@ -12,9 +12,15 @@ export interface LearningStage {
   lessonText: string;
   keys: string[];
   intervals: string[];
-  unlockThreshold: number; // accuracy % to unlock next stage
+  unlockThreshold: number;
   bossTotalQuestions: number;
-  bossPassThreshold: number; // ratio
+  bossPassThreshold: number;
+  /** Which page handles practice for this stage */
+  drillType: 'foundations' | 'scale-builder' | 'practice';
+  /** Sub-mode used by FoundationsPage (stages 1 & 2 only) */
+  foundationType?: 'scale-fill' | 'key-sig' | 'degree';
+  /** Per-question boss timer in seconds (undefined = no timer) */
+  bossTimerSec?: number;
 }
 
 export interface LearningPathState {
@@ -31,35 +37,99 @@ export class LearningPathService {
   private state!: LearningPathState;
 
   readonly STAGES: LearningStage[] = [
+    // ── Stage 1 (new): Scale Fill-in-the-Blank — Sharp Keys ─────────────────
     {
       id: 1,
-      title: 'Major Scales: Natural & Sharp Keys',
-      subtitle: 'The Foundation',
-      description: 'Learn the 7 natural and sharp major scales using the W-W-H-W-W-W-H formula.',
-      lessonText: `The Major Scale is the foundation of all Western music theory.
-It's built by moving up the musical alphabet using this step pattern:
-Whole – Whole – Half – Whole – Whole – Whole – Half
+      title: 'Scale Fill: Sharp Keys',
+      subtitle: 'Fill the Blanks',
+      description: 'Fill in missing notes of sharp-key major scales and learn how many sharps each key has.',
+      lessonText: `Welcome to the foundations of music theory!
 
-In practice, a "Whole" step = 2 semitones, a "Half" step = 1 semitone.
+A major scale follows the pattern: Whole – Whole – Half – Whole – Whole – Whole – Half
+(or 2-2-1-2-2-2-1 semitones)
+
+In this stage you will:
+  • Fill in missing notes in a scale (e.g. C _ _ F G _ _)
+  • Identify scale degrees (what note is degree 5?)
+  • Learn how many sharps each key has and which notes they are
+
+Sharp keys and their signatures:
+  C major  — 0 sharps
+  G major  — 1 sharp:  F#
+  D major  — 2 sharps: F#, C#
+  A major  — 3 sharps: F#, C#, G#
+  E major  — 4 sharps: F#, C#, G#, D#
+  B major  — 5 sharps: F#, C#, G#, D#, A#
+  F# major — 6 sharps: F#, C#, G#, D#, A#, E#
+
+Memory trick for sharp order: Father Charles Goes Down And Ends Battle`,
+      keys: ['C', 'G', 'D', 'A', 'E', 'B', 'F#'],
+      intervals: [],
+      unlockThreshold: 0.8,
+      bossTotalQuestions: 10,
+      bossPassThreshold: 0.8,
+      drillType: 'foundations',
+      foundationType: 'scale-fill',
+      bossTimerSec: 10,
+    },
+    // ── Stage 2 (new): Key Signatures — All 12 keys ──────────────────────────
+    {
+      id: 2,
+      title: 'Key Signatures',
+      subtitle: 'Sharps & Flats',
+      description: 'Learn how many sharps or flats each key has, and which notes they are — in order.',
+      lessonText: `Every major key has a "key signature" — a set of sharps or flats that belong to it.
+
+Order of SHARPS (memory trick: "Father Charles Goes Down And Ends Battle"):
+  1: F#  2: C#  3: G#  4: D#  5: A#  6: E#
+
+  C = 0 sharps  |  G = 1#  |  D = 2#  |  A = 3#  |  E = 4#  |  B = 5#  |  F# = 6#
+
+Order of FLATS (reverse of sharps: "Battle Ends And Down Goes Charles' Father"):
+  1: Bb  2: Eb  3: Ab  4: Db  5: Gb
+
+  F = 1b  |  Bb = 2b  |  Eb = 3b  |  Ab = 4b  |  Db = 5b
+
+In this stage you will:
+  • Tap the number of sharps or flats a key has
+  • Name each accidental in the correct order`,
+      keys: ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'F', 'Bb', 'Eb', 'Ab', 'Db'],
+      intervals: [],
+      unlockThreshold: 0.8,
+      bossTotalQuestions: 10,
+      bossPassThreshold: 0.8,
+      drillType: 'foundations',
+      foundationType: 'key-sig',
+      bossTimerSec: 8,
+    },
+    // ── Stage 3 (was 1): Scale Builder — Sharp Keys ──────────────────────────
+    {
+      id: 3,
+      title: 'Major Scales: Natural & Sharp Keys',
+      subtitle: 'Build the Scale',
+      description: 'Build sharp major scales note-by-note using the W-W-H-W-W-W-H formula.',
+      lessonText: `You already know the notes — now build the scales from memory in real time.
+Use the chromatic grid to place each note of the scale in the correct order.
 
 Starting on C: C → D → E → F → G → A → B → C
 Starting on G: G → A → B → C → D → E → F# → G (one sharp!)
 Starting on D: D → E → F# → G → A → B → C# → D (two sharps!)
 
-Each new sharp key adds exactly one more sharp. The order of sharps follows the cycle of fifths.`,
+Each new sharp key adds exactly one more sharp following the cycle of fifths.`,
       keys: ['C', 'G', 'D', 'A', 'E', 'B', 'F#'],
       intervals: [],
       unlockThreshold: 0.7,
       bossTotalQuestions: 10,
       bossPassThreshold: 0.7,
+      drillType: 'scale-builder',
     },
+    // ── Stage 4 (was 2): Scale Builder — Flat Keys ───────────────────────────
     {
-      id: 2,
+      id: 4,
       title: 'Major Scales: Flat Keys',
       subtitle: 'The Other Side',
       description: 'Master the 5 flat major scales: F, Bb, Eb, Ab, Db.',
       lessonText: `Flat keys work the same way — just with flats instead of sharps.
-The flat key cycle moves in the opposite direction to the sharp cycle.
 
 Starting on F:  F → G → A → Bb → C → D → E → F (one flat: Bb)
 Starting on Bb: Bb → C → D → Eb → F → G → A → Bb (two flats: Bb, Eb)
@@ -73,9 +143,11 @@ Memory tip: "Fat Boys Eat At Dinner" → F, Bb, Eb, Ab, Db`,
       unlockThreshold: 0.7,
       bossTotalQuestions: 10,
       bossPassThreshold: 0.7,
+      drillType: 'scale-builder',
     },
+    // ── Stage 5 (was 3): Diatonic Intervals ─────────────────────────────────
     {
-      id: 3,
+      id: 5,
       title: 'Diatonic Intervals',
       subtitle: 'Distances Within the Scale',
       description: 'Learn how to calculate the 2nd through 7th of any major scale.',
@@ -97,9 +169,11 @@ Example: In G Major, the Major 3rd = B (4 semitones above G).`,
       unlockThreshold: 0.7,
       bossTotalQuestions: 10,
       bossPassThreshold: 0.7,
+      drillType: 'practice',
     },
+    // ── Stage 6 (was 4): Harmonic Intervals ─────────────────────────────────
     {
-      id: 4,
+      id: 6,
       title: 'Harmonic Intervals',
       subtitle: 'Beyond the Scale',
       description: 'Discover the Minor 3rd, Minor 7th, Augmented 4th, and Diminished 5th.',
@@ -118,9 +192,11 @@ The #4/b5 (tritone) is the most dissonant interval in music — use it wisely!`,
       unlockThreshold: 0.7,
       bossTotalQuestions: 10,
       bossPassThreshold: 0.7,
+      drillType: 'practice',
     },
+    // ── Stage 7 (was 5): Combined Mastery ───────────────────────────────────
     {
-      id: 5,
+      id: 7,
       title: 'Combined Mastery',
       subtitle: 'All Keys × All Intervals',
       description: 'Full command of all 12 keys and all 10 interval types. Unlocks Blitz Mode and Theory Exam.',
@@ -142,11 +218,13 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
       unlockThreshold: 0.8,
       bossTotalQuestions: 15,
       bossPassThreshold: 0.7,
+      drillType: 'practice',
     },
   ];
 
   constructor(private progressService: ProgressService) {
     this.load();
+    this.migrateOldState();
   }
 
   private load() {
@@ -154,24 +232,69 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
     if (raw) {
       this.state = JSON.parse(raw);
     } else {
-      this.state = {
-        currentStage: 1,
-        unlockedStages: [1],
-        stageProgress: {
-          1: { correct: 0, total: 0 },
-          2: { correct: 0, total: 0 },
-          3: { correct: 0, total: 0 },
-          4: { correct: 0, total: 0 },
-          5: { correct: 0, total: 0 },
-        },
-        bossResults: {
-          1: { passed: false, attempts: 0 },
-          2: { passed: false, attempts: 0 },
-          3: { passed: false, attempts: 0 },
-          4: { passed: false, attempts: 0 },
-          5: { passed: false, attempts: 0 },
-        },
-      };
+      this.state = this.freshState();
+    }
+  }
+
+  private freshState(): LearningPathState {
+    return {
+      currentStage: 1,
+      unlockedStages: [1],
+      stageProgress: {
+        1: { correct: 0, total: 0 },
+        2: { correct: 0, total: 0 },
+        3: { correct: 0, total: 0 },
+        4: { correct: 0, total: 0 },
+        5: { correct: 0, total: 0 },
+        6: { correct: 0, total: 0 },
+        7: { correct: 0, total: 0 },
+      },
+      bossResults: {
+        1: { passed: false, attempts: 0 },
+        2: { passed: false, attempts: 0 },
+        3: { passed: false, attempts: 0 },
+        4: { passed: false, attempts: 0 },
+        5: { passed: false, attempts: 0 },
+        6: { passed: false, attempts: 0 },
+        7: { passed: false, attempts: 0 },
+      },
+    };
+  }
+
+  /** Migrate saved data from the old 5-stage format (stages 1–5 → 3–7) */
+  private migrateOldState() {
+    const sp = this.state.stageProgress as Record<number, { correct: number; total: number }>;
+    const br = this.state.bossResults as Record<number, { passed: boolean; attempts: number }>;
+
+    if (sp[5] !== undefined && sp[7] === undefined) {
+      // Remap old 1-5 → new 3-7
+      const remapped: LearningPathState = this.freshState();
+      for (let old = 1; old <= 5; old++) {
+        const n = (old + 2) as Stage;
+        remapped.stageProgress[n] = sp[old] ?? { correct: 0, total: 0 };
+        remapped.bossResults[n]    = br[old] ?? { passed: false, attempts: 0 };
+      }
+      const remap = (s: number): Stage => Math.min(s + 2, 7) as Stage;
+      remapped.currentStage  = remap(this.state.currentStage);
+      remapped.unlockedStages = this.state.unlockedStages.map(s => remap(s));
+      if (!remapped.unlockedStages.includes(1)) remapped.unlockedStages.unshift(1);
+      remapped.lastRoute = this.state.lastRoute;
+
+      this.state = remapped;
+      this.save();
+    }
+
+    // Ensure stages 1–7 keys always exist (safe guard for any partial saves)
+    for (let s = 1; s <= 7; s++) {
+      if (!this.state.stageProgress[s as Stage]) {
+        this.state.stageProgress[s as Stage] = { correct: 0, total: 0 };
+      }
+      if (!this.state.bossResults[s as Stage]) {
+        this.state.bossResults[s as Stage] = { passed: false, attempts: 0 };
+      }
+    }
+    if (!this.state.unlockedStages.includes(1)) {
+      this.state.unlockedStages.unshift(1);
     }
   }
 
@@ -193,9 +316,18 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
     return this.state.unlockedStages.includes(id);
   }
 
+  /** Returns which route to navigate to for a given stage */
+  getDrillRoute(stage: LearningStage): string {
+    switch (stage.drillType) {
+      case 'foundations':    return '/foundations';
+      case 'scale-builder':  return '/scale-builder';
+      default:               return '/practice';
+    }
+  }
+
   /** Record progress on the boss round for a stage */
   recordBossResult(stage: Stage, correct: number, total: number): boolean {
-    const passed = correct / total >= this.STAGES[stage - 1].bossPassThreshold;
+    const passed = correct / total >= this.getStage(stage).bossPassThreshold;
     this.state.bossResults[stage].attempts++;
     this.state.bossResults[stage].passed = passed;
     if (passed) {
@@ -207,7 +339,7 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
 
   private unlockNextStage(completedStage: Stage) {
     const next = (completedStage + 1) as Stage;
-    if (next <= 5 && !this.state.unlockedStages.includes(next)) {
+    if (next <= 7 && !this.state.unlockedStages.includes(next)) {
       this.state.unlockedStages.push(next);
       this.state.currentStage = next;
     }
@@ -215,10 +347,10 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
   }
 
   /** Check if advanced modes are available */
-  isBlitzUnlocked(): boolean { return this.state.unlockedStages.includes(5); }
-  isExamUnlocked(): boolean { return this.state.unlockedStages.includes(5); }
-  isWorksheetUnlocked(): boolean { return this.state.unlockedStages.includes(4); }
-  isTimedChallengeUnlocked(): boolean { return this.state.unlockedStages.includes(3); }
+  isBlitzUnlocked():          boolean { return this.state.unlockedStages.includes(7); }
+  isExamUnlocked():           boolean { return this.state.unlockedStages.includes(7); }
+  isWorksheetUnlocked():      boolean { return this.state.unlockedStages.includes(6); }
+  isTimedChallengeUnlocked(): boolean { return this.state.unlockedStages.includes(5); }
 
   saveLastRoute(route: string) {
     this.state.lastRoute = route;

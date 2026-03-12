@@ -1,25 +1,27 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 /* expose Math for template */
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons } from '@ionic/angular/standalone';
 import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
 import { ProgressService } from '../../services/progress.service';
 import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
+import { MilestoneService } from '../../services/milestone.service';
 
-type GameState = 'playing' | 'answered' | 'done';
+type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
 interface IntervalStat { name: string; correct: number; total: number; }
 
 @Component({
   selector: 'app-worksheet-challenge',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
   templateUrl: './worksheet-challenge.page.html',
 })
 export class WorksheetChallengePage implements OnInit, OnDestroy {
-  state: GameState = 'playing';
+  state: GameState = 'idle';
   questions: IntervalQuestion[] = [];
   currentIndex = 0;
   notes: NoteLabel[] = [];
@@ -37,15 +39,15 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     private adaptive: AdaptiveService,
     private streak: StreakService,
     private learningPath: LearningPathService,
+    private milestone: MilestoneService,
   ) {}
 
   ngOnInit() {
     this.notes = this.theory.getChromaticNotes();
-    this.startSession();
   }
 
   ngOnDestroy() {
-    if (this.state !== 'done') this.saveSession();
+    if (this.state !== 'idle' && this.state !== 'done') this.saveSession();
   }
 
   startSession() {
@@ -89,6 +91,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     this.state = 'done';
     this.buildIntervalStats();
     this.saveSession();
+    this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
   }
 
   private saveSession() {

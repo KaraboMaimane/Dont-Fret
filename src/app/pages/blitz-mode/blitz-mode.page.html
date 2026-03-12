@@ -57,6 +57,15 @@
       <div style="font-size:3rem; margin-bottom:12px;">{{ score >= 20 ? '🏆' : score >= 10 ? '🎯' : '💪' }}</div>
       <div style="font-size:3rem; font-weight:900; color:var(--df-accent); letter-spacing:-0.04em;">{{ score }}</div>
       <div class="question-text" style="font-size:1rem; font-weight:400; color:var(--df-text2);">correct answers</div>
+      <!-- Personal best banner -->
+      <div *ngIf="isNewBest" class="fade-in-up"
+           style="margin-top:12px; padding:8px 16px; background:rgba(251,191,36,0.12); border:1px solid var(--df-amber); border-radius:8px; font-size:0.85rem; font-weight:800; color:var(--df-amber);">
+        🏅 New Personal Best!
+      </div>
+      <div *ngIf="!isNewBest && blitzBestScore > 0"
+           style="margin-top:8px; font-size:0.75rem; color:var(--df-text2);">
+        Personal best: {{ blitzBestScore }}
+      </div>
     </div>
     <div class="stats-row" style="margin-bottom:20px;">
       <div class="stat-item">

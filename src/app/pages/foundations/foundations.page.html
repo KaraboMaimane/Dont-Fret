@@ -1,0 +1,323 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/learning-path"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ isBossRound ? '🏆 Boss Round' : '🎵 Foundations' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <!-- ── Session stats bar ─────────────────────────────────────────────── -->
+  <div style="padding:12px 16px 0; display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-size:0.8rem; color:var(--df-text2);">
+      ✅ <strong style="color:var(--df-text);">{{ sessionCorrect }}</strong> / {{ sessionTotal }}
+    </span>
+    <span style="font-size:0.8rem; font-weight:700;"
+          [style.color]="accuracyPct >= 70 ? 'var(--df-green)' : 'var(--df-amber)'">
+      {{ accuracyPct }}%
+    </span>
+    <span *ngIf="isBossRound" style="font-size:0.75rem; color:var(--df-accent); font-weight:700;">
+      BOSS &nbsp;{{ poolIndex }}/{{ pool.length }}
+    </span>
+  </div>
+
+  <div style="padding:16px;" class="fade-in-up">
+
+    <!-- ── Boss complete card ─────────────────────────────────────────── -->
+    <div *ngIf="bossComplete" class="df-card-glass fade-in-up" style="padding:28px 20px; text-align:center;">
+      <div style="font-size:2.5rem; margin-bottom:8px;">{{ bossFinalPassed ? '🏆' : '💪' }}</div>
+      <div style="font-size:1.4rem; font-weight:900; color:var(--df-text); margin-bottom:4px;">
+        {{ bossFinalPassed ? 'Boss Defeated!' : 'Not Quite Yet…' }}
+      </div>
+      <div style="font-size:0.9rem; color:var(--df-text2); margin-bottom:20px;">
+        {{ bossFinalScore }} / {{ bossFinalTotal }} correct
+        ({{ bossFinalTotal > 0 ? (bossFinalScore / bossFinalTotal * 100 | number:'1.0-0') : 0 }}%)
+      </div>
+      <div *ngIf="bossFinalPassed" style="color:var(--df-green); font-size:0.85rem; margin-bottom:20px;">
+        🎉 Stage passed! Your next stage is now unlocked.
+      </div>
+      <div *ngIf="!bossFinalPassed" style="color:var(--df-amber); font-size:0.85rem; margin-bottom:20px;">
+        Need 80%+ to pass. Keep practising and try again!
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button *ngIf="bossFinalPassed" class="df-btn df-btn-primary" style="flex:1;" (click)="goToNextStage()">
+          Next Stage →
+        </button>
+        <button class="df-btn df-btn-outline" style="flex:1;" (click)="retryBossRound()">
+          🔁 Retry Boss
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Readiness nudge ───────────────────────────────────────────── -->
+    <div *ngIf="showReadinessNudge && !bossComplete" class="df-card fade-in-up"
+         style="margin-bottom:16px; padding:16px; border-left:3px solid"
+         [style.border-color]="nudgeType === 'ready' ? 'var(--df-green)' : 'var(--df-amber)'">
+      <div style="font-size:0.95rem; font-weight:700; color:var(--df-text); margin-bottom:8px;">
+        {{ nudgeType === 'ready' ? '🎯 You\'re nailing it!' : '📚 Let\'s slow things down' }}
+      </div>
+      <div style="font-size:0.8rem; color:var(--df-text2); margin-bottom:12px;">
+        {{ nudgeType === 'ready'
+           ? 'Your recent accuracy is above 80%. Ready to try the boss round?'
+           : 'Your accuracy has dipped. The app will focus on your weakest keys.' }}
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button *ngIf="nudgeType === 'ready'" class="df-btn df-btn-primary" style="flex:1; font-size:0.8rem;"
+                (click)="startBossRound()">
+          🏆 Try Boss Round
+        </button>
+        <button class="df-btn df-btn-outline" style="flex:1; font-size:0.8rem;" (click)="dismissNudge()">
+          Keep Practising
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Mistake replay prompt ─────────────────────────────────────── -->
+    <div *ngIf="showMistakeReplay" class="df-card-glass fade-in-up" style="padding:20px; text-align:center;">
+      <div style="font-size:1.5rem; margin-bottom:8px;">🔂</div>
+      <div style="font-size:1rem; font-weight:800; color:var(--df-text); margin-bottom:8px;">Replay Mistakes?</div>
+      <div style="font-size:0.8rem; color:var(--df-text2); margin-bottom:16px;">
+        You had {{ mistakes.length }} incorrect answer{{ mistakes.length === 1 ? '' : 's' }} this round.
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="df-btn df-btn-primary" style="flex:1;" (click)="startMistakeReplay()">🔂 Replay</button>
+        <button class="df-btn df-btn-outline" style="flex:1;" (click)="skipMistakeReplay()">Skip →</button>
+      </div>
+    </div>
+
+    <!-- ── Main question area ─────────────────────────────────────────── -->
+    <ng-container *ngIf="!bossComplete && !showMistakeReplay && question">
+      <!-- Timer bar (boss only) -->
+      <div *ngIf="isBossRound"
+           style="height:5px; background:var(--df-surface2); border-radius:3px; overflow:hidden; margin-bottom:12px;">
+        <div style="height:100%; border-radius:3px; transition:width 1.05s linear;"
+             [style.width.%]="timerPct"
+             [style.background]="timeLeft <= 3 ? 'var(--df-red)' : timeLeft <= 5 ? 'var(--df-amber)' : 'var(--df-accent)'">
+        </div>
+      </div>
+
+      <!-- Hot streak badge -->
+      <div *ngIf="hotStreak >= 3" style="margin-bottom:10px; text-align:center;">
+        <span style="background:rgba(251,191,36,0.12); color:var(--df-amber); font-size:0.78rem; font-weight:800; padding:4px 14px; border-radius:99px; border:1px solid rgba(251,191,36,0.3);">
+          🔥 {{ hotStreak }} in a row!
+        </span>
+      </div>
+      <!-- Replay badge -->
+      <div *ngIf="isReplayMode" style="margin-bottom:12px; text-align:center;">
+        <span style="background:rgba(251,191,36,0.12); color:var(--df-amber); font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:99px; border:1px solid rgba(251,191,36,0.25);">
+          🔂 Replay mode — {{ mistakesRemaining }} left
+        </span>
+      </div>
+
+      <!-- ────────────────────────────────────────────────────────── -->
+      <!-- SCALE FILL question                                        -->
+      <!-- ────────────────────────────────────────────────────────── -->
+      <ng-container *ngIf="question.type === 'scale-fill'">
+        <div class="question-card">
+          <div class="question-key">{{ asScaleFill(question).key }} Major Scale</div>
+          <div class="question-meta">Fill in the missing notes</div>
+
+          <!-- 7-slot scale display -->
+          <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:16px; margin-bottom:8px;">
+            <div *ngFor="let slot of asScaleFill(question).scale; let i = index"
+                 style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:38px;">
+              <!-- Note slot -->
+              <div style="padding:6px 10px; border-radius:8px; font-weight:800; font-size:0.95rem; min-width:38px; text-align:center; transition: all 0.2s;"
+                   [style.background]="slot !== null && isFilledBlank(i)
+                     ? 'rgba(74,222,128,0.18)'
+                     : slot !== null
+                       ? 'var(--df-surface2)'
+                       : isActiveBlank(i)
+                         ? 'rgba(167,139,250,0.22)'
+                         : 'var(--df-surface2)'"
+                   [style.border]="slot !== null && isFilledBlank(i)
+                     ? '1px solid var(--df-green)'
+                     : isActiveBlank(i)
+                       ? '2px solid var(--df-accent)'
+                       : '1px dashed var(--df-border)'"
+                   [style.color]="slot !== null && isFilledBlank(i)
+                     ? 'var(--df-green)'
+                     : slot !== null
+                       ? 'var(--df-text)'
+                       : isActiveBlank(i)
+                         ? 'var(--df-accent)'
+                         : 'var(--df-text2)'">
+                {{ slot !== null ? slot : (isActiveBlank(i) ? '?' : '—') }}
+              </div>
+              <!-- Degree label -->
+              <span style="font-size:0.65rem; color:var(--df-text2); font-weight:600;">{{ i + 1 }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="answerState !== 'complete'" style="font-size:0.75rem; color:var(--df-text2); margin-top:4px; text-align:center;">
+            Degree {{ asScaleFill(question).blankIndexes[asScaleFill(question).currentBlankIndex] + 1 }} is blank
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ────────────────────────────────────────────────────────── -->
+      <!-- DEGREE question                                            -->
+      <!-- ────────────────────────────────────────────────────────── -->
+      <ng-container *ngIf="question.type === 'degree'">
+        <div class="question-card">
+          <div class="question-key">{{ asDegree(question).key }} Major</div>
+          <div class="question-text" style="font-size:1.3rem; font-weight:800; color:var(--df-text);">
+            What is <span style="color:var(--df-accent);">degree {{ asDegree(question).degree }}</span>?
+          </div>
+          <div class="question-meta" style="margin-top:6px;">
+            {{ asDegree(question).key }} – _ – _ – _ – _ – _ – _
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ────────────────────────────────────────────────────────── -->
+      <!-- KEY SIG COUNT question                                     -->
+      <!-- ────────────────────────────────────────────────────────── -->
+      <ng-container *ngIf="question.type === 'key-sig-count'">
+        <div class="question-card">
+          <div class="question-key">{{ asKeySigCount(question).key }} Major</div>
+          <div class="question-text" style="font-size:1.15rem; font-weight:800; color:var(--df-text);">
+            <ng-container [ngSwitch]="asKeySigCount(question).accidentalType">
+              <span *ngSwitchCase="'sharp'">How many <span style="color:var(--df-accent);">sharps</span>?</span>
+              <span *ngSwitchCase="'flat'">How many <span style="color:var(--df-accent);">flats</span>?</span>
+              <span *ngSwitchDefault>How many <span style="color:var(--df-accent);">accidentals</span>?</span>
+            </ng-container>
+          </div>
+          <div class="question-meta" style="margin-top:6px;">Tap the correct number</div>
+        </div>
+      </ng-container>
+
+      <!-- ────────────────────────────────────────────────────────── -->
+      <!-- KEY SIG LIST question                                      -->
+      <!-- ────────────────────────────────────────────────────────── -->
+      <ng-container *ngIf="question.type === 'key-sig-list'">
+        <div class="question-card">
+          <div class="question-key">{{ asKeySigList(question).key }} Major</div>
+          <div class="question-text" style="font-size:1.1rem; font-weight:800; color:var(--df-text);">
+            Name the <span style="color:var(--df-accent);">{{ asKeySigList(question).accidentalType }}s</span> in order
+          </div>
+
+          <!-- Numbered accidental slots -->
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px;">
+            <div *ngFor="let acc of asKeySigList(question).accidentals; let i = index"
+                 style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:40px;">
+              <div style="font-size:0.6rem; font-weight:700; color:var(--df-text2);">#{{ i + 1 }}</div>
+              <div style="padding:6px 10px; border-radius:8px; font-weight:800; font-size:0.9rem; min-width:40px; text-align:center; transition:all 0.2s;"
+                   [style.background]="i < asKeySigList(question).currentIndex
+                     ? (i % 2 === 0 ? 'rgba(74,222,128,0.15)' : 'rgba(96,165,250,0.15)')
+                     : i === asKeySigList(question).currentIndex
+                       ? 'rgba(167,139,250,0.22)'
+                       : 'var(--df-surface2)'"
+                   [style.border]="i < asKeySigList(question).currentIndex
+                     ? (i % 2 === 0 ? '1px solid var(--df-green)' : '1px solid #60a5fa')
+                     : i === asKeySigList(question).currentIndex
+                       ? '2px solid var(--df-accent)'
+                       : '1px dashed var(--df-border)'"
+                   [style.color]="i < asKeySigList(question).currentIndex
+                     ? 'var(--df-green)'
+                     : i === asKeySigList(question).currentIndex
+                       ? 'var(--df-accent)'
+                       : 'var(--df-text2)'">
+                {{ i < asKeySigList(question).currentIndex ? acc : (i === asKeySigList(question).currentIndex ? '?' : '—') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Feedback banner ──────────────────────────────────────── -->
+      <div *ngIf="feedbackText"
+           class="feedback-banner"
+           [class.correct]="answerState === 'correct' || answerState === 'complete'"
+           [class.incorrect]="answerState === 'incorrect'"
+           style="margin-bottom:12px;">
+        {{ feedbackText }}
+      </div>
+      <!-- ── Mnemonic tip (shown on wrong answers) ─────── -->
+      <div *ngIf="getMnemonic() as mnemonic" class="df-card fade-in-up"
+           style="margin-bottom:12px; padding:12px 14px; border-left:3px solid var(--df-accent); white-space:pre-line; font-size:0.8rem; line-height:1.55; color:var(--df-text2);">
+        <div style="font-size:0.68rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">💡 Tip</div>
+        {{ mnemonic }}
+      </div>
+      <!-- ── Number grid (key-sig-count only) ────────────────────── -->
+      <div *ngIf="question.type === 'key-sig-count' && answerState !== 'complete'"
+           style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:16px;">
+        <button *ngFor="let n of NUMBER_OPTIONS"
+                class="note-btn"
+                [class]="getNumberClass(n)"
+                (click)="selectNumber(n)"
+                style="font-size:1.2rem; font-weight:900; min-width:48px;">
+          {{ n }}
+        </button>
+      </div>
+
+      <!-- ── 12-note grid (all except key-sig-count) ──────────────── -->
+      <div *ngIf="question.type !== 'key-sig-count' && answerState !== 'complete'"
+           class="note-grid">
+        <button *ngFor="let note of notes"
+                class="note-btn"
+                [class]="getNoteClass(note)"
+                [disabled]="isNoteGridDisabled()"
+                (click)="selectNote(note)">
+          {{ note }}
+        </button>
+      </div>
+
+      <!-- ── Completion footer ────────────────────────────────────── -->
+      <div *ngIf="answerState === 'complete'" style="margin-top:12px;">
+        <!-- Key sig summary for list questions -->
+        <div *ngIf="question.type === 'key-sig-list'"
+             style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;">
+          <div *ngFor="let acc of asKeySigList(question).accidentals; let i = index"
+               style="padding:4px 12px; border-radius:8px; font-weight:800; font-size:0.9rem;"
+               [style.background]="i % 2 === 0 ? 'rgba(74,222,128,0.12)' : 'rgba(96,165,250,0.12)'"
+               [style.border]="i % 2 === 0 ? '1px solid var(--df-green)' : '1px solid #60a5fa'"
+               [style.color]="i % 2 === 0 ? 'var(--df-green)' : '#60a5fa'">
+            {{ i + 1 }}: {{ acc }}
+          </div>
+        </div>
+
+        <!-- Key sig answer for count questions -->
+        <div *ngIf="question.type === 'key-sig-count' && asKeySigCount(question).answer > 0"
+             style="margin-bottom:14px;">
+          <div style="font-size:0.7rem; color:var(--df-text2); text-align:center; margin-bottom:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">
+            The {{ asKeySigCount(question).accidentalType }}s of {{ asKeySigCount(question).key }} major
+          </div>
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <div *ngFor="let acc of getKeySigAccidentals(asKeySigCount(question).key); let i = index"
+                 style="padding:4px 12px; border-radius:8px; font-weight:800; font-size:0.9rem;"
+                 [style.background]="i % 2 === 0 ? 'rgba(74,222,128,0.12)' : 'rgba(96,165,250,0.12)'"
+                 [style.border]="i % 2 === 0 ? '1px solid var(--df-green)' : '1px solid #60a5fa'"
+                 [style.color]="i % 2 === 0 ? 'var(--df-green)' : '#60a5fa'">
+              {{ i + 1 }}: {{ acc }}
+            </div>
+          </div>
+        </div>
+
+        <button class="df-btn df-btn-primary" style="width:100%;" (click)="nextQuestion()">
+          Next →
+        </button>
+      </div>
+
+    </ng-container><!-- /!bossComplete && !showMistakeReplay && question -->
+
+  </div><!-- /padding container -->
+
+  <div style="height:80px;"></div>
+
+  <!-- ── Badge Celebration Toast ── -->
+  <div *ngIf="milestone.justUnlocked" class="fade-in-up"
+       style="position:fixed; bottom:90px; left:16px; right:16px; z-index:9999;
+              background:var(--df-surface); border:1.5px solid var(--df-accent);
+              border-radius:16px; padding:14px 18px; display:flex;
+              align-items:center; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    <span style="font-size:2.2rem; line-height:1;">{{ milestone.justUnlocked.emoji }}</span>
+    <div>
+      <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px;">Badge Unlocked!</div>
+      <div style="font-weight:800; font-size:0.95rem; color:var(--df-text);">{{ milestone.justUnlocked.title }}</div>
+      <div style="font-size:0.75rem; color:var(--df-text2);">{{ milestone.justUnlocked.description }}</div>
+    </div>
+  </div>
+</ion-content>

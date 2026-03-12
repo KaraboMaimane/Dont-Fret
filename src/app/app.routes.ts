@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/exam/exam.page').then(m => m.ExamPage)
   },
   {
+    path: 'foundations',
+    loadComponent: () => import('./pages/foundations/foundations.page').then(m => m.FoundationsPage)
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./pages/settings/settings.page').then(m => m.SettingsPage)
   },

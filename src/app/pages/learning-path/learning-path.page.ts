@@ -47,13 +47,27 @@ export class LearningPathPage implements OnInit {
   }
 
   startPractice() {
+    if (!this.selectedStage) return;
+    const route = this.learningPath.getDrillRoute(this.selectedStage);
     this.closeLesson();
-    this.router.navigateByUrl('/practice');
+    this.router.navigateByUrl(route);
   }
 
   startScaleBuilder() {
     this.closeLesson();
     this.router.navigateByUrl('/scale-builder');
+  }
+
+  startBossRound() {
+    if (!this.selectedStage) return;
+    const route = this.learningPath.getDrillRoute(this.selectedStage);
+    this.closeLesson();
+    this.router.navigateByUrl(`${route}?boss=true`);
+  }
+
+  /** True if this stage uses the Foundations page (not practice/scale-builder) */
+  isFoundationsStage(stage: LearningStage): boolean {
+    return stage.drillType === 'foundations';
   }
 
   getStageStatus(stage: LearningStage): 'locked' | 'current' | 'unlocked' {

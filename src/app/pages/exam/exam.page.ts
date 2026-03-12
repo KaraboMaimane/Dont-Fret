@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons } from '@ionic/angular/standalone';
 import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
 import { ProgressService } from '../../services/progress.service';
@@ -19,7 +20,7 @@ interface ExamResult {
 @Component({
   selector: 'app-exam',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
   templateUrl: './exam.page.html',
 })
 export class ExamPage implements OnInit, OnDestroy {
@@ -29,6 +30,8 @@ export class ExamPage implements OnInit, OnDestroy {
   notes: NoteLabel[] = [];
   selectedNote: NoteLabel | null = null;
   results: ExamResult[] = [];
+  feedbackText = '';
+  showAbandonConfirm = false;
   timePerQ = 10;
   timeLeftSec = 10;
   countdownPct = 100;
@@ -45,6 +48,7 @@ export class ExamPage implements OnInit, OnDestroy {
     private adaptive: AdaptiveService,
     private streak: StreakService,
     private milestone: MilestoneService,
+    private router: Router,
   ) {}
 
   ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
@@ -88,6 +92,15 @@ export class ExamPage implements OnInit, OnDestroy {
     this.results.push({ question: q, selected: note, correct, responseMs });
     this.progress.recordAnswer(q.key, q.intervalName, correct, responseMs);
     this.streak.incrementDailyGoal(1);
+    if (note === null) {
+      this.feedbackText = `⏱️ Time's up — the ${q.intervalName} of ${q.key} is ${q.answer}`;
+    } else if (correct) {
+      this.feedbackText = `✅ Correct! (${(responseMs / 1000).toFixed(1)}s)`;
+    } else {
+      const actualInterval = this.theory.getIntervalNameForNote(q.key, note);
+      const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
+      this.feedbackText = `❌ Wrong${clue} — the ${q.intervalName} of ${q.key} is ${q.answer}`;
+    }
   }
 
   nextQ() {
@@ -114,6 +127,20 @@ export class ExamPage implements OnInit, OnDestroy {
 
   private clearTimer() {
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
+  }
+
+  requestBack() {
+    if (this.state === 'playing' || this.state === 'answered') {
+      this.showAbandonConfirm = true;
+    } else {
+      this.router.navigateByUrl('/dashboard');
+    }
+  }
+
+  confirmAbandon() {
+    this.clearTimer();
+    this.showAbandonConfirm = false;
+    this.router.navigateByUrl('/dashboard');
   }
 
   get correctCount(): number { return this.results.filter(r => r.correct).length; }

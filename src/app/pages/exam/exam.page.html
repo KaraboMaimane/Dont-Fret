@@ -1,13 +1,31 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+      <ion-back-button defaultHref="/dashboard" *ngIf="state === 'idle' || state === 'done'"></ion-back-button>
+      <button *ngIf="state === 'playing' || state === 'answered'"
+              class="df-btn df-btn-ghost"
+              style="font-size:0.9rem; padding:4px 10px; min-height:unset;"
+              (click)="requestBack()">← Back</button>
     </ion-buttons>
     <ion-title>Theory Exam 🎓</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+
+  <!-- Abandon confirmation overlay -->
+  <div *ngIf="showAbandonConfirm"
+       style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div class="df-card" style="width:100%;max-width:340px;text-align:center;padding:28px 24px;">
+      <div style="font-size:2rem;margin-bottom:12px;">🚪</div>
+      <div style="font-weight:800;font-size:1.05rem;margin-bottom:8px;">Abandon Exam?</div>
+      <div style="font-size:0.85rem;color:var(--df-text2);margin-bottom:20px;line-height:1.5;">Your progress will be lost. Are you sure?</div>
+      <div style="display:flex;gap:10px;">
+        <button class="df-btn df-btn-ghost" style="flex:1;" (click)="showAbandonConfirm = false">Keep Going</button>
+        <button class="df-btn df-btn-primary" style="flex:1;background:var(--df-red);border-color:var(--df-red);" (click)="confirmAbandon()">Leave</button>
+      </div>
+    </div>
+  </div>
   <!-- Idle -->
   <div *ngIf="state === 'idle'" style="padding:24px 16px;" class="fade-in-up">
     <div class="question-card" style="margin-bottom:20px;">
@@ -53,9 +71,7 @@ Good luck. 🎵</div>
          class="feedback-banner"
          [class.correct]="results[results.length-1].correct"
          [class.incorrect]="!results[results.length-1].correct">
-      {{ results[results.length-1].correct
-         ? '✅ Correct! (' + (results[results.length-1].responseMs/1000).toFixed(1) + 's)'
-         : '❌ Answer: ' + currentQ.answer }}
+      {{ feedbackText }}
     </div>
 
     <div class="note-grid">

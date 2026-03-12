@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons } from '@ionic/angular/standalone';
 import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
 import { ProgressService } from '../../services/progress.service';
 import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
+import { MilestoneService } from '../../services/milestone.service';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -19,7 +21,7 @@ interface QuestionResult {
 @Component({
   selector: 'app-timed-challenge',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
   templateUrl: './timed-challenge.page.html',
 })
 export class TimedChallengePage implements OnInit, OnDestroy {
@@ -29,6 +31,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
   notes: NoteLabel[] = [];
   selectedNote: NoteLabel | null = null;
   results: QuestionResult[] = [];
+  feedbackText = '';
   timeLimitSec = 10;
   timeLeftSec = 10;
   countdownPct = 100;
@@ -44,6 +47,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     private adaptive: AdaptiveService,
     private streak: StreakService,
     private learningPath: LearningPathService,
+    private milestone: MilestoneService,
   ) {}
 
   ngOnInit() {
@@ -99,6 +103,15 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.results.push({ question: q, selected: note, correct, responseMs });
     this.progress.recordAnswer(q.key, q.intervalName, correct, responseMs);
     this.streak.incrementDailyGoal(1);
+    if (note === null) {
+      this.feedbackText = `⏱️ Time's up — the ${q.intervalName} of ${q.key} is ${q.answer}`;
+    } else if (correct) {
+      this.feedbackText = `✅ Correct! (${(responseMs / 1000).toFixed(1)}s)`;
+    } else {
+      const actualInterval = this.theory.getIntervalNameForNote(q.key, note);
+      const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
+      this.feedbackText = `❌ Wrong${clue} — the ${q.intervalName} of ${q.key} is ${q.answer}`;
+    }
   }
 
   nextQuestion() {
@@ -116,6 +129,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.state = 'done';
     const correct = this.results.filter(r => r.correct).length;
     this.progress.recordSession('Timed Challenge', correct, this.results.length, Date.now() - this.sessionStart);
+    this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
   }
 
   private clearTimer() {

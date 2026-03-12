@@ -21,7 +21,24 @@
             <div style="font-weight:600; color:var(--df-text); font-size:0.9rem;">Prefer Flat Names</div>
             <div style="font-size:0.75rem; color:var(--df-text2);">Show Bb instead of A#, Eb instead of D#</div>
           </ion-label>
-          <ion-toggle [(ngModel)]="preferFlats" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-accent);"></ion-toggle>
+          <ion-toggle [ngModel]="preferFlats" (ngModelChange)="onPreferFlatsChange($event)" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-accent);"></ion-toggle>
+        </ion-item>
+        <ion-item lines="none" style="--background:transparent;">
+          <ion-label>
+            <div style="font-weight:600; color:var(--df-text); font-size:0.9rem;">Daily Goal</div>
+            <div style="font-size:0.75rem; color:var(--df-text2); margin-bottom:10px;">Questions per day</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; padding-bottom:8px;">
+              <button *ngFor="let opt of GOAL_OPTIONS"
+                      class="df-btn"
+                      style="min-width:48px; padding:6px 10px; font-size:0.85rem;"
+                      [style.background]="dailyGoal === opt ? 'var(--df-accent)' : 'var(--df-surface2)'"
+                      [style.color]="dailyGoal === opt ? '#fff' : 'var(--df-text2)'"
+                      [style.border]="dailyGoal === opt ? '1.5px solid var(--df-accent)' : '1.5px solid var(--df-border)'"
+                      (click)="setDailyGoal(opt)">
+                {{ opt }}
+              </button>
+            </div>
+          </ion-label>
         </ion-item>
       </ion-list>
     </div>
@@ -40,6 +57,11 @@
 
     <div style="padding:0 16px 8px;">
       <div class="section-title" style="color:var(--df-red);">Danger Zone</div>
+    </div>
+
+    <div *ngIf="resetSuccess" class="fade-in-up"
+         style="margin:0 16px 12px; padding:12px 16px; background:rgba(74,222,128,0.12); border:1px solid var(--df-green); border-radius:var(--df-radius-sm); font-size:0.85rem; color:var(--df-green); font-weight:700; text-align:center;">
+      ✅ All progress has been reset.
     </div>
 
     <div class="df-card" style="margin:0 16px; border-color: rgba(248,113,113,0.2);">

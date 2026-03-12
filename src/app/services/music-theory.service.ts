@@ -14,6 +14,61 @@ export interface ScaleQuestion {
   scale: NoteLabel[];
 }
 
+// ── Foundation question types ──────────────────────────────────────────────
+
+/** Scale with some notes blanked out. User fills one blank at a time L→R. */
+export interface ScaleFillQuestion {
+  type: 'scale-fill';
+  key: NoteLabel;
+  /** 7-slot array; null = blank the user must fill */
+  scale: (NoteLabel | null)[];
+  /** Sorted indexes (into scale[]) that started as blanks */
+  blankIndexes: number[];
+  /** Which entry in blankIndexes we're asking about right now */
+  currentBlankIndex: number;
+  /** Correct note for blank at blankIndexes[currentBlankIndex] */
+  answer: NoteLabel;
+  hadError: boolean;
+}
+
+/** "What is degree N of Key major?" */
+export interface DegreeQuestion {
+  type: 'degree';
+  key: NoteLabel;
+  degree: number;  // 2–7
+  answer: NoteLabel;
+  hadError: boolean;
+}
+
+/** "How many sharps/flats does Key major have?" → tap 0–7 */
+export interface KeySigCountQuestion {
+  type: 'key-sig-count';
+  key: NoteLabel;
+  accidentalType: 'sharp' | 'flat' | 'none';
+  answer: number;
+  hadError: boolean;
+}
+
+/** "Name the sharps/flats of Key major in order" → tap each from grid */
+export interface KeySigListQuestion {
+  type: 'key-sig-list';
+  key: NoteLabel;
+  accidentalType: 'sharp' | 'flat';
+  /** Full ordered list of accidentals for this key */
+  accidentals: NoteLabel[];
+  /** Index of the next blank to fill */
+  currentIndex: number;
+  /** Correct note for accidentals[currentIndex] */
+  answer: NoteLabel;
+  hadError: boolean;
+}
+
+export type FoundationQuestion =
+  | ScaleFillQuestion
+  | DegreeQuestion
+  | KeySigCountQuestion
+  | KeySigListQuestion;
+
 @Injectable({ providedIn: 'root' })
 export class MusicTheoryService {
   // The chromatic scale using both sharp and flat names
@@ -25,6 +80,7 @@ export class MusicTheoryService {
   private readonly ENHARMONIC: Record<string, string> = {
     'C#': 'Db', 'Db': 'C#',
     'D#': 'Eb', 'Eb': 'D#',
+    'E#': 'F',  'F':  'E#',   // needed for F# major (6th sharp = E#)
     'F#': 'Gb', 'Gb': 'F#',
     'G#': 'Ab', 'Ab': 'G#',
     'A#': 'Bb', 'Bb': 'A#',
@@ -62,8 +118,48 @@ export class MusicTheoryService {
     'Minor 3rd', 'Minor 7th', 'Augmented 4th', 'Diminished 5th'
   ];
 
+  /** Key signature data: accidentals listed in canonical order */
+  readonly KEY_SIGNATURES: Record<string, {
+    count: number;
+    type: 'sharp' | 'flat' | 'none';
+    accidentals: NoteLabel[];
+  }> = {
+    'C':  { count: 0, type: 'none',  accidentals: [] },
+    'G':  { count: 1, type: 'sharp', accidentals: ['F#'] },
+    'D':  { count: 2, type: 'sharp', accidentals: ['F#', 'C#'] },
+    'A':  { count: 3, type: 'sharp', accidentals: ['F#', 'C#', 'G#'] },
+    'E':  { count: 4, type: 'sharp', accidentals: ['F#', 'C#', 'G#', 'D#'] },
+    'B':  { count: 5, type: 'sharp', accidentals: ['F#', 'C#', 'G#', 'D#', 'A#'] },
+    'F#': { count: 6, type: 'sharp', accidentals: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'] },
+    'F':  { count: 1, type: 'flat',  accidentals: ['Bb'] },
+    'Bb': { count: 2, type: 'flat',  accidentals: ['Bb', 'Eb'] },
+    'Eb': { count: 3, type: 'flat',  accidentals: ['Bb', 'Eb', 'Ab'] },
+    'Ab': { count: 4, type: 'flat',  accidentals: ['Bb', 'Eb', 'Ab', 'Db'] },
+    'Db': { count: 5, type: 'flat',  accidentals: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
+  };
+
+  /** Mnemonic for remembering the order of sharps */
+  readonly SHARP_MNEMONIC =
+    '"Father Charles Goes Down And Ends Battle"\n→ F#  C#  G#  D#  A#  E#';
+
+  /** Mnemonic for remembering the order of flats */
+  readonly FLAT_MNEMONIC =
+    '"Battle Ends And Down Goes Charles\' Father"\n→ Bb  Eb  Ab  Db  Gb';
+
+  /** Scale formula as a readable hint */
+  readonly SCALE_FORMULA =
+    'Scale formula: W – W – H – W – W – W – H\n(Whole step = 2 semitones, Half step = 1 semitone)';
+
   // W-W-H-W-W-W-H in semitones
   private readonly MAJOR_SCALE_STEPS = [2, 2, 1, 2, 2, 2, 1];
+
+  /** Loaded once from localStorage; pages pick this up on their next ngOnInit. */
+  preferFlats = false;
+
+  constructor() {
+    const raw = localStorage.getItem('dont-fret-prefs');
+    if (raw) this.preferFlats = JSON.parse(raw).preferFlats ?? false;
+  }
 
   private chromaticIndexOf(note: NoteLabel): number {
     const idx = this.CHROMATIC.indexOf(note);
@@ -112,7 +208,7 @@ export class MusicTheoryService {
    * Get an interval answer for a given key + interval name
    */
   getIntervalAnswer(key: NoteLabel, intervalName: string): NoteLabel {
-    const preferFlat = this.FLAT_KEYS.includes(key);
+    const preferFlat = this.preferFlats || this.FLAT_KEYS.includes(key);
     const diatonic = this.DIATONIC_INTERVALS.find(i => i.name === intervalName);
     if (diatonic) {
       return this.getNoteAtInterval(key, diatonic.semitones, preferFlat);
@@ -154,7 +250,8 @@ export class MusicTheoryService {
    * All chromatic notes for the note button grid
    */
   getChromaticNotes(): NoteLabel[] {
-    return [...this.CHROMATIC];
+    if (!this.preferFlats) return [...this.CHROMATIC];
+    return this.CHROMATIC.map(n => n === 'C#' ? 'Db' : n === 'F#' ? 'Gb' : n);
   }
 
   /**
@@ -163,5 +260,108 @@ export class MusicTheoryService {
   areEnharmonicEquals(a: NoteLabel, b: NoteLabel): boolean {
     if (a === b) return true;
     return this.ENHARMONIC[a] === b || this.ENHARMONIC[b] === a;
+  }
+
+  /**
+   * Returns the semitone distance (0–11) from `key` root up to `note`.
+   * Returns -1 if either note is unrecognised.
+   */
+  getSemitonesFromRoot(key: NoteLabel, note: NoteLabel): number {
+    const rootIdx = this.chromaticIndexOf(key);
+    const noteIdx = this.chromaticIndexOf(note);
+    if (rootIdx === -1 || noteIdx === -1) return -1;
+    return (noteIdx - rootIdx + 12) % 12;
+  }
+
+  /**
+   * Identifies what interval `note` represents from `key` root.
+   * Checks diatonic intervals first, then harmonic.
+   * Returns null for unison (0) or unrecognised distances.
+   */
+  getIntervalNameForNote(key: NoteLabel, note: NoteLabel): string | null {
+    const semitones = this.getSemitonesFromRoot(key, note);
+    if (semitones <= 0) return null;
+    const diatonic = this.DIATONIC_INTERVALS.find(i => i.semitones === semitones);
+    if (diatonic) return diatonic.name;
+    const harmonic = this.HARMONIC_INTERVALS.find(i => i.semitones === semitones);
+    if (harmonic) return harmonic.name;
+    return null;
+  }
+
+  // ── Foundation question generators ────────────────────────────────────────
+
+  getKeySig(key: NoteLabel) {
+    return this.KEY_SIGNATURES[key] ?? { count: 0, type: 'none' as const, accidentals: [] };
+  }
+
+  /**
+   * Scale with `blankCount` random positions erased. User fills left-to-right.
+   */
+  generateScaleFillQuestion(key: NoteLabel, blankCount = 3): ScaleFillQuestion {
+    const fullScale = this.generateMajorScale(key);
+    const positions = [0, 1, 2, 3, 4, 5, 6];
+    for (let i = positions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+    const blankIndexes = positions.slice(0, blankCount).sort((a, b) => a - b);
+    const scale: (NoteLabel | null)[] = fullScale.map((note, i) =>
+      blankIndexes.includes(i) ? null : note
+    );
+    return {
+      type: 'scale-fill',
+      key,
+      scale,
+      blankIndexes,
+      currentBlankIndex: 0,
+      answer: fullScale[blankIndexes[0]],
+      hadError: false,
+    };
+  }
+
+  /**
+   * "What is degree N of Key major?" (degree 2–7)
+   */
+  generateDegreeQuestion(key: NoteLabel, degree?: number): DegreeQuestion {
+    const deg = degree ?? (Math.floor(Math.random() * 6) + 2);
+    const scale = this.generateMajorScale(key);
+    return {
+      type: 'degree',
+      key,
+      degree: deg,
+      answer: scale[deg - 1],
+      hadError: false,
+    };
+  }
+
+  /**
+   * "How many sharps/flats does Key major have?" → answer is 0–7
+   */
+  generateKeySigCountQuestion(key: NoteLabel): KeySigCountQuestion {
+    const ks = this.getKeySig(key);
+    return {
+      type: 'key-sig-count',
+      key,
+      accidentalType: ks.type,
+      answer: ks.count,
+      hadError: false,
+    };
+  }
+
+  /**
+   * "Name the accidentals of Key major in order" → null if key has none
+   */
+  generateKeySigListQuestion(key: NoteLabel): KeySigListQuestion | null {
+    const ks = this.getKeySig(key);
+    if (ks.count === 0) return null;
+    return {
+      type: 'key-sig-list',
+      key,
+      accidentalType: ks.type as 'sharp' | 'flat',
+      accidentals: [...ks.accidentals],
+      currentIndex: 0,
+      answer: ks.accidentals[0],
+      hadError: false,
+    };
   }
 }

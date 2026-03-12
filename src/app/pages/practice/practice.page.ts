@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, IonButton
 } from '@ionic/angular/standalone';
@@ -33,6 +33,10 @@ export class PracticePage implements OnInit, OnDestroy {
   sessionStart = 0;
   showMistakeReplay = false;
   mistakeQueue: IntervalQuestion[] = [];
+  showRoundSummary = false;
+  roundAccuracy = 0;
+  prevSessionAccuracy = 0;
+  accuracyDelta = 0;
   private questionStart = 0;
   private pool: IntervalQuestion[] = [];
   private poolIndex = 0;
@@ -44,16 +48,39 @@ export class PracticePage implements OnInit, OnDestroy {
     private progress: ProgressService,
     private adaptive: AdaptiveService,
     private streak: StreakService,
-    private milestone: MilestoneService,
+    public milestone: MilestoneService,
     private learningPath: LearningPathService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() { this.startSession(); }
   ngOnDestroy() { this.saveSession(); }
 
   startSession() {
-    this.pool = this.adaptive.buildQuestionPool(undefined, 40);
+    const sessions = this.progress.getRecentSessions(2);
+    this.prevSessionAccuracy = sessions.length >= 1
+      ? Math.round((sessions[0].correct / (sessions[0].total || 1)) * 100)
+      : 0;
+
+    const focusKey = this.route.snapshot.queryParams['key'] as string | undefined;
+    const focusInterval = this.route.snapshot.queryParams['interval'] as string | undefined;
+    if (focusKey && focusInterval) {
+      const answer = this.theory.getIntervalAnswer(focusKey as NoteLabel, focusInterval);
+      const intervalType: 'diatonic' | 'harmonic' =
+        this.theory.DIATONIC_INTERVALS.some(i => i.name === focusInterval) ? 'diatonic' : 'harmonic';
+      const focusPool = answer
+        ? Array.from({ length: 10 }, () => ({
+            key: focusKey as NoteLabel,
+            intervalName: focusInterval,
+            intervalType,
+            answer,
+          }))
+        : [];
+      this.pool = [...focusPool, ...this.adaptive.buildQuestionPool(undefined, 30)];
+    } else {
+      this.pool = this.adaptive.buildQuestionPool(undefined, 40);
+    }
     this.poolIndex = 0;
     this.sessionCorrect = 0;
     this.sessionTotal = 0;
@@ -77,8 +104,12 @@ export class PracticePage implements OnInit, OnDestroy {
       if (this.mistakeQueue.length === 0) {
         this.showMistakeReplay = false;
         this.isReplayMode = false;
-        this.pool = this.adaptive.buildQuestionPool(undefined, 40);
-        this.poolIndex = 0;
+        // All replay answers correct → earn Mistake Buster
+        if (this.mistakes.length === 0) {
+          this.milestone.unlock('mistake_buster');
+        }
+        this.showRoundEnd();
+        return;
       } else {
         this.question = this.mistakeQueue.shift()!;
       }
@@ -88,9 +119,8 @@ export class PracticePage implements OnInit, OnDestroy {
           this.showMistakeReplay = true;
           return;
         }
-        // Refill pool
-        this.pool = this.adaptive.buildQuestionPool(undefined, 40);
-        this.poolIndex = 0;
+        this.showRoundEnd();
+        return;
       }
       this.question = this.pool[this.poolIndex++];
     }
@@ -103,9 +133,13 @@ export class PracticePage implements OnInit, OnDestroy {
     this.selectedNote = note;
     const correct = this.theory.areEnharmonicEquals(note, this.question.answer);
     this.answerState = correct ? 'correct' : 'incorrect';
-    this.feedbackText = correct
-      ? `✅ Correct! ${this.question.key} ${this.question.intervalName} = ${this.question.answer} (${(this.responseMs/1000).toFixed(1)}s)`
-      : `❌ Wrong — the ${this.question.intervalName} of ${this.question.key} is ${this.question.answer}`;
+    if (correct) {
+      this.feedbackText = `✅ Correct! ${this.question.key} ${this.question.intervalName} = ${this.question.answer} (${(this.responseMs/1000).toFixed(1)}s)`;
+    } else {
+      const actualInterval = this.theory.getIntervalNameForNote(this.question.key, note);
+      const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
+      this.feedbackText = `❌ Wrong${clue} — the ${this.question.intervalName} of ${this.question.key} is ${this.question.answer}`;
+    }
 
     this.progress.recordAnswer(this.question.key, this.question.intervalName, correct, this.responseMs);
     this.sessionTotal++;
@@ -138,13 +172,24 @@ export class PracticePage implements OnInit, OnDestroy {
 
   skipMistakeReplay() {
     this.showMistakeReplay = false;
-    this.pool = this.adaptive.buildQuestionPool(undefined, 40);
-    this.poolIndex = 0;
-    this.nextQuestion();
+    this.showRoundEnd();
+  }
+
+  private showRoundEnd() {
+    this.saveSession();
+    this.roundAccuracy = this.accuracyPct;
+    this.accuracyDelta = this.roundAccuracy - this.prevSessionAccuracy;
+    this.showRoundSummary = true;
+    this.question = null;
+  }
+
+  continueAfterSummary() {
+    this.showRoundSummary = false;
+    this.startSession();
   }
 
   private saveSession() {
-    if (this.sessionTotal > 0) {
+    if (this.sessionTotal > 0 && !this.showRoundSummary) {
       this.progress.recordSession('Practice', this.sessionCorrect, this.sessionTotal, Date.now() - this.sessionStart);
     }
   }

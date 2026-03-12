@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons } from '@ionic/angular/standalone';
 import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
 import { ProgressService } from '../../services/progress.service';
@@ -12,7 +13,7 @@ type BlitzState = 'idle' | 'playing' | 'done';
 @Component({
   selector: 'app-blitz-mode',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
   templateUrl: './blitz-mode.page.html',
 })
 export class BlitzModePage implements OnInit, OnDestroy {
@@ -24,6 +25,8 @@ export class BlitzModePage implements OnInit, OnDestroy {
   totalAnswered = 0;
   lastCorrect: boolean | null = null;
   lastAnswer: NoteLabel | null = null;
+  blitzBestScore = 0;
+  isNewBest = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   private pool: IntervalQuestion[] = [];
   private poolIdx = 0;
@@ -42,6 +45,9 @@ export class BlitzModePage implements OnInit, OnDestroy {
   ngOnDestroy() { this.clearTimer(); }
 
   startGame() {
+    const past = this.progress.getRecentSessions(20).filter((s: any) => s.mode === 'Blitz');
+    this.blitzBestScore = past.length > 0 ? Math.max(...past.map((s: any) => s.correct)) : 0;
+    this.isNewBest = false;
     this.pool = this.adaptive.buildExamPool(100);
     this.poolIdx = 0;
     this.score = 0;
@@ -93,6 +99,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
   endGame() {
     this.state = 'done';
     this.clearTimer();
+    this.isNewBest = this.score > this.blitzBestScore;
     this.progress.recordSession('Blitz', this.sessionCorrect, this.totalAnswered, Date.now() - this.sessionStart);
     this.milestone.unlock('blitz_debut');
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());

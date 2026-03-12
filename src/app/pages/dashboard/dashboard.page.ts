@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
@@ -20,12 +20,13 @@ interface ModeCard {
   tag: string;
   route: string;
   locked: boolean;
+  unlockHint?: string;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon],
   templateUrl: './dashboard.page.html',
 })
 export class DashboardPage implements OnInit {
@@ -45,6 +46,11 @@ export class DashboardPage implements OnInit {
   heatmapCells: { key: string; interval: string; level: MasteryLevel }[] = [];
   modeCards: ModeCard[] = [];
   weakCells: { key: string; intervalName: string; accuracy: number }[] = [];
+  foundationStage1Keys: string[] = [];
+  foundationStage2Keys: string[] = [];
+  showHistory = false;
+  sparklineData: { accuracy: number; mode: string }[] = [];
+  continueCard: { label: string; icon: string; route: string; acc: number; timeAgo: string } | null = null;
 
   constructor(
     public progress: ProgressService,
@@ -95,13 +101,56 @@ export class DashboardPage implements OnInit {
     this.badges = this.milestone.getAllBadges();
 
     // Weak cells
-    this.weakCells = this.progress.getWeakestCells(3);
+    this.weakCells = this.progress.getWeakestCells(2);
 
     // Recent sessions
     this.recentSessions = this.progress.getRecentSessions(5);
 
+    // Continue card
+    if (this.recentSessions.length > 0) {
+      const last = this.recentSessions[0];
+      const modeMap: Record<string, { route: string; icon: string }> = {
+        'Practice':         { route: '/practice',          icon: '🎯' },
+        'Foundations':      { route: '/foundations',       icon: '🎵' },
+        'Scale Builder':    { route: '/scale-builder',     icon: '🔨' },
+        'Timed Challenge':  { route: '/timed-challenge',   icon: '⏱️' },
+        'Worksheet':        { route: '/worksheet-challenge', icon: '📋' },
+        'Blitz Mode':       { route: '/blitz-mode',        icon: '⚡' },
+        'Theory Exam':      { route: '/exam',              icon: '🎓' },
+      };
+      const entry = modeMap[last.mode] ?? { route: '/practice', icon: '🎯' };
+      this.continueCard = {
+        label: last.mode || 'Practice',
+        icon: entry.icon,
+        route: entry.route,
+        acc: Math.round((last.correct / (last.total || 1)) * 100),
+        timeAgo: this.timeAgo(last.date),
+      };
+    } else {
+      this.continueCard = null;
+    }
+
+    // Sparkline (last 7 sessions, oldest → newest)
+    const last7 = this.progress.getRecentSessions(7).reverse();
+    this.sparklineData = last7.map(s => ({
+      accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
+      mode: s.mode || 'Practice',
+    }));
+
+    // Foundation stage keys
+    this.foundationStage1Keys = this.learningPath.getStage(1).keys;
+    this.foundationStage2Keys = this.learningPath.getStage(2).keys;
+
     // Mode cards
     this.modeCards = [
+      {
+        title: 'Foundations',
+        icon: '🎵',
+        desc: 'Scales & key signatures',
+        tag: 'BEGINNER',
+        route: '/foundations',
+        locked: false,
+      },
       {
         title: 'Practice',
         icon: '🎯',
@@ -121,36 +170,48 @@ export class DashboardPage implements OnInit {
       {
         title: 'Timed Challenge',
         icon: '⏱️',
-        desc: '10 questions, beat the clock',
+        desc: '10 questions. Beat the clock. Earn stars.',
         tag: 'TIMED',
         route: '/timed-challenge',
         locked: !this.learningPath.isTimedChallengeUnlocked(),
+        unlockHint: 'Unlock by completing Stage 5 – Diatonic Intervals',
       },
       {
         title: 'Worksheet',
         icon: '📋',
-        desc: '40 adaptive questions',
+        desc: '40 adaptive questions — full interval breakdown.',
         tag: 'DRILL',
         route: '/worksheet-challenge',
         locked: !this.learningPath.isWorksheetUnlocked(),
+        unlockHint: 'Unlock by completing Stage 6 – Harmonic Intervals',
       },
       {
         title: 'Blitz Mode',
         icon: '⚡',
-        desc: '60s — how many can you name?',
+        desc: '60 seconds. How many can you name?',
         tag: 'BLITZ',
         route: '/blitz-mode',
         locked: !this.learningPath.isBlitzUnlocked(),
+        unlockHint: 'Unlock by completing Stage 7 – Combined Mastery',
       },
       {
         title: 'Theory Exam',
         icon: '🎓',
-        desc: '20 questions, 80% to pass',
+        desc: '20 questions, 80% to pass. Earn the Titan badge.',
         tag: 'EXAM',
         route: '/exam',
         locked: !this.learningPath.isExamUnlocked(),
+        unlockHint: 'Unlock by completing Stage 7 – Combined Mastery',
       },
     ];
+  }
+
+  getFoundationChipColor(key: string, cellName: string): string {
+    const acc = this.progress.getAccuracy(key, cellName);
+    if (acc >= 0.8) return 'var(--df-green)';
+    if (acc >= 0.5) return 'var(--df-amber)';
+    if (acc > 0)   return 'var(--df-red)';
+    return 'var(--df-surface2)';
   }
 
   navigateTo(card: ModeCard) {
@@ -174,6 +235,18 @@ export class DashboardPage implements OnInit {
   formatDate(ts: number): string {
     const d = new Date(ts);
     return d.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
+  }
+
+  timeAgo(ts: number): string {
+    const diffMins = Math.floor((Date.now() - ts) / 60000);
+    if (diffMins < 2)  return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffH = Math.floor(diffMins / 60);
+    if (diffH < 24)    return diffH === 1 ? '1h ago' : `${diffH}h ago`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD === 1)   return 'yesterday';
+    if (diffD < 7)     return `${diffD} days ago`;
+    return new Date(ts).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
   }
 
   // 12 positions for the streak ring circumference

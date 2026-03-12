@@ -68,9 +68,7 @@
          class="feedback-banner"
          [class.correct]="results[results.length-1].correct"
          [class.incorrect]="!results[results.length-1].correct">
-      {{ results[results.length-1].correct
-          ? '✅ Correct! (' + (results[results.length-1].responseMs / 1000).toFixed(1) + 's)'
-          : '❌ ' + currentQuestion.answer + ' was correct' }}
+      {{ feedbackText }}
     </div>
 
     <!-- Note grid -->

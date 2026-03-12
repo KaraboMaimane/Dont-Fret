@@ -15,6 +15,17 @@
   </div>
 
   <div style="padding:16px;" class="fade-in-up">
+    <!-- Key selector chips -->
+    <div style="overflow-x:auto; display:flex; gap:6px; padding-bottom:12px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
+      <button *ngFor="let k of stageKeys"
+              (click)="selectKey(k)"
+              class="df-btn"
+              [class]="currentKey === k ? 'df-btn-primary' : 'df-btn-ghost'"
+              style="flex-shrink:0; padding:4px 12px; font-size:0.8rem; min-height:unset; font-weight:700;">
+        {{ k }}
+      </button>
+    </div>
+
     <!-- Challenge Card -->
     <div class="question-card">
       <div class="question-key">Build the Scale</div>
@@ -50,7 +61,7 @@
     <div class="note-grid" [style.opacity]="state === 'complete' ? '0.4' : '1'">
       <button *ngFor="let note of notes"
               class="note-btn"
-              [class]="state !== 'building' ? '' : getNoteState(note)"
+              [class]="getNoteState(note)"
               (click)="selectNote(note)"
               [disabled]="state === 'complete'">
         {{ note }}

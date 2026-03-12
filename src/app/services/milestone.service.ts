@@ -48,6 +48,11 @@ export class MilestoneService {
     this.load();
   }
 
+  // ── Live celebration state ────────────────────────────────────────────────
+  /** Set for ~4 s after a badge is freshly earned; templates bind to this directly. */
+  justUnlocked: Badge | null = null;
+  private clearUnlockTimer: ReturnType<typeof setTimeout> | null = null;
+
   private load() {
     const raw = localStorage.getItem(this.STORAGE_KEY);
     if (raw) {
@@ -69,9 +74,16 @@ export class MilestoneService {
     if (this.earned.has(id)) return false;
     this.earned.add(id);
     const badge = this.BADGES.find(b => b.id === id);
-    if (badge) { badge.unlocked = true; badge.unlockedAt = Date.now(); }
+    if (badge) {
+      badge.unlocked = true;
+      badge.unlockedAt = Date.now();
+      // Trigger celebration overlay
+      this.justUnlocked = badge;
+      if (this.clearUnlockTimer) clearTimeout(this.clearUnlockTimer);
+      this.clearUnlockTimer = setTimeout(() => { this.justUnlocked = null; }, 4000);
+    }
     this.save();
-    return true; // newly unlocked
+    return true;
   }
 
   isUnlocked(id: BadgeId): boolean { return this.earned.has(id); }

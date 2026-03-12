@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
-import { MusicTheoryService, IntervalQuestion, NoteLabel } from './music-theory.service';
+import {
+  MusicTheoryService,
+  IntervalQuestion,
+  FoundationQuestion,
+  NoteLabel,
+} from './music-theory.service';
 import { ProgressService } from './progress.service';
 import { LearningPathService, Stage } from './learning-path.service';
 
@@ -30,7 +35,10 @@ export class AdaptiveService {
     for (const key of keys) {
       for (const intervalName of intervals) {
         const acc = this.progress.getAccuracy(key, intervalName);
-        const weight = acc < 0.5 ? 3 : 1;
+        // Overdue spaced-repetition cells get highest priority; weak cells moderate
+        const weight = this.progress.isOverdue(key, intervalName) ? 5
+          : acc < 0.5 ? 3
+          : 1;
         const answer = this.theory.getIntervalAnswer(key, intervalName);
         for (let w = 0; w < weight; w++) {
           pool.push({ key, intervalName, intervalType: 'diatonic', answer });
@@ -112,5 +120,81 @@ export class AdaptiveService {
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
+  }
+
+  // ── Foundation pool builders ──────────────────────────────────────────────
+
+  /**
+   * Practice pool for Foundations stages.
+   * Stage 1 (scale-fill): only scale-fill questions.
+   * Stage 2 (key-sig): only key-sig count + list questions.
+   * Weak keys get weight 3; strong keys get weight 1.
+   */
+  buildFoundationsPool(stage: Stage, count = 40): FoundationQuestion[] {
+    const stageData = this.learningPath.getStage(stage);
+    if (!stageData.foundationType) return [];
+
+    const keys = stageData.keys;
+    const pool: FoundationQuestion[] = [];
+
+    for (const key of keys) {
+      if (stageData.foundationType === 'scale-fill') {
+        const acc = this.progress.getAccuracy(key, 'Scale Fill');
+        const weight = acc < 0.5 ? 3 : 1;
+        for (let w = 0; w < weight; w++) {
+          pool.push(this.theory.generateScaleFillQuestion(key));
+        }
+
+      } else if (stageData.foundationType === 'key-sig') {
+        const acc = this.progress.getAccuracy(key, 'Key Sig');
+        const weight = acc < 0.5 ? 3 : 1;
+        for (let w = 0; w < weight; w++) {
+          pool.push(this.theory.generateKeySigCountQuestion(key));
+          const listQ = this.theory.generateKeySigListQuestion(key);
+          if (listQ) pool.push(listQ);
+        }
+
+      } else {
+        // degree — one question per degree 2–7, weighted individually
+        for (let deg = 2; deg <= 7; deg++) {
+          const acc = this.progress.getAccuracy(key, `Degree ${deg}`);
+          const weight = acc < 0.5 ? 2 : 1;
+          for (let w = 0; w < weight; w++) {
+            pool.push(this.theory.generateDegreeQuestion(key, deg));
+          }
+        }
+      }
+    }
+
+    return this.shuffle(pool).slice(0, count);
+  }
+
+  /**
+   * Boss-round pool for Foundations stages: one question type per key,
+   * shuffled to `count`. Strictly matches stage type — no cross-mixing.
+   */
+  buildFoundationsBossPool(stage: Stage, count: number): FoundationQuestion[] {
+    const stageData = this.learningPath.getStage(stage);
+    if (!stageData.foundationType) return [];
+
+    const keys = stageData.keys;
+    const pool: FoundationQuestion[] = [];
+
+    for (const key of keys) {
+      if (stageData.foundationType === 'scale-fill') {
+        pool.push(this.theory.generateScaleFillQuestion(key));
+
+      } else if (stageData.foundationType === 'key-sig') {
+        pool.push(this.theory.generateKeySigCountQuestion(key));
+        const listQ = this.theory.generateKeySigListQuestion(key);
+        if (listQ) pool.push(listQ);
+
+      } else {
+        const deg = Math.floor(Math.random() * 6) + 2;
+        pool.push(this.theory.generateDegreeQuestion(key, deg));
+      }
+    }
+
+    return this.shuffle(pool).slice(0, count);
   }
 }

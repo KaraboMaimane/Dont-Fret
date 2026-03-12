@@ -5,10 +5,6 @@
 </ion-header>
 
 <ion-content>
-  <div class="page-header">
-    <p class="page-title">Your Curriculum</p>
-    <p class="page-subtitle">Complete each stage to unlock the next</p>
-  </div>
 
   <!-- Stage List -->
   <div style="margin-bottom: 80px;">
@@ -87,13 +83,36 @@
       </div>
 
       <!-- Action buttons -->
-      <div style="display:flex;gap:10px;">
-        <button class="df-btn df-btn-primary" style="flex:1;" (click)="startPractice()">
-          🎯 Start Practice
-        </button>
-        <button class="df-btn df-btn-outline" style="flex:1;" (click)="startScaleBuilder()">
-          🔨 Scale Builder
-        </button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <!-- Foundations stage buttons -->
+        <ng-container *ngIf="selectedStage && isFoundationsStage(selectedStage)">
+          <button class="df-btn df-btn-primary" style="flex:1;" (click)="startPractice()">
+            🎵 Start Practice
+          </button>
+          <button class="df-btn df-btn-outline" style="flex:1;" (click)="startBossRound()">
+            🏆 Boss Round
+          </button>
+        </ng-container>
+
+        <!-- Scale-builder stage buttons -->
+        <ng-container *ngIf="selectedStage && selectedStage.drillType === 'scale-builder'">
+          <button class="df-btn df-btn-primary" style="flex:1;" (click)="startScaleBuilder()">
+            🔨 Scale Builder
+          </button>
+          <button class="df-btn df-btn-outline" style="flex:1;" (click)="startBossRound()">
+            🏆 Boss Round
+          </button>
+        </ng-container>
+
+        <!-- Practice/interval stage buttons -->
+        <ng-container *ngIf="selectedStage && selectedStage.drillType === 'practice'">
+          <button class="df-btn df-btn-primary" style="flex:1;" (click)="startPractice()">
+            🎯 Start Practice
+          </button>
+          <button class="df-btn df-btn-outline" style="flex:1;" (click)="startBossRound()">
+            🏆 Boss Round
+          </button>
+        </ng-container>
       </div>
     </div>
   </div>

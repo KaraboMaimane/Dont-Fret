@@ -5,6 +5,7 @@ import { MusicTheoryService, NoteLabel } from '../../services/music-theory.servi
 import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
+import { MilestoneService } from '../../services/milestone.service';
 
 type BuilderState = 'building' | 'complete' | 'boss';
 
@@ -14,27 +15,39 @@ type BuilderState = 'building' | 'complete' | 'boss';
   imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
   templateUrl: './scale-builder.page.html',
 })
-export class ScaleBuilderPage implements OnInit {
+export class ScaleBuilderPage implements OnInit, OnDestroy {
   currentKey: NoteLabel = 'C';
   targetScale: NoteLabel[] = [];
   builtScale: NoteLabel[] = [];
   notes: NoteLabel[] = [];
+  stageKeys: NoteLabel[] = [];
   lastFeedback: 'correct' | 'incorrect' | null = null;
   state: BuilderState = 'building';
   sessionCorrect = 0;
   sessionTotal = 0;
+  private sessionStart = 0;
 
   constructor(
     private theory: MusicTheoryService,
     private progress: ProgressService,
     private streak: StreakService,
     private learningPath: LearningPathService,
+    private milestone: MilestoneService,
   ) {}
 
   ngOnInit() {
     this.notes = this.theory.getChromaticNotes();
+    const stage = this.learningPath.getCurrentStage();
+    this.stageKeys = (stage.keys.length ? stage.keys : this.theory.ALL_KEYS) as NoteLabel[];
+    this.sessionStart = Date.now();
     this.newChallenge();
     this.streak.recordActivity();
+  }
+
+  ngOnDestroy() {
+    if (this.sessionTotal > 0) {
+      this.progress.recordSession('Scale Builder', this.sessionCorrect, this.sessionTotal, Date.now() - this.sessionStart);
+    }
   }
 
   newChallenge() {
@@ -62,6 +75,7 @@ export class ScaleBuilderPage implements OnInit {
         this.sessionCorrect++;
         this.sessionTotal++;
         this.streak.incrementDailyGoal(1);
+        this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
       }
     } else {
       this.lastFeedback = 'incorrect';
@@ -71,11 +85,20 @@ export class ScaleBuilderPage implements OnInit {
   }
 
   getNoteState(note: NoteLabel): 'correct' | 'incorrect' | '' {
-    if (!this.lastFeedback) return '';
+    if (this.state !== 'building' || !this.lastFeedback) return '';
     const expected = this.targetScale[this.builtScale.length];
     if (this.lastFeedback === 'incorrect' && this.theory.areEnharmonicEquals(note, expected)) return 'correct';
     return '';
   }
 
   get progress$() { return Math.round(this.builtScale.length / 7 * 100); }
+
+  selectKey(key: NoteLabel) {
+    if (this.state === 'building' && this.builtScale.length > 0) return; // mid-answer, don't interrupt
+    this.currentKey = key;
+    this.targetScale = this.theory.generateMajorScale(this.currentKey);
+    this.builtScale = [];
+    this.lastFeedback = null;
+    this.state = 'building';
+  }
 }

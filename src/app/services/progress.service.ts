@@ -6,7 +6,8 @@ export interface CellRecord {
   correct: number;
   total: number;
   totalResponseMs: number;
-  lastSeen?: number;  // timestamp
+  lastSeen?: number;    // timestamp of last attempt
+  nextReviewAt?: number; // spaced-repetition — epoch ms when this cell is due again
 }
 
 export interface SessionRecord {
@@ -68,6 +69,14 @@ export class ProgressService {
     if (isCorrect) {
       this.state.cells[k].correct++;
       this.state.correctAnswers++;
+      // Schedule spaced repetition review
+      const acc = this.state.cells[k].correct / this.state.cells[k].total;
+      const total = this.state.cells[k].total;
+      const dayMs = 86_400_000;
+      const intervalDays = (acc >= 0.8 && total >= 5) ? 7
+        : acc >= 0.5 ? 3
+        : 1;
+      this.state.cells[k].nextReviewAt = Date.now() + intervalDays * dayMs;
     }
     this.state.totalQuestions++;
     this.state.totalResponseMs += responseMs;
@@ -99,6 +108,13 @@ export class ProgressService {
 
   getCellRecord(key: string, intervalName: string): CellRecord | null {
     return this.state.cells[this.cellKey(key, intervalName)] ?? null;
+  }
+
+  /** True when this cell has a scheduled review and that review time has passed. */
+  isOverdue(key: string, intervalName: string): boolean {
+    const cell = this.getCellRecord(key, intervalName);
+    if (!cell?.nextReviewAt) return false;
+    return Date.now() >= cell.nextReviewAt;
   }
 
   getAccuracy(key: string, intervalName: string): number {
