@@ -1,6 +1,7 @@
 # Don't Fret 🎸
 
-![Build APK](https://github.com/KaraboMaimane/Dont-Fret/actions/workflows/build-apk.yml/badge.svg)
+[![Build All Platforms](https://github.com/KaraboMaimane/Dont-Fret/actions/workflows/build.yml/badge.svg)](https://github.com/KaraboMaimane/Dont-Fret/actions/workflows/build.yml)
+[![Build iOS (manual)](https://github.com/KaraboMaimane/Dont-Fret/actions/workflows/build-ios.yml/badge.svg)](https://github.com/KaraboMaimane/Dont-Fret/actions/workflows/build-ios.yml)
 
 **Don't Fret** is a mobile-first music theory learning app for guitarists. It uses adaptive difficulty, spaced repetition, and a structured 7-stage learning path to help you master keys, scales, and intervals — one drill at a time.
 
@@ -42,7 +43,7 @@
 | Mobile | Capacitor 8 |
 | Styling | SCSS with CSS custom properties |
 | Testing | Vitest |
-| CI/CD | GitHub Actions — debug APK artifact |
+| CI/CD | GitHub Actions — Web (GitHub Pages) + Android APK + iOS (manual) |
 
 ---
 
@@ -76,7 +77,7 @@ src/app/
 
 ### Prerequisites
 
-- Node.js 23+
+- Node.js 22 (LTS)
 - npm 10+
 
 ### Install & Run
@@ -125,22 +126,55 @@ Or copy the APK to the phone and open it (requires *Install unknown apps* enable
 
 ---
 
-## CI/CD — Automatic APK on every push
+## CI/CD
 
-Every push or pull request to `master` triggers the [Build Debug APK](.github/workflows/build-apk.yml) workflow.
+### Workflows at a glance
+
+| Workflow | File | Trigger | Output |
+|---|---|---|---|
+| **Build All Platforms** | `build.yml` | Push or PR to `master` | GitHub Pages deploy + debug APK artifact |
+| **Build iOS** | `build-ios.yml` | Manual (`workflow_dispatch`) | Simulator validation (signed IPA when secrets configured) |
+
+### How it works
+
+Every push (or PR) to `master` runs three parallel jobs in `build.yml`:
+
+1. **`build-web`** — Installs dependencies, runs `ng build`, uploads the output as a GitHub Pages artifact and shares the dist folder with the Android job.
+2. **`deploy-web`** *(push to master only)* — Deploys the Pages artifact to **https://karabomaimane.github.io/Dont-Fret/**. Pull requests build but do not deploy.
+3. **`build-android`** — Downloads the pre-built dist, syncs Capacitor, assembles a debug APK — no second Angular build needed.
 
 ### Versioning
 
 - **`versionName`** — `<package.json version>-build.<run_number>` e.g. `1.0.0-build.7`
-- **`versionCode`** — the GitHub Actions run number (an always-increasing integer that Android uses to determine update order)
+- **`versionCode`** — the GitHub Actions run number (always-increasing integer Android uses to determine update order)
 
-The `versionCode` and `versionName` are injected into `android/app/build.gradle` at build time — you never need to manually edit that file.
+Both values are injected into `android/app/build.gradle` at build time — no manual edits needed.
 
-### Download the APK
+### Downloading the APK
 
 1. Go to the **Actions** tab on this repo
-2. Click the latest workflow run
+2. Click the latest **Build All Platforms** run
 3. Download the APK from the **Artifacts** section at the bottom of the run summary
+
+### Running the iOS build manually
+
+1. Go to **Actions → Build iOS**
+2. Click **Run workflow** → **Run workflow**
+3. The build validates against the iOS Simulator with no code-signing required
+4. To export a real-device IPA, add the four secrets below and uncomment the export steps in `build-ios.yml`
+
+| Secret | How to generate |
+|---|---|
+| `APPLE_CERTIFICATE` | `base64 -i YourCert.p12` |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for the `.p12` |
+| `APPLE_PROVISIONING_PROFILE` | `base64 -i Profile.mobileprovision` |
+| `APPLE_TEAM_ID` | Your 10-character Apple Developer Team ID |
+
+### One-time GitHub Pages setup
+
+1. Go to **Settings → Pages** on this repo
+2. Set **Source** to **GitHub Actions**
+3. Push to `master` — the `deploy-web` job publishes automatically
 
 ### Bumping the base version
 
@@ -161,4 +195,4 @@ The next CI run will pick up the new base and name the build accordingly (e.g. `
 
 1. Fork the repo and create a feature branch off `master`
 2. Make your changes and run `npm test` to verify nothing is broken
-3. Open a pull request — CI will build a versioned APK automatically so you can sideload and test before merging
+3. Open a pull request — CI will build the Angular app and a versioned debug APK automatically so you can sideload and test before merging

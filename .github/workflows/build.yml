@@ -1,0 +1,143 @@
+name: Build All Platforms
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Required for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one Pages deployment at a time; do not cancel in-flight deploys
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. Build Web ────────────────────────────────────────────────────────────
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          echo "name=${BASE}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build Angular app
+        run: npm run build
+
+      # Upload for GitHub Pages deployment (deploy-web job below)
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/dont-fret/browser
+
+      # Also upload as a plain artifact so the Android job can reuse the dist
+      - name: Upload web dist for Android job
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dist/dont-fret/browser
+          retention-days: 1
+
+  # ── 2. Deploy Web → GitHub Pages (push to master only) ─────────────────────
+  deploy-web:
+    name: Deploy to GitHub Pages
+    needs: build-web
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ── 3. Build Android debug APK ──────────────────────────────────────────────
+  build-android:
+    name: Build Android APK
+    needs: build-web
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          echo "name=${BASE}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+          echo "code=${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      # Restore the pre-built web dist so we skip a second ng build
+      - name: Download web dist
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist/dont-fret/browser
+
+      - name: Inject version into build.gradle
+        run: |
+          sed -i "s/versionCode .*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
+
+      - name: Sync Capacitor (Android)
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Rename APK with version
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk \
+             android/app/build/outputs/apk/debug/dont-fret-${{ steps.version.outputs.name }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dont-fret-apk-${{ steps.version.outputs.name }}
+          path: android/app/build/outputs/apk/debug/dont-fret-${{ steps.version.outputs.name }}.apk
+          retention-days: 30

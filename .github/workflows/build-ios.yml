@@ -1,0 +1,128 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          echo "name=${BASE}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Build Angular app
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Build iOS (simulator validation)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcpretty || xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      # ── IPA Export (requires signing secrets) ─────────────────────────────
+      # To enable real device / TestFlight builds, add these secrets to your
+      # repository (Settings → Secrets and variables → Actions):
+      #
+      #   APPLE_CERTIFICATE          base64-encoded .p12 distribution certificate
+      #                              Encode with: base64 -i cert.p12 | pbcopy
+      #   APPLE_CERTIFICATE_PASSWORD password for the .p12 file
+      #   APPLE_PROVISIONING_PROFILE base64-encoded .mobileprovision file
+      #                              Encode with: base64 -i profile.mobileprovision | pbcopy
+      #   APPLE_TEAM_ID              your 10-character Apple Team ID
+      #
+      # Then uncomment the steps below.
+      # ─────────────────────────────────────────────────────────────────────
+
+      # - name: Import signing certificate
+      #   if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+      #   env:
+      #     CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE }}
+      #     CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      #   run: |
+      #     KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+      #     security create-keychain -p "" $KEYCHAIN_PATH
+      #     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+      #     security unlock-keychain -p "" $KEYCHAIN_PATH
+      #     echo "$CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+      #     security import $RUNNER_TEMP/certificate.p12 -P "$CERT_PASSWORD" -A -k $KEYCHAIN_PATH
+      #     security list-keychain -d user -s $KEYCHAIN_PATH
+
+      # - name: Import provisioning profile
+      #   if: ${{ secrets.APPLE_PROVISIONING_PROFILE != '' }}
+      #   run: |
+      #     PP_PATH=$RUNNER_TEMP/profile.mobileprovision
+      #     echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > $PP_PATH
+      #     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+      #     cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      # - name: Archive app
+      #   if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+      #   run: |
+      #     xcodebuild \
+      #       -project ios/App/App.xcodeproj \
+      #       -scheme App \
+      #       -configuration Release \
+      #       -sdk iphoneos \
+      #       -destination "generic/platform=iOS" \
+      #       DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+      #       archive \
+      #       -archivePath $RUNNER_TEMP/App.xcarchive
+
+      # - name: Export IPA
+      #   if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+      #   run: |
+      #     cat > $RUNNER_TEMP/ExportOptions.plist << 'EOF'
+      #     <?xml version="1.0" encoding="UTF-8"?>
+      #     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      #     <plist version="1.0"><dict>
+      #       <key>method</key><string>ad-hoc</string>
+      #       <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
+      #     </dict></plist>
+      #     EOF
+      #     xcodebuild -exportArchive \
+      #       -archivePath $RUNNER_TEMP/App.xcarchive \
+      #       -exportPath $RUNNER_TEMP/ipa \
+      #       -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
+
+      # - name: Upload IPA
+      #   if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: dont-fret-ios-${{ steps.version.outputs.name }}
+      #     path: ${{ runner.temp }}/ipa/*.ipa
+      #     retention-days: 30
