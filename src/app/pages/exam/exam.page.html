@@ -64,6 +64,7 @@ Trust your ear and stay calm. 🎵</div>
       <div class="mode-fx-layer" [ngClass]="fxLayerClass"></div>
       <div class="runtime-metrics">
         <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+        <app-combo-meter [combo]="currentStreak" label="Combo"></app-combo-meter>
         <span class="runtime-chip" [ngClass]="pressureChipClass">{{ pressureLabel }}</span>
       </div>
 

@@ -6,6 +6,9 @@ const PREFS_KEY = 'dont-fret-prefs';
 @Injectable({ providedIn: 'root' })
 export class HapticsService {
   private audioCtx: AudioContext | null = null;
+  private bedOscillators: OscillatorNode[] = [];
+  private bedGains: GainNode[] = [];
+  private bedLevel = 0;
 
   private getPrefs(): Record<string, unknown> {
     try {
@@ -78,6 +81,92 @@ export class HapticsService {
     gain.connect(ctx.destination);
     osc.start(start);
     osc.stop(end + 0.01);
+  }
+
+  private ensureAdaptiveBed(): AudioContext | null {
+    const ctx = this.getAudioContext();
+    if (!ctx) return null;
+
+    if (this.bedOscillators.length > 0 && this.bedGains.length > 0) {
+      return ctx;
+    }
+
+    const freqs = [82, 123, 164];
+    const types: OscillatorType[] = ['sine', 'triangle', 'triangle'];
+
+    this.bedOscillators = freqs.map((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = types[index];
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      this.bedGains.push(gain);
+      return osc;
+    });
+
+    return ctx;
+  }
+
+  setAdaptiveIntensity(level: number) {
+    if (!this.isSoundEnabled()) {
+      this.stopAdaptiveIntensity();
+      return;
+    }
+
+    const clamped = Math.max(0, Math.min(Math.round(level), 3));
+    if (clamped === 0) {
+      this.stopAdaptiveIntensity();
+      return;
+    }
+
+    const ctx = this.ensureAdaptiveBed();
+    if (!ctx) return;
+
+    const levelGains: Record<number, number[]> = {
+      1: [0.0035, 0.0018, 0.0012],
+      2: [0.0058, 0.0032, 0.0022],
+      3: [0.009, 0.0052, 0.0034],
+    };
+
+    const gains = levelGains[clamped];
+    this.bedGains.forEach((node, index) => {
+      const next = gains[index] ?? 0.001;
+      node.gain.setTargetAtTime(next, ctx.currentTime, 0.15);
+    });
+
+    this.bedLevel = clamped;
+  }
+
+  stopAdaptiveIntensity() {
+    this.bedLevel = 0;
+    if (this.bedOscillators.length === 0 && this.bedGains.length === 0) return;
+
+    for (const osc of this.bedOscillators) {
+      try {
+        osc.stop();
+      } catch {
+        // Ignore already-stopped oscillator errors.
+      }
+      try {
+        osc.disconnect();
+      } catch {
+        // Ignore disconnect errors.
+      }
+    }
+
+    for (const gain of this.bedGains) {
+      try {
+        gain.disconnect();
+      } catch {
+        // Ignore disconnect errors.
+      }
+    }
+
+    this.bedOscillators = [];
+    this.bedGains = [];
   }
 
   private async nativeImpact(style: ImpactStyle): Promise<boolean> {

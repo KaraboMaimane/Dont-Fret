@@ -11,6 +11,7 @@ import { PersonalRecordsService } from '../../services/personal-records.service'
 import { HapticsService } from '../../services/haptics.service';
 import { GameHudComponent } from '../../components/game-hud/game-hud.component';
 import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 type ExamState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -35,6 +36,7 @@ interface ExamResult {
     IonButtons,
     GameHudComponent,
     ModeIntroComponent,
+    ComboMeterComponent,
   ],
   templateUrl: './exam.page.html',
 })
@@ -72,7 +74,10 @@ export class ExamPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
-  ngOnDestroy() { this.clearTimer(); }
+  ngOnDestroy() {
+    this.clearTimer();
+    this.haptics.stopAdaptiveIntensity();
+  }
 
   startExam() {
     this.questions = this.adaptive.buildExamPool(20);
@@ -83,6 +88,7 @@ export class ExamPage implements OnInit, OnDestroy {
     this.state = 'playing';
     this.sessionStart = Date.now();
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
     this.streak.recordActivity();
     this.loadQ();
   }
@@ -95,9 +101,11 @@ export class ExamPage implements OnInit, OnDestroy {
     this.countdownPct = 100;
     this.questionStart = Date.now();
     this.clearTimer();
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
     this.timer = setInterval(() => {
       this.timeLeftSec--;
       this.countdownPct = (this.timeLeftSec / this.timePerQ) * 100;
+      this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
       if (this.timeLeftSec <= 0) {
         this.clearTimer();
         this.submitAnswer(null);
@@ -136,6 +144,7 @@ export class ExamPage implements OnInit, OnDestroy {
       const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
       this.feedbackText = `❌ Wrong${clue} — the ${q.intervalName} of ${q.key} is ${q.answer}`;
     }
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   nextQ() {
@@ -159,6 +168,7 @@ export class ExamPage implements OnInit, OnDestroy {
       this.milestone.unlock('theory_titan');
     }
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
+    this.haptics.stopAdaptiveIntensity();
   }
 
   private clearTimer() {
@@ -175,6 +185,7 @@ export class ExamPage implements OnInit, OnDestroy {
 
   confirmAbandon() {
     this.clearTimer();
+    this.haptics.stopAdaptiveIntensity();
     this.showAbandonConfirm = false;
     this.router.navigateByUrl('/dashboard');
   }
@@ -206,6 +217,12 @@ export class ExamPage implements OnInit, OnDestroy {
     if (this.countdownPct <= 60) return 'Clock Pressure';
     if (this.currentStreak >= 4) return 'Flow State';
     return 'Controlled Tempo';
+  }
+
+  private getAdaptiveLevel(): number {
+    if (this.countdownPct <= 30 || this.currentStreak >= 6) return 3;
+    if (this.countdownPct <= 60 || this.currentStreak >= 3) return 2;
+    return 1;
   }
 
   getNoteClass(note: NoteLabel): string {

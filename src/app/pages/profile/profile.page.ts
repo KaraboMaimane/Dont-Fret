@@ -113,8 +113,20 @@ export class ProfilePage {
       }));
 
     this.badges = this.milestone.getAllBadges();
-    this.heatmapKeys = this.theory.ALL_KEYS;
-    this.heatmapIntervals = this.theory.ALL_INTERVALS;
+    const recordedKeys = new Set<string>();
+    const recordedIntervals = new Set<string>();
+    for (const packedCellKey of Object.keys(this.progress.getState().cells)) {
+      const separator = packedCellKey.indexOf('|');
+      if (separator <= 0) continue;
+      recordedKeys.add(packedCellKey.slice(0, separator));
+      recordedIntervals.add(packedCellKey.slice(separator + 1));
+    }
+    this.heatmapKeys = Array.from(new Set([...this.theory.ALL_KEYS, ...recordedKeys]));
+    const canonicalIntervals = this.theory.ALL_INTERVALS;
+    const extraIntervals = Array.from(recordedIntervals)
+      .filter(interval => !canonicalIntervals.includes(interval))
+      .sort((a, b) => a.localeCompare(b));
+    this.heatmapIntervals = [...canonicalIntervals, ...extraIntervals];
 
     this.xpPoints = (this.totalQuestions * 5) + (this.accuracy * 3) + (this.streak * 20);
     this.rankLabel = this.getRankLabel(this.xpPoints);

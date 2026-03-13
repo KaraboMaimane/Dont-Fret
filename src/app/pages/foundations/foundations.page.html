@@ -107,7 +107,18 @@
         <div class="mode-fx-layer" [class.warning]="fxLayerClass === 'warning'" [class.danger]="fxLayerClass === 'danger'" [class.fever]="fxLayerClass === 'fever'"></div>
         <div class="runtime-metrics">
           <span class="runtime-chip" [class.hot]="hotStreak >= 3">Streak x{{ hotStreak }}</span>
+          <app-combo-meter [combo]="hotStreak" label="Combo"></app-combo-meter>
           <span class="runtime-chip" [class.hot]="pressureChipClass === 'hot'" [class.danger]="pressureChipClass === 'danger'">{{ pressureLabel }}</span>
+        </div>
+        <!-- Session Momentum bar -->
+        <div *ngIf="sessionTotal > 0" style="margin: 6px 0 2px; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:0.6rem; color:var(--df-text2); font-weight:700; white-space:nowrap; min-width:64px;">Momentum {{ sessionMomentum }}%</span>
+          <div style="flex:1; height:4px; background:var(--df-surface2); border-radius:4px; overflow:hidden;">
+            <div style="height:100%; border-radius:4px; transition:width 0.4s ease;"
+                 [style.width.%]="sessionMomentum"
+                 [style.background]="sessionMomentum >= 80 ? 'var(--df-green)' : sessionMomentum >= 50 ? 'var(--df-amber)' : 'var(--df-red)'">
+            </div>
+          </div>
         </div>
 
         <!-- Timer bar (boss only) -->
@@ -329,18 +340,5 @@
 
   <div style="height:80px;"></div>
 
-  <!-- ── Badge Celebration Toast ── -->
-  <div *ngIf="milestone.justUnlocked" class="fade-in-up"
-       style="position:fixed; bottom:90px; left:16px; right:16px; z-index:9999;
-              background:var(--df-surface); border:1.5px solid var(--df-accent);
-              border-radius:16px; padding:14px 18px; display:flex;
-              align-items:center; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-    <span style="font-size:2.2rem; line-height:1;">{{ milestone.justUnlocked.emoji }}</span>
-    <div>
-      <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px;">Badge Unlocked!</div>
-      <div style="font-weight:800; font-size:0.95rem; color:var(--df-text);">{{ milestone.justUnlocked.title }}</div>
-      <div style="font-size:0.75rem; color:var(--df-text2);">{{ milestone.justUnlocked.description }}</div>
-    </div>
-  </div>
   </div>
 </ion-content>

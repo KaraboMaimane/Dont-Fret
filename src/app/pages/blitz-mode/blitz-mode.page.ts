@@ -11,6 +11,7 @@ import { PersonalRecordsService } from '../../services/personal-records.service'
 import { HapticsService } from '../../services/haptics.service';
 import { GameHudComponent } from '../../components/game-hud/game-hud.component';
 import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 type BlitzState = 'idle' | 'playing' | 'done';
 
@@ -28,6 +29,7 @@ type BlitzState = 'idle' | 'playing' | 'done';
     IonButtons,
     GameHudComponent,
     ModeIntroComponent,
+    ComboMeterComponent,
   ],
   templateUrl: './blitz-mode.page.html',
 })
@@ -62,7 +64,10 @@ export class BlitzModePage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
-  ngOnDestroy() { this.clearTimer(); }
+  ngOnDestroy() {
+    this.clearTimer();
+    this.haptics.stopAdaptiveIntensity();
+  }
 
   startGame() {
     const past = this.progress.getRecentSessions(20).filter((s: any) => s.mode === 'Blitz');
@@ -81,6 +86,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     this.sessionStart = Date.now();
     this.state = 'playing';
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
     this.streak.recordActivity();
     this.nextQuestion();
     this.startTimer();
@@ -89,6 +95,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
   private startTimer() {
     this.timer = setInterval(() => {
       this.timeLeft--;
+      this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
       if (this.timeLeft <= 0) { this.clearTimer(); this.endGame(); }
     }, 1000);
   }
@@ -124,6 +131,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     } else {
       this.currentStreak = 0;
     }
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
     setTimeout(() => this.nextQuestion(), 300);
   }
 
@@ -135,6 +143,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     this.records.recordBlitzRun(this.score, this.totalAnswered, Date.now() - this.sessionStart);
     this.milestone.unlock('blitz_debut');
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
+    this.haptics.stopAdaptiveIntensity();
   }
 
   private clearTimer() {
@@ -170,5 +179,11 @@ export class BlitzModePage implements OnInit, OnDestroy {
     if (this.timeLeft <= 25) return 'Heat Rising';
     if (this.currentStreak >= 5) return 'Fever Chain';
     return 'Steady Pace';
+  }
+
+  private getAdaptiveLevel(): number {
+    if (this.timeLeft <= 10 || this.currentStreak >= 7) return 3;
+    if (this.timeLeft <= 25 || this.currentStreak >= 4) return 2;
+    return 1;
   }
 }

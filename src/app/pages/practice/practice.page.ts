@@ -13,6 +13,7 @@ import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/
 import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
 import { HapticsService } from '../../services/haptics.service';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 type AnswerState = 'unanswered' | 'correct' | 'incorrect';
 type PracticeGoal = 'warmup' | 'accuracy' | 'review' | 'weak-spots';
@@ -21,7 +22,7 @@ type SessionMode = 'recommended' | 'custom' | 'due' | 'weak' | 'focus' | 'preset
 @Component({
   selector: 'app-practice',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, ComboMeterComponent],
   templateUrl: './practice.page.html',
 })
 export class PracticePage implements OnInit, OnDestroy {
@@ -85,6 +86,7 @@ export class PracticePage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.saveSession();
+    this.haptics.stopAdaptiveIntensity();
   }
 
   initializeSetup() {
@@ -306,6 +308,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.questionFlip = false;
     this.question = null;
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
     this.nextQuestion();
     this.streak.recordActivity();
   }
@@ -342,6 +345,7 @@ export class PracticePage implements OnInit, OnDestroy {
 
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
     this.questionFlip = !this.questionFlip;
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
 
     this.questionStart = Date.now();
   }
@@ -379,6 +383,7 @@ export class PracticePage implements OnInit, OnDestroy {
     }
 
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   toggleHint() {
@@ -429,6 +434,7 @@ export class PracticePage implements OnInit, OnDestroy {
 
   backToSetup() {
     this.saveSession();
+    this.haptics.stopAdaptiveIntensity();
     this.initializeSetup();
   }
 
@@ -438,6 +444,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.accuracyDelta = this.roundAccuracy - this.prevSessionAccuracy;
     this.showRoundSummary = true;
     this.question = null;
+    this.haptics.stopAdaptiveIntensity();
   }
 
   private saveSession() {
@@ -496,6 +503,12 @@ export class PracticePage implements OnInit, OnDestroy {
     if (this.questionsLeft <= 5) return 'Closing Push';
     if (this.currentStreak >= 5) return 'Perfect Flow';
     return 'Training Pace';
+  }
+
+  private getAdaptiveLevel(): number {
+    if (this.questionsLeft <= 2 || this.currentStreak >= 7) return 3;
+    if (this.questionsLeft <= 5 || this.currentStreak >= 3) return 2;
+    return 1;
   }
 
   private getPracticeKeysForStage(stageId: Stage): NoteLabel[] {

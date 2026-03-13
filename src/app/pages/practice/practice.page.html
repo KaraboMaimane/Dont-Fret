@@ -192,6 +192,7 @@
         <div class="mode-fx-layer" [class.warning]="fxLayerClass === 'warning'" [class.danger]="fxLayerClass === 'danger'" [class.fever]="fxLayerClass === 'fever'"></div>
         <div class="runtime-metrics">
           <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+          <app-combo-meter [combo]="currentStreak" label="Combo"></app-combo-meter>
           <span class="runtime-chip" [class.hot]="pressureChipClass === 'hot'" [class.danger]="pressureChipClass === 'danger'">{{ pressureLabel }}</span>
         </div>
 
@@ -237,17 +238,5 @@
 
     <div style="height:80px;"></div>
 
-    <div *ngIf="milestone.justUnlocked" class="fade-in-up"
-         style="position:fixed; bottom:90px; left:16px; right:16px; z-index:9999;
-                background:var(--df-surface); border:1.5px solid var(--df-accent);
-                border-radius:16px; padding:14px 18px; display:flex;
-                align-items:center; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-      <span style="font-size:2.2rem; line-height:1;">{{ milestone.justUnlocked.emoji }}</span>
-      <div>
-        <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px;">Badge Unlocked!</div>
-        <div style="font-weight:800; font-size:0.95rem; color:var(--df-text);">{{ milestone.justUnlocked.title }}</div>
-        <div style="font-size:0.75rem; color:var(--df-text2);">{{ milestone.justUnlocked.description }}</div>
-      </div>
-    </div>
   </div>
 </ion-content>

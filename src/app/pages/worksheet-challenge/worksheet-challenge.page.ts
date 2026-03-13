@@ -12,6 +12,7 @@ import { MilestoneService } from '../../services/milestone.service';
 import { HapticsService } from '../../services/haptics.service';
 import { GameHudComponent } from '../../components/game-hud/game-hud.component';
 import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -20,7 +21,7 @@ interface IntervalStat { name: string; correct: number; total: number; }
 @Component({
   selector: 'app-worksheet-challenge',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, GameHudComponent, ModeIntroComponent],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, GameHudComponent, ModeIntroComponent, ComboMeterComponent],
   templateUrl: './worksheet-challenge.page.html',
 })
 export class WorksheetChallengePage implements OnInit, OnDestroy {
@@ -55,6 +56,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.state !== 'idle' && this.state !== 'done') this.saveSession();
+    this.haptics.stopAdaptiveIntensity();
   }
 
   startSession() {
@@ -72,6 +74,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     this.state = 'playing';
     this.intervalStats = [];
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
     this.streak.recordActivity();
     this.questionStart = Date.now();
   }
@@ -96,6 +99,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     } else {
       this.currentStreak = 0;
     }
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   next() {
@@ -109,6 +113,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
       this.selectedNote = null;
       this.isCorrect = null;
       this.questionStart = Date.now();
+      this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
     }
   }
 
@@ -117,6 +122,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     this.buildIntervalStats();
     this.saveSession();
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
+    this.haptics.stopAdaptiveIntensity();
   }
 
   private saveSession() {
@@ -162,6 +168,13 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     if (remaining <= 12) return 'Mid Push';
     if (this.currentStreak >= 5) return 'Locked In';
     return 'Steady Drill';
+  }
+
+  private getAdaptiveLevel(): number {
+    const remaining = this.questions.length - this.currentIndex;
+    if (remaining <= 5 || this.currentStreak >= 7) return 3;
+    if (remaining <= 12 || this.currentStreak >= 3) return 2;
+    return 1;
   }
 
   getNoteClass(note: NoteLabel): string {

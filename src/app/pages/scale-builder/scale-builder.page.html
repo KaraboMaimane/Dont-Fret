@@ -36,6 +36,7 @@
       <div class="mode-fx-layer" [class.warning]="fxLayerClass === 'warning'" [class.danger]="fxLayerClass === 'danger'" [class.fever]="fxLayerClass === 'fever'"></div>
       <div class="runtime-metrics">
         <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+        <app-combo-meter [combo]="currentStreak" label="Combo"></app-combo-meter>
         <span class="runtime-chip" [class.hot]="pressureChipClass === 'hot'" [class.danger]="pressureChipClass === 'danger'">{{ pressureLabel }}</span>
       </div>
 

@@ -18,11 +18,12 @@ import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { LearningPathService, Stage, LearningStage } from '../../services/learning-path.service';
 import { HapticsService } from '../../services/haptics.service';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 @Component({
   selector: 'app-foundations',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, ComboMeterComponent],
   templateUrl: './foundations.page.html',
 })
 export class FoundationsPage implements OnInit, OnDestroy {
@@ -103,6 +104,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.clearTimer();
+    this.haptics.stopAdaptiveIntensity();
     if (this.sessionTotal > 0) {
       this.progress.recordSession(
         this.isBossRound ? 'Foundations Boss' : 'Foundations',
@@ -133,6 +135,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.hotStreak = 0;
     this.questionFlip = false;
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
 
     const stageId = this.currentStage.id as Stage;
     if (this.isBossRound) {
@@ -174,6 +177,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
       this.questionFlip = !this.questionFlip;
       this.resetQuestion(this.question);
       this.notes = this.theory.getChromaticNotesForKey(this.question.key);
+      this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
       if (this.isBossRound) this.startTimer();
       return;
     }
@@ -186,6 +190,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
       if (this.mistakes.length > 0) {
         this.showMistakeReplay = true;
         this.question = null;
+        this.haptics.stopAdaptiveIntensity();
         return;
       }
       this.refillPool();
@@ -196,6 +201,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.questionFlip = !this.questionFlip;
     this.resetQuestion(this.question);
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
     if (this.isBossRound) this.startTimer();
   }
 
@@ -208,6 +214,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.questionFlip = !this.questionFlip;
     this.resetQuestion(this.question);
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
     if (this.isBossRound) this.startTimer();
   }
 
@@ -232,6 +239,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.mistakes = [];
     this.isReplayMode = true;
     this.showMistakeReplay = false;
+    this.haptics.setAdaptiveIntensity(1);
     this.nextQuestion();
   }
 
@@ -399,6 +407,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     }
     this.sessionTotal++;
     this.updateReadiness(correct);
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   // ────────────────────────────────────────────────────────────────────────
@@ -466,6 +475,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
       : 'Key Sig';
     this.recordAndFeedback(this.question.key, cellName, false);
     this.haptics.timeout();
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
     this.answerState = 'incorrect';
     this.feedbackText = '⏰ Time\'s up!';
     setTimeout(() => { if (this.answerState === 'incorrect') this.nextQuestion(); }, 1500);
@@ -510,6 +520,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     }
     this.bossComplete = true;
     this.question = null;
+    this.haptics.stopAdaptiveIntensity();
   }
 
   retryBossRound() {
@@ -536,6 +547,12 @@ export class FoundationsPage implements OnInit, OnDestroy {
 
   get mistakesRemaining(): number { return this.mistakeQueue.length; }
 
+  /** Rolling session accuracy (0-100). Persists through mistakes. */
+  get sessionMomentum(): number {
+    if (this.sessionTotal === 0) return 0;
+    return Math.round((this.sessionCorrect / this.sessionTotal) * 100);
+  }
+
   get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
     if (this.hotStreak >= 5 && !this.isBossRound) return 'fever';
     if (this.isBossRound && this.timeLeft <= 3) return 'danger';
@@ -554,8 +571,14 @@ export class FoundationsPage implements OnInit, OnDestroy {
     if (this.isBossRound && this.timeLeft <= 3) return 'Critical Timer';
     if (this.isBossRound && this.timeLeft <= 6) return 'Boss Pressure';
     if (this.hotStreak >= 5) return 'Fluent Run';
-    if (this.hotStreak >= 3) return 'Momentum';
+    if (this.hotStreak >= 3) return 'Hot Run';
     return 'Foundation Build';
+  }
+
+  private getAdaptiveLevel(): number {
+    if ((this.isBossRound && this.timeLeft <= 3) || this.hotStreak >= 7) return 3;
+    if ((this.isBossRound && this.timeLeft <= 6) || this.hotStreak >= 3) return 2;
+    return 1;
   }
 
   isActiveBlank(slotIndex: number): boolean {

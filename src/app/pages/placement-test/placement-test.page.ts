@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
@@ -7,6 +7,7 @@ import { LearningPathService, Stage } from '../../services/learning-path.service
 import { HapticsService } from '../../services/haptics.service';
 import { GameHudComponent } from '../../components/game-hud/game-hud.component';
 import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 interface PlacementQuestion extends IntervalQuestion {
   tier: 1 | 2 | 3;
@@ -22,10 +23,10 @@ interface PlacementResult {
 @Component({
   selector: 'app-placement-test',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, GameHudComponent, ModeIntroComponent],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, GameHudComponent, ModeIntroComponent, ComboMeterComponent],
   templateUrl: './placement-test.page.html',
 })
-export class PlacementTestPage {
+export class PlacementTestPage implements OnDestroy {
   notes: NoteLabel[] = [];
   readonly totalQuestions = 12;
 
@@ -55,6 +56,10 @@ export class PlacementTestPage {
     this.notes = this.theory.getChromaticNotes();
   }
 
+  ngOnDestroy() {
+    this.haptics.stopAdaptiveIntensity();
+  }
+
   startTest() {
     this.questions = this.buildQuestionSet();
     this.results = [];
@@ -65,6 +70,7 @@ export class PlacementTestPage {
     this.questionFlip = false;
     this.state = 'playing';
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
     this.notes = this.questions.length > 0
       ? this.theory.getChromaticNotesForKey(this.questions[0].key)
       : this.theory.getChromaticNotes();
@@ -98,6 +104,7 @@ export class PlacementTestPage {
       this.feedback = `❌ Correct answer: ${question.answer}`;
       this.currentStreak = 0;
     }
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
 
     setTimeout(() => {
       this.currentIndex++;
@@ -108,6 +115,7 @@ export class PlacementTestPage {
       } else {
         this.notes = this.theory.getChromaticNotesForKey(this.questions[this.currentIndex].key);
         this.questionFlip = !this.questionFlip;
+        this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
         this.questionStart = Date.now();
       }
 
@@ -121,6 +129,7 @@ export class PlacementTestPage {
     this.recommendedStage = this.estimateStage();
     this.recommendedStageName = this.learningPath.getStage(this.recommendedStage).title;
     this.learningPath.applyPlacement(this.recommendedStage);
+    this.haptics.stopAdaptiveIntensity();
   }
 
   continue() {
@@ -170,6 +179,13 @@ export class PlacementTestPage {
     if (remaining <= 5) return 'Closing In';
     if (this.currentStreak >= 4) return 'Perfect Flow';
     return 'Calibration';
+  }
+
+  private getAdaptiveLevel(): number {
+    const remaining = this.totalQuestions - this.currentIndex;
+    if (remaining <= 2 || this.currentStreak >= 6) return 3;
+    if (remaining <= 5 || this.currentStreak >= 3) return 2;
+    return 1;
   }
 
   private estimateStage(): Stage {

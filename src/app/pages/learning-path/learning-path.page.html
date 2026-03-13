@@ -5,12 +5,12 @@
 </ion-header>
 
 <ion-content>
-  <div class="page-shell">
+  <div class="page-shell atmospheric-shell">
 
   <!-- Stage List -->
   <div style="margin-bottom: 80px;">
     <div *ngFor="let stage of stages; let i = index"
-         class="stage-item"
+          class="stage-item motion-card"
          [class.locked]="!isUnlocked(stage)"
          (click)="selectStage(stage)">
 
@@ -43,7 +43,7 @@
        style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200; display:flex; align-items:flex-end; justify-content:center;"
        (click)="closeLesson()">
 
-    <div class="df-card-glass fade-in-up"
+    <div class="df-card-glass fade-in-up motion-card"
          style="width:100%; max-width:600px; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none; padding:28px 24px 48px; max-height:85vh; overflow-y:auto;"
          (click)="$event.stopPropagation()">
 

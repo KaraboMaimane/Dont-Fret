@@ -67,13 +67,22 @@ export class SettingsPage {
       this.confirmReset = true;
       return;
     }
+    // Clear all progress-related keys
     this.progress.resetProgress();
-    localStorage.removeItem('dont-fret-streak');
-    localStorage.removeItem('dont-fret-learning-path');
-    localStorage.removeItem('dont-fret-milestones');
+    const keysToRemove = [
+      'dont-fret-streak',
+      'dont-fret-learning-path',
+      'dont-fret-milestones',
+      'dont-fret-records',
+      'dont-fret-daily-challenges',
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
     this.confirmReset = false;
     this.resetSuccess = true;
-    setTimeout(() => { this.resetSuccess = false; }, 3000);
+    // Reload the page after brief toast so all singleton services reinitialize
+    // from clean storage (removing items from localStorage does not update
+    // already-constructed service instances in memory).
+    setTimeout(() => { window.location.reload(); }, 1800);
   }
 
   cancelReset() { this.confirmReset = false; }

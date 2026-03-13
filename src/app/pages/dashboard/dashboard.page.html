@@ -5,14 +5,14 @@
 </ion-header>
 
 <ion-content>
-  <div class="page-shell" style="padding: 12px 0 0;">
+  <div class="page-shell atmospheric-shell stagger-sections" style="padding: 12px 0 0;">
 
   <!-- ── Contextual welcome banner ── -->
   <div *ngIf="welcomeBanner" style="padding: 0 16px 12px;" class="fade-in-up">
 
     <!-- NEW USER: no sessions yet -->
-    <div *ngIf="welcomeBanner.type === 'new-user'"
-         class="df-card"
+        <div *ngIf="welcomeBanner.type === 'new-user'"
+          class="df-card motion-card"
          style="text-align:center; padding:24px 20px; border-color:var(--df-accent); background:rgba(167,139,250,0.06);">
       <div style="font-size:2.4rem; margin-bottom:8px;">🎸</div>
       <div style="font-weight:900; font-size:1.1rem; color:var(--df-text); margin-bottom:6px;">Welcome to Don't Fret!</div>
@@ -37,8 +37,8 @@
     </div>
 
     <!-- JUST PLACED: first sessions after placement test -->
-    <div *ngIf="welcomeBanner.type === 'just-placed'"
-         class="df-card"
+        <div *ngIf="welcomeBanner.type === 'just-placed'"
+          class="df-card motion-card"
          style="padding:16px; border-color:rgba(74,222,128,0.45); background:rgba(74,222,128,0.06);">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
         <div>
@@ -55,8 +55,8 @@
     </div>
 
     <!-- LONG BREAK: 5+ days since last session -->
-    <div *ngIf="welcomeBanner.type === 'long-break'"
-         class="df-card"
+        <div *ngIf="welcomeBanner.type === 'long-break'"
+          class="df-card motion-card"
          style="padding:16px; border-color:rgba(251,191,36,0.4); background:rgba(251,191,36,0.06);">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
         <div>
@@ -78,8 +78,8 @@
     </div>
 
     <!-- DAILY SWEEP: all quests done today -->
-    <div *ngIf="welcomeBanner.type === 'daily-sweep'"
-         class="df-card"
+        <div *ngIf="welcomeBanner.type === 'daily-sweep'"
+          class="df-card motion-card"
          style="padding:16px; border-color:rgba(74,222,128,0.45); background:rgba(74,222,128,0.06);">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
         <div>
@@ -103,7 +103,7 @@
   </div>
 
     <div style="padding: 0 16px 12px;" class="fade-in-up">
-      <div class="df-card dashboard-quest-card" style="padding:18px 16px 16px;">
+      <div class="df-card dashboard-quest-card motion-card" style="padding:18px 16px 16px;">
         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px;">
           <div>
             <div style="font-size:0.65rem; font-weight:800; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">Today's Training</div>
@@ -176,7 +176,7 @@
 
   <!-- ── Continue hero card (returning users only) ── -->
   <div *ngIf="continueCard" style="padding: 12px 16px 0;" class="fade-in-up">
-    <div class="df-card"
+    <div class="df-card motion-card"
          style="padding:16px; border-color:var(--df-accent); background:rgba(167,139,250,0.05); cursor:pointer;"
          (click)="router.navigateByUrl(continueCard.route)">
       <div style="font-size:0.62rem; font-weight:700; color:var(--df-accent); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">Continue where you left off</div>
@@ -199,7 +199,7 @@
     <span class="section-title">🎲 Daily Spotlight</span>
   </div>
   <div style="padding:0 16px;" *ngIf="dailySpotlight">
-    <div class="df-card" style="padding:14px 16px; border-color:rgba(96,165,250,0.45); background:linear-gradient(180deg, rgba(96,165,250,0.12), rgba(22,22,31,0.98));">
+    <div class="df-card motion-card" style="padding:14px 16px; border-color:rgba(96,165,250,0.45); background:linear-gradient(180deg, rgba(96,165,250,0.12), rgba(22,22,31,0.98));">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
         <div>
           <div style="font-size:0.95rem; font-weight:800; color:var(--df-text);">{{ dailySpotlight.title }}</div>
@@ -223,7 +223,7 @@
     <span class="section-title">🎁 Reward Loop</span>
   </div>
   <div style="padding:0 16px;">
-    <div class="df-card" style="padding:10px 14px;">
+    <div class="df-card motion-card" style="padding:10px 14px;">
       <div *ngFor="let reward of rewardDrops"
            style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--df-border);">
         <div style="display:flex; gap:10px; align-items:flex-start;">
@@ -249,7 +249,7 @@
       <span class="section-title">🔓 Next Unlock</span>
     </div>
     <div style="padding: 0 16px;">
-      <div class="df-card" style="padding:14px 16px; border-color:rgba(167,139,250,0.45);">
+      <div class="df-card motion-card" style="padding:14px 16px; border-color:rgba(167,139,250,0.45);">
         <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
           <div>
             <div style="font-size:0.95rem; font-weight:800; color:var(--df-text);">{{ nextUnlockCard.icon }} {{ nextUnlockCard.title }}</div>

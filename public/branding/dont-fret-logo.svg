@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Don't Fret logo</title>
+  <desc id="desc">Stylized fretboard and note icon for Don't Fret</desc>
+  <defs>
+    <linearGradient id="bg" x1="20" y1="20" x2="236" y2="236" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b1a31"/>
+      <stop offset="1" stop-color="#08101f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="58" y1="68" x2="198" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1ad1ff"/>
+      <stop offset="1" stop-color="#ffb957"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="16" y="16" width="224" height="224" rx="52" fill="url(#bg)" stroke="#2f4f73" stroke-width="2"/>
+
+  <g opacity="0.36" stroke="#305983" stroke-width="2" stroke-linecap="round">
+    <line x1="58" y1="76" x2="198" y2="76"/>
+    <line x1="58" y1="102" x2="198" y2="102"/>
+    <line x1="58" y1="128" x2="198" y2="128"/>
+    <line x1="58" y1="154" x2="198" y2="154"/>
+    <line x1="58" y1="180" x2="198" y2="180"/>
+    <line x1="76" y1="64" x2="76" y2="192"/>
+    <line x1="108" y1="64" x2="108" y2="192"/>
+    <line x1="140" y1="64" x2="140" y2="192"/>
+    <line x1="172" y1="64" x2="172" y2="192"/>
+  </g>
+
+  <g filter="url(#glow)">
+    <ellipse cx="102" cy="156" rx="20" ry="16" fill="url(#accent)"/>
+    <ellipse cx="160" cy="132" rx="20" ry="16" fill="url(#accent)"/>
+    <path d="M120 154V88c0-5 4-9 9-10l41-10c6-1 12 3 12 9v58" fill="none" stroke="url(#accent)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 92l62-15" fill="none" stroke="#89e4ff" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <circle cx="46" cy="210" r="4" fill="#1ad1ff" opacity="0.7"/>
+  <circle cx="209" cy="46" r="3" fill="#ffb957" opacity="0.72"/>
+</svg>

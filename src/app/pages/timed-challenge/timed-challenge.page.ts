@@ -12,6 +12,7 @@ import { PersonalRecordsService } from '../../services/personal-records.service'
 import { HapticsService } from '../../services/haptics.service';
 import { GameHudComponent } from '../../components/game-hud/game-hud.component';
 import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -36,6 +37,7 @@ interface QuestionResult {
     IonButtons,
     GameHudComponent,
     ModeIntroComponent,
+    ComboMeterComponent,
   ],
   templateUrl: './timed-challenge.page.html',
 })
@@ -74,7 +76,10 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.notes = this.theory.getChromaticNotes();
   }
 
-  ngOnDestroy() { this.clearTimer(); }
+  ngOnDestroy() {
+    this.clearTimer();
+    this.haptics.stopAdaptiveIntensity();
+  }
 
   startGame() {
     this.questions = this.adaptive.buildQuestionPool(undefined, 10);
@@ -85,6 +90,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.state = 'playing';
     this.sessionStart = Date.now();
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(1);
     this.streak.recordActivity();
     this.loadQuestion();
   }
@@ -97,10 +103,12 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.countdownPct = 100;
     this.questionStart = Date.now();
     this.clearTimer();
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
 
     this.timer = setInterval(() => {
       this.timeLeftSec--;
       this.countdownPct = (this.timeLeftSec / this.timeLimitSec) * 100;
+      this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
       if (this.timeLeftSec <= 0) {
         this.clearTimer();
         this.autoAnswer();
@@ -144,6 +152,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
       const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
       this.feedbackText = `❌ Wrong${clue} — the ${q.intervalName} of ${q.key} is ${q.answer}`;
     }
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   nextQuestion() {
@@ -163,6 +172,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.progress.recordSession('Timed Challenge', correct, this.results.length, Date.now() - this.sessionStart);
     this.records.recordTimedRun(correct, this.results.length, this.timeLimitSec, this.stars, Date.now() - this.sessionStart);
     this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
+    this.haptics.stopAdaptiveIntensity();
   }
 
   private clearTimer() {
@@ -204,6 +214,12 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     if (this.countdownPct <= 60) return 'Clock Pressure';
     if (this.currentStreak >= 4) return 'Flow State';
     return 'Controlled Tempo';
+  }
+
+  private getAdaptiveLevel(): number {
+    if (this.countdownPct <= 30 || this.currentStreak >= 6) return 3;
+    if (this.countdownPct <= 60 || this.currentStreak >= 3) return 2;
+    return 1;
   }
 
   getNoteClass(note: NoteLabel): string {

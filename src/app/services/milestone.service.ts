@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { ProgressService } from './progress.service';
 
 export type BadgeId =
@@ -49,9 +49,11 @@ export class MilestoneService {
   }
 
   // ── Live celebration state ────────────────────────────────────────────────
-  /** Set for ~4 s after a badge is freshly earned; templates bind to this directly. */
-  justUnlocked: Badge | null = null;
+  /** Set for ~2.5 s after a badge is freshly earned; templates bind to this directly. */
+  readonly justUnlocked = signal<Badge | null>(null);
   private clearUnlockTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly unlockToastDurationMs = 2500;
+  private unlockQueue: Badge[] = [];
 
   private load() {
     const raw = localStorage.getItem(this.STORAGE_KEY);
@@ -77,13 +79,45 @@ export class MilestoneService {
     if (badge) {
       badge.unlocked = true;
       badge.unlockedAt = Date.now();
-      // Trigger celebration overlay
-      this.justUnlocked = badge;
-      if (this.clearUnlockTimer) clearTimeout(this.clearUnlockTimer);
-      this.clearUnlockTimer = setTimeout(() => { this.justUnlocked = null; }, 4000);
+      this.enqueueUnlockToast(badge);
     }
     this.save();
     return true;
+  }
+
+  dismissJustUnlocked() {
+    if (this.clearUnlockTimer) {
+      clearTimeout(this.clearUnlockTimer);
+      this.clearUnlockTimer = null;
+    }
+    this.showNextUnlockToast();
+  }
+
+  private enqueueUnlockToast(badge: Badge) {
+    this.unlockQueue.push(badge);
+    if (!this.justUnlocked()) {
+      this.showNextUnlockToast();
+    }
+  }
+
+  private showNextUnlockToast() {
+    const next = this.unlockQueue.shift() ?? null;
+    this.justUnlocked.set(next);
+
+    if (!next) {
+      this.clearUnlockTimer = null;
+      return;
+    }
+
+    if (this.clearUnlockTimer) {
+      clearTimeout(this.clearUnlockTimer);
+      this.clearUnlockTimer = null;
+    }
+
+    this.clearUnlockTimer = setTimeout(() => {
+      this.clearUnlockTimer = null;
+      this.showNextUnlockToast();
+    }, this.unlockToastDurationMs);
   }
 
   isUnlocked(id: BadgeId): boolean { return this.earned.has(id); }

@@ -8,13 +8,14 @@ import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { HapticsService } from '../../services/haptics.service';
 import { GameHudComponent } from '../../components/game-hud/game-hud.component';
+import { ComboMeterComponent } from '../../components/combo-meter/combo-meter.component';
 
 type BuilderState = 'building' | 'complete' | 'boss';
 
 @Component({
   selector: 'app-scale-builder',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, GameHudComponent],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, GameHudComponent, ComboMeterComponent],
   templateUrl: './scale-builder.page.html',
 })
 export class ScaleBuilderPage implements OnInit, OnDestroy {
@@ -52,6 +53,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     if (this.sessionTotal > 0) {
       this.progress.recordSession('Scale Builder', this.sessionCorrect, this.sessionTotal, Date.now() - this.sessionStart);
     }
+    this.haptics.stopAdaptiveIntensity();
   }
 
   newChallenge() {
@@ -65,6 +67,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     this.lastFeedback = null;
     this.state = 'building';
     this.haptics.startRound();
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   selectNote(note: NoteLabel) {
@@ -93,6 +96,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
       this.progress.recordAnswer(this.currentKey, 'Major Scale', false, 0);
       this.sessionTotal++;
     }
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   getNoteState(note: NoteLabel): 'correct' | 'incorrect' | '' {
@@ -113,6 +117,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     this.currentStreak = 0;
     this.lastFeedback = null;
     this.state = 'building';
+    this.haptics.setAdaptiveIntensity(this.getAdaptiveLevel());
   }
 
   get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
@@ -133,5 +138,11 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     if (this.currentStreak >= 4) return 'Perfect Chain';
     if (this.builtScale.length >= 3) return 'Mid Build';
     return 'Scale Forge';
+  }
+
+  private getAdaptiveLevel(): number {
+    if (this.builtScale.length >= 5 || this.currentStreak >= 6) return 3;
+    if (this.builtScale.length >= 3 || this.currentStreak >= 3) return 2;
+    return 1;
   }
 }

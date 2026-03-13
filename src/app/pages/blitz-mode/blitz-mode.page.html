@@ -40,6 +40,7 @@
       <div class="mode-fx-layer" [ngClass]="fxLayerClass"></div>
       <div class="runtime-metrics">
         <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+        <app-combo-meter [combo]="currentStreak" label="Chain"></app-combo-meter>
         <span class="runtime-chip" [ngClass]="pressureChipClass">{{ pressureLabel }}</span>
       </div>
 
