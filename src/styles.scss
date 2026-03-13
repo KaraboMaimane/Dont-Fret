@@ -745,6 +745,38 @@ textarea:focus {
   to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
+@keyframes danger-pulse {
+  0%, 100% { opacity: 0.24; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes fever-pulse {
+  0%, 100% { opacity: 0.24; }
+  50% { opacity: 0.36; }
+}
+
+@keyframes question-enter-a {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes question-enter-b {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .fade-in-up {
   animation: fadeInUp 0.35s ease both;
 }
@@ -808,6 +840,93 @@ textarea:focus {
   padding: 28px 20px;
   text-align: center;
   margin-bottom: 20px;
+}
+
+.question-card.runtime-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-runtime-shell {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.mode-runtime-shell > :not(.mode-fx-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+.mode-fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mode-fx-layer.warning {
+  opacity: 0.24;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 185, 87, 0.24), transparent 60%);
+}
+
+.mode-fx-layer.danger {
+  opacity: 0.35;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 111, 120, 0.24), transparent 45%),
+    radial-gradient(circle at 90% 0%, rgba(255, 111, 120, 0.22), transparent 45%);
+  animation: danger-pulse 1s ease-in-out infinite;
+}
+
+.mode-fx-layer.fever {
+  opacity: 0.28;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(26, 209, 255, 0.25), transparent 56%),
+    radial-gradient(circle at 20% 70%, rgba(255, 185, 87, 0.2), transparent 50%);
+  animation: fever-pulse 1.2s ease-in-out infinite;
+}
+
+.runtime-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.runtime-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(113, 206, 255, 0.3);
+  background: rgba(26, 209, 255, 0.12);
+  color: var(--df-text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.runtime-chip.hot {
+  border-color: rgba(255, 185, 87, 0.44);
+  background: rgba(255, 185, 87, 0.18);
+  color: #ffe7c0;
+}
+
+.runtime-chip.danger {
+  border-color: rgba(255, 111, 120, 0.42);
+  background: rgba(255, 111, 120, 0.18);
+  color: #ffd2d5;
+}
+
+.question-card.question-enter-a {
+  animation: question-enter-a 0.22s ease both;
+}
+
+.question-card.question-enter-b {
+  animation: question-enter-b 0.22s ease both;
 }
 
 .question-key {

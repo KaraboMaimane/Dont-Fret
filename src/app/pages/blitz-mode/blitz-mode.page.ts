@@ -42,6 +42,8 @@ export class BlitzModePage implements OnInit, OnDestroy {
   lastAnswer: NoteLabel | null = null;
   blitzBestScore = 0;
   isNewBest = false;
+  currentStreak = 0;
+  questionFlip = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   private pool: IntervalQuestion[] = [];
   private poolIdx = 0;
@@ -72,6 +74,8 @@ export class BlitzModePage implements OnInit, OnDestroy {
     this.totalAnswered = 0;
     this.timeLeft = 60;
     this.sessionCorrect = 0;
+    this.currentStreak = 0;
+    this.questionFlip = false;
     this.lastCorrect = null;
     this.lastAnswer = null;
     this.sessionStart = Date.now();
@@ -96,6 +100,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     }
     this.question = this.pool[this.poolIdx++];
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
+    this.questionFlip = !this.questionFlip;
     this.lastCorrect = null;
     this.lastAnswer = null;
   }
@@ -111,10 +116,13 @@ export class BlitzModePage implements OnInit, OnDestroy {
     this.progress.recordAnswer(this.question.key, this.question.intervalName, correct, 0);
     this.streak.incrementDailyGoal(1);
     if (correct) {
+      this.currentStreak++;
       this.score++;
       this.sessionCorrect++;
       if (this.score % 5 === 0) this.haptics.streak(this.score / 5);
       this.timeLeft = Math.min(this.timeLeft + 2, 90); // +2s, cap at 90
+    } else {
+      this.currentStreak = 0;
     }
     setTimeout(() => this.nextQuestion(), 300);
   }
@@ -142,5 +150,25 @@ export class BlitzModePage implements OnInit, OnDestroy {
     if (this.timeLeft > 30) return '';
     if (this.timeLeft > 10) return 'warning';
     return 'danger';
+  }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    if (this.currentStreak >= 5 && this.timeLeft > 10) return 'fever';
+    if (this.timeLeft <= 10) return 'danger';
+    if (this.timeLeft <= 25) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    if (this.timeLeft <= 10) return 'danger';
+    if (this.timeLeft <= 25 || this.currentStreak >= 3) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    if (this.timeLeft <= 10) return 'Critical Time';
+    if (this.timeLeft <= 25) return 'Heat Rising';
+    if (this.currentStreak >= 5) return 'Fever Chain';
+    return 'Steady Pace';
   }
 }

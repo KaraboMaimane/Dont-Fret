@@ -36,23 +36,31 @@
       style="margin-bottom:10px; display:block;">
     </app-game-hud>
 
-    <!-- Timer -->
-    <div style="text-align:center; margin-bottom:16px;">
-      <div class="timer-display" [class]="timerClass">{{ timeLeft }}<span style="font-size:1.2rem; font-weight:400; color:var(--df-text2);">s</span></div>
-      <div style="font-size:0.75rem; color:var(--df-text2); margin-top:4px;">Score: <strong style="color:var(--df-accent); font-size:1rem;">{{ score }}</strong> · {{ totalAnswered }} answered · {{ accuracy }}% acc</div>
-    </div>
+    <div class="mode-runtime-shell">
+      <div class="mode-fx-layer" [ngClass]="fxLayerClass"></div>
+      <div class="runtime-metrics">
+        <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+        <span class="runtime-chip" [ngClass]="pressureChipClass">{{ pressureLabel }}</span>
+      </div>
 
-    <!-- Feedback flash -->
-    <div *ngIf="lastCorrect !== null"
-         style="text-align:center; font-size:1.2rem; font-weight:800; margin-bottom:8px;"
-         [style.color]="lastCorrect ? 'var(--df-green)' : 'var(--df-red)'">
-      {{ lastCorrect ? '✅ +2s' : '❌' }}
-    </div>
+      <!-- Timer -->
+      <div style="text-align:center; margin-bottom:16px;">
+        <div class="timer-display" [class]="timerClass">{{ timeLeft }}<span style="font-size:1.2rem; font-weight:400; color:var(--df-text2);">s</span></div>
+        <div style="font-size:0.75rem; color:var(--df-text2); margin-top:4px;">Score: <strong style="color:var(--df-accent); font-size:1rem;">{{ score }}</strong> · {{ totalAnswered }} answered · {{ accuracy }}% acc</div>
+      </div>
 
-    <!-- Question -->
-    <div class="question-card" style="margin-bottom:16px;">
-      <div class="question-key">Key of {{ question.key }}</div>
-      <div class="question-text" style="font-size:1.4rem;">{{ question.intervalName }}?</div>
+      <!-- Feedback flash -->
+      <div *ngIf="lastCorrect !== null"
+           style="text-align:center; font-size:1.2rem; font-weight:800; margin-bottom:8px;"
+           [style.color]="lastCorrect ? 'var(--df-green)' : 'var(--df-red)'">
+        {{ lastCorrect ? '✅ +2s' : '❌' }}
+      </div>
+
+      <!-- Question -->
+      <div class="question-card runtime-card" style="margin-bottom:16px;" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
+        <div class="question-key">Key of {{ question.key }}</div>
+        <div class="question-text" style="font-size:1.4rem;">{{ question.intervalName }}?</div>
+      </div>
     </div>
 
     <!-- Note Grid -->

@@ -50,6 +50,8 @@ export class TimedChallengePage implements OnInit, OnDestroy {
   timeLimitSec = 10;
   timeLeftSec = 10;
   countdownPct = 100;
+  currentStreak = 0;
+  questionFlip = false;
   readonly Math = Math;
   private timer: ReturnType<typeof setInterval> | null = null;
   private questionStart = 0;
@@ -78,6 +80,8 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.questions = this.adaptive.buildQuestionPool(undefined, 10);
     this.currentIndex = 0;
     this.results = [];
+    this.currentStreak = 0;
+    this.questionFlip = false;
     this.state = 'playing';
     this.sessionStart = Date.now();
     this.haptics.startRound();
@@ -88,6 +92,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
   loadQuestion() {
     this.selectedNote = null;
     this.notes = this.theory.getChromaticNotesForKey(this.currentQuestion.key);
+    this.questionFlip = !this.questionFlip;
     this.timeLeftSec = this.timeLimitSec;
     this.countdownPct = 100;
     this.questionStart = Date.now();
@@ -98,7 +103,6 @@ export class TimedChallengePage implements OnInit, OnDestroy {
       this.countdownPct = (this.timeLeftSec / this.timeLimitSec) * 100;
       if (this.timeLeftSec <= 0) {
         this.clearTimer();
-        this.haptics.timeout();
         this.autoAnswer();
       }
     }, 1000);
@@ -125,13 +129,16 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.progress.recordAnswer(q.key, q.intervalName, correct, responseMs);
     this.streak.incrementDailyGoal(1);
     if (note === null) {
+      this.currentStreak = 0;
       this.haptics.timeout();
       this.feedbackText = `⏱️ Time's up — the ${q.intervalName} of ${q.key} is ${q.answer}`;
     } else if (correct) {
+      this.currentStreak++;
       this.haptics.success();
-      if (this.correctCount % 3 === 0) this.haptics.streak(this.correctCount / 3);
+      if (this.currentStreak > 0 && this.currentStreak % 3 === 0) this.haptics.streak(this.currentStreak / 3);
       this.feedbackText = `✅ Correct! (${(responseMs / 1000).toFixed(1)}s)`;
     } else {
+      this.currentStreak = 0;
       this.haptics.error();
       const actualInterval = this.theory.getIntervalNameForNote(q.key, note);
       const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
@@ -177,6 +184,26 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     if (this.countdownPct > 60) return '';
     if (this.countdownPct > 30) return 'warning';
     return 'danger';
+  }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    if (this.currentStreak >= 4 && this.countdownPct > 30) return 'fever';
+    if (this.countdownPct <= 30) return 'danger';
+    if (this.countdownPct <= 60) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    if (this.countdownPct <= 30) return 'danger';
+    if (this.countdownPct <= 60 || this.currentStreak >= 3) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    if (this.countdownPct <= 30) return 'Critical Window';
+    if (this.countdownPct <= 60) return 'Clock Pressure';
+    if (this.currentStreak >= 4) return 'Flow State';
+    return 'Controlled Tempo';
   }
 
   getNoteClass(note: NoteLabel): string {

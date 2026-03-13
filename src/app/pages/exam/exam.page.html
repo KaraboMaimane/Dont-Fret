@@ -60,32 +60,40 @@ Trust your ear and stay calm. 🎵</div>
       style="margin-bottom:10px; display:block;">
     </app-game-hud>
 
-    <div style="display:flex;justify-content:space-between; margin-bottom:6px;">
-      <span style="font-size:0.8rem; color:var(--df-text2);">Q{{ currentIndex + 1 }}/{{ questions.length }}</span>
-      <span style="font-size:0.8rem; color:var(--df-text2);">{{ correctCount }} correct</span>
-    </div>
-    <div class="progress-bar-track" style="margin-bottom:12px;">
-      <div class="progress-bar-fill" [style.width.%]="(currentIndex / questions.length) * 100"></div>
-    </div>
-
-    <!-- Countdown -->
-    <div *ngIf="state === 'playing'" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-      <div class="countdown-track" style="flex:1;">
-        <div class="countdown-fill" [class]="countdownClass" [style.width.%]="countdownPct"></div>
+    <div class="mode-runtime-shell">
+      <div class="mode-fx-layer" [ngClass]="fxLayerClass"></div>
+      <div class="runtime-metrics">
+        <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+        <span class="runtime-chip" [ngClass]="pressureChipClass">{{ pressureLabel }}</span>
       </div>
-      <span style="font-size:1rem;font-weight:800;min-width:24px;" [style.color]="timeLeftSec <= 3 ? 'var(--df-red)' : 'var(--df-text)'">{{ timeLeftSec }}</span>
-    </div>
 
-    <div class="question-card" *ngIf="currentQ">
-      <div class="question-key">Key of {{ currentQ.key }}</div>
-      <div class="question-text">{{ currentQ.intervalName }}?</div>
-    </div>
+      <div style="display:flex;justify-content:space-between; margin-bottom:6px;">
+        <span style="font-size:0.8rem; color:var(--df-text2);">Q{{ currentIndex + 1 }}/{{ questions.length }}</span>
+        <span style="font-size:0.8rem; color:var(--df-text2);">{{ correctCount }} correct</span>
+      </div>
+      <div class="progress-bar-track" style="margin-bottom:12px;">
+        <div class="progress-bar-fill" [style.width.%]="(currentIndex / questions.length) * 100"></div>
+      </div>
 
-    <div *ngIf="state === 'answered' && results.length > 0"
-         class="feedback-banner"
-         [class.correct]="results[results.length-1].correct"
-         [class.incorrect]="!results[results.length-1].correct">
-      {{ feedbackText }}
+      <!-- Countdown -->
+      <div *ngIf="state === 'playing'" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="countdown-track" style="flex:1;">
+          <div class="countdown-fill" [class]="countdownClass" [style.width.%]="countdownPct"></div>
+        </div>
+        <span style="font-size:1rem;font-weight:800;min-width:24px;" [style.color]="timeLeftSec <= 3 ? 'var(--df-red)' : 'var(--df-text)'">{{ timeLeftSec }}</span>
+      </div>
+
+      <div class="question-card runtime-card" *ngIf="currentQ" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
+        <div class="question-key">Key of {{ currentQ.key }}</div>
+        <div class="question-text">{{ currentQ.intervalName }}?</div>
+      </div>
+
+      <div *ngIf="state === 'answered' && results.length > 0"
+           class="feedback-banner"
+           [class.correct]="results[results.length-1].correct"
+           [class.incorrect]="!results[results.length-1].correct">
+        {{ feedbackText }}
+      </div>
     </div>
 
     <div class="note-grid">
