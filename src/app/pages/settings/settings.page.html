@@ -69,6 +69,22 @@
       <div style="font-size:0.7rem; color:var(--df-text2); margin-top:8px;">Version 1.0.0</div>
     </div>
 
+    <div *ngIf="devToolsEnabled" style="padding:0 16px 8px;">
+      <div class="section-title">Developer Tools</div>
+    </div>
+
+    <div *ngIf="devToolsEnabled" class="df-card" style="margin:0 16px 16px; padding:0; border-color:rgba(73,245,166,0.28);">
+      <ion-list style="background:transparent; padding:0;">
+        <ion-item lines="none" style="--background:transparent;">
+          <ion-label>
+            <div style="font-weight:700; color:var(--df-green); font-size:0.9rem;">Unlock All Lessons</div>
+            <div style="font-size:0.75rem; color:var(--df-text2);">Developer-only override for stage locks and arcade mode locks.</div>
+          </ion-label>
+          <ion-toggle [ngModel]="devUnlockAllStages" (ngModelChange)="onDevUnlockAllStagesChange($event)" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-green);"></ion-toggle>
+        </ion-item>
+      </ion-list>
+    </div>
+
     <div style="padding:0 16px 8px;">
       <div class="section-title" style="color:var(--df-red);">Danger Zone</div>
     </div>

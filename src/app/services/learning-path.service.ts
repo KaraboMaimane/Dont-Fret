@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MusicTheoryService } from './music-theory.service';
 import { ProgressService } from './progress.service';
+import { environment } from '../../environments/environment';
 
 export type Stage = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -37,7 +38,9 @@ export interface LearningPathState {
 @Injectable({ providedIn: 'root' })
 export class LearningPathService {
   private readonly STORAGE_KEY = 'dont-fret-learning-path';
+  private readonly DEV_UNLOCK_KEY = 'dont-fret-dev-unlock-all-stages';
   private state!: LearningPathState;
+  private devUnlockAllStages = false;
 
   readonly STAGES: LearningStage[] = [
     // ── Stage 1 (new): Scale Fill-in-the-Blank — Sharp Keys ─────────────────
@@ -226,8 +229,34 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
   ];
 
   constructor(private progressService: ProgressService) {
+    this.devUnlockAllStages = this.loadDevUnlockAllStages();
     this.load();
     this.migrateOldState();
+  }
+
+  private loadDevUnlockAllStages(): boolean {
+    if (!environment.devTools) return false;
+    const raw = localStorage.getItem(this.DEV_UNLOCK_KEY);
+    if (raw === null) return environment.defaultUnlockAllStages;
+    return raw === 'true';
+  }
+
+  private hasDevUnlockOverride(): boolean {
+    return environment.devTools && this.devUnlockAllStages;
+  }
+
+  isDevToolsEnabled(): boolean {
+    return environment.devTools;
+  }
+
+  isDevUnlockAllStagesEnabled(): boolean {
+    return this.hasDevUnlockOverride();
+  }
+
+  setDevUnlockAllStages(enabled: boolean) {
+    if (!environment.devTools) return;
+    this.devUnlockAllStages = enabled;
+    localStorage.setItem(this.DEV_UNLOCK_KEY, String(enabled));
   }
 
   private load() {
@@ -328,7 +357,7 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
   }
 
   isStageUnlocked(id: Stage): boolean {
-    return this.state.unlockedStages.includes(id);
+    return this.hasDevUnlockOverride() || this.state.unlockedStages.includes(id);
   }
 
   /** Returns which route to navigate to for a given stage */
@@ -362,10 +391,10 @@ Complete this stage to unlock Blitz Mode and take the Theory Exam.`,
   }
 
   /** Check if advanced modes are available */
-  isBlitzUnlocked():          boolean { return this.state.unlockedStages.includes(7); }
-  isExamUnlocked():           boolean { return this.state.unlockedStages.includes(7); }
-  isWorksheetUnlocked():      boolean { return this.state.unlockedStages.includes(6); }
-  isTimedChallengeUnlocked(): boolean { return this.state.unlockedStages.includes(5); }
+  isBlitzUnlocked():          boolean { return this.hasDevUnlockOverride() || this.state.unlockedStages.includes(7); }
+  isExamUnlocked():           boolean { return this.hasDevUnlockOverride() || this.state.unlockedStages.includes(7); }
+  isWorksheetUnlocked():      boolean { return this.hasDevUnlockOverride() || this.state.unlockedStages.includes(6); }
+  isTimedChallengeUnlocked(): boolean { return this.hasDevUnlockOverride() || this.state.unlockedStages.includes(5); }
 
   saveLastRoute(route: string) {
     this.state.lastRoute = route;

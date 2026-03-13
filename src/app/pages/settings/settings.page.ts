@@ -6,6 +6,7 @@ import { IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons,
 import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
 import { MusicTheoryService } from '../../services/music-theory.service';
+import { LearningPathService } from '../../services/learning-path.service';
 
 const PREFS_KEY = 'dont-fret-prefs';
 
@@ -24,11 +25,14 @@ export class SettingsPage {
   readonly GOAL_OPTIONS = [10, 20, 30, 50, 100];
   confirmReset = false;
   resetSuccess = false;
+  devToolsEnabled = false;
+  devUnlockAllStages = false;
 
   constructor(
     private progress: ProgressService,
     private streak: StreakService,
     private theory: MusicTheoryService,
+    private learningPath: LearningPathService,
   ) {
     // Load persisted preferences
     const raw = localStorage.getItem(PREFS_KEY);
@@ -39,6 +43,8 @@ export class SettingsPage {
       this.hapticsEnabled = prefs.hapticsEnabled ?? true;
     }
     this.dailyGoal = this.streak.getState().dailyGoalTarget;
+    this.devToolsEnabled = this.learningPath.isDevToolsEnabled();
+    this.devUnlockAllStages = this.learningPath.isDevUnlockAllStagesEnabled();
   }
 
   onPreferFlatsChange(value: boolean) {
@@ -60,6 +66,11 @@ export class SettingsPage {
   setDailyGoal(goal: number) {
     this.dailyGoal = goal;
     this.streak.setDailyGoalTarget(goal);
+  }
+
+  onDevUnlockAllStagesChange(value: boolean) {
+    this.devUnlockAllStages = value;
+    this.learningPath.setDevUnlockAllStages(value);
   }
 
   resetAll() {

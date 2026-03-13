@@ -132,7 +132,7 @@ Or copy the APK to the phone and open it (requires *Install unknown apps* enable
 
 | Workflow | File | Trigger | Output |
 |---|---|---|---|
-| **Build All Platforms** | `build.yml` | Push or PR to `master` | Unit tests + GitHub Pages deploy + debug APK artifact |
+| **Build All Platforms** | `build.yml` | Push or PR to `master` | Unit tests + GitHub Pages deploy + debug APK (unlocked) + release unsigned APK (locked) |
 | **Build iOS** | `build-ios.yml` | Manual (`workflow_dispatch`) | Simulator validation (signed IPA when secrets configured) |
 
 ### How it works
@@ -140,9 +140,11 @@ Or copy the APK to the phone and open it (requires *Install unknown apps* enable
 Every push (or PR) to `master` runs these jobs in `build.yml`:
 
 1. **`test`** — Runs the unit test suite (`npm test -- --watch=false`) and gates downstream build jobs.
-2. **`build-web`** — Installs dependencies, runs `ng build`, uploads the output as a GitHub Pages artifact, and shares the dist folder with the Android job.
+2. **`build-web`** — Installs dependencies, builds for GitHub Pages with `--base-href /Dont-Fret/`, validates output, and uploads the Pages artifact.
 3. **`deploy-web`** *(push to master only)* — Deploys the Pages artifact to **https://karabomaimane.github.io/Dont-Fret/**. Pull requests build but do not deploy.
-4. **`build-android`** — Downloads the pre-built dist, syncs Capacitor, assembles a debug APK — no second Angular build needed.
+4. **`build-android`** — Builds two Android variants:
+  - **Debug APK (unlocked)** using the `debug-unlocked` Angular configuration.
+  - **Release unsigned APK (locked)** using the production Angular configuration.
 
 ### Versioning
 
@@ -151,11 +153,18 @@ Every push (or PR) to `master` runs these jobs in `build.yml`:
 
 Both values are injected into `android/app/build.gradle` at build time — no manual edits needed.
 
-### Downloading the APK
+### Downloading Android artifacts
 
 1. Go to the **Actions** tab on this repo
 2. Click the latest **Build All Platforms** run
-3. Download the APK from the **Artifacts** section at the bottom of the run summary
+3. Download one (or both) artifacts from the **Artifacts** section:
+  - `dont-fret-debug-unlocked-<version>`
+  - `dont-fret-release-unsigned-<version>`
+
+### Lock behavior by APK type
+
+- **Debug APK**: lesson/stage locks can be overridden from **Settings → Developer Tools**.
+- **Release unsigned APK**: dev overrides are disabled; normal lesson locking is always enforced.
 
 ### Running the iOS build manually
 
@@ -196,4 +205,4 @@ The next CI run will pick up the new base and name the build accordingly (e.g. `
 
 1. Fork the repo and create a feature branch off `master`
 2. Make your changes and run `npm test` to verify nothing is broken
-3. Open a pull request — CI will build the Angular app and a versioned debug APK automatically so you can sideload and test before merging
+3. Open a pull request — CI will run tests, build web for GitHub Pages, and produce both Android artifacts automatically

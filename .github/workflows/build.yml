@@ -96,9 +96,9 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # ── 3. Build Android debug APK ──────────────────────────────────────────────
+  # ── 3. Build Android APKs (debug unlocked + release unsigned locked) ───────
   build-android:
-    name: Build Android APK
+    name: Build Android APKs
     needs: test
     runs-on: ubuntu-latest
 
@@ -127,15 +127,15 @@ jobs:
           echo "name=${BASE}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
           echo "code=${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: Build Angular app for Android
-        run: npm run build
+      - name: Build Angular app for Android debug (dev unlocked)
+        run: npm run build -- --configuration debug-unlocked
 
       - name: Inject version into build.gradle
         run: |
           sed -i "s/versionCode .*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
           sed -i "s/versionName .*/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
 
-      - name: Sync Capacitor (Android)
+      - name: Sync Capacitor (Android debug)
         run: npx cap sync android
 
       - name: Make gradlew executable
@@ -145,14 +145,36 @@ jobs:
         run: ./gradlew assembleDebug
         working-directory: android
 
-      - name: Rename APK with version
+      - name: Rename debug APK with version
         run: |
           mv android/app/build/outputs/apk/debug/app-debug.apk \
-             android/app/build/outputs/apk/debug/dont-fret-${{ steps.version.outputs.name }}.apk
+             android/app/build/outputs/apk/debug/dont-fret-debug-unlocked-${{ steps.version.outputs.name }}.apk
 
-      - name: Upload APK artifact
+      - name: Build Angular app for Android release (locked)
+        run: npm run build -- --configuration production
+
+      - name: Sync Capacitor (Android release)
+        run: npx cap sync android
+
+      - name: Build unsigned release APK
+        run: ./gradlew assembleRelease
+        working-directory: android
+
+      - name: Rename unsigned release APK with version
+        run: |
+          mv android/app/build/outputs/apk/release/app-release-unsigned.apk \
+             android/app/build/outputs/apk/release/dont-fret-release-unsigned-${{ steps.version.outputs.name }}.apk
+
+      - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dont-fret-apk-${{ steps.version.outputs.name }}
-          path: android/app/build/outputs/apk/debug/dont-fret-${{ steps.version.outputs.name }}.apk
+          name: dont-fret-debug-unlocked-${{ steps.version.outputs.name }}
+          path: android/app/build/outputs/apk/debug/dont-fret-debug-unlocked-${{ steps.version.outputs.name }}.apk
+          retention-days: 30
+
+      - name: Upload unsigned release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dont-fret-release-unsigned-${{ steps.version.outputs.name }}
+          path: android/app/build/outputs/apk/release/dont-fret-release-unsigned-${{ steps.version.outputs.name }}.apk
           retention-days: 30
