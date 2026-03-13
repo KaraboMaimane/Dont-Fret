@@ -2,7 +2,7 @@
   "name": "Don't Fret — Music Theory Trainer",
   "short_name": "Don't Fret",
   "description": "Learn music theory interactively — scales, intervals, and more.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "fullscreen",
   "background_color": "#0d0d12",
   "theme_color": "#0d0d12",
