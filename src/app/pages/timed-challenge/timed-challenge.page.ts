@@ -9,6 +9,7 @@ import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { PersonalRecordsService } from '../../services/personal-records.service';
+import { HapticsService } from '../../services/haptics.service';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -50,6 +51,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     private learningPath: LearningPathService,
     private milestone: MilestoneService,
     private records: PersonalRecordsService,
+    private haptics: HapticsService,
   ) {}
 
   ngOnInit() {
@@ -107,10 +109,13 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.progress.recordAnswer(q.key, q.intervalName, correct, responseMs);
     this.streak.incrementDailyGoal(1);
     if (note === null) {
+      this.haptics.error();
       this.feedbackText = `⏱️ Time's up — the ${q.intervalName} of ${q.key} is ${q.answer}`;
     } else if (correct) {
+      this.haptics.success();
       this.feedbackText = `✅ Correct! (${(responseMs / 1000).toFixed(1)}s)`;
     } else {
+      this.haptics.error();
       const actualInterval = this.theory.getIntervalNameForNote(q.key, note);
       const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
       this.feedbackText = `❌ Wrong${clue} — the ${q.intervalName} of ${q.key} is ${q.answer}`;

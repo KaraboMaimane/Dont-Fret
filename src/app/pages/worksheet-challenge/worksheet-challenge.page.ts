@@ -9,6 +9,7 @@ import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
+import { HapticsService } from '../../services/haptics.service';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -40,6 +41,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     private streak: StreakService,
     private learningPath: LearningPathService,
     private milestone: MilestoneService,
+    private haptics: HapticsService,
   ) {}
 
   ngOnInit() {
@@ -72,6 +74,8 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     const responseMs = Date.now() - this.questionStart;
     this.selectedNote = note;
     this.isCorrect = note === q.answer;
+    if (this.isCorrect) this.haptics.success();
+    else this.haptics.error();
     this.state = 'answered';
     this.progress.recordAnswer(q.key, q.intervalName, this.isCorrect, responseMs);
     this.streak.incrementDailyGoal(1);

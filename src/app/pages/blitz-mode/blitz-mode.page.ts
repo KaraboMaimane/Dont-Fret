@@ -8,6 +8,7 @@ import { AdaptiveService } from '../../services/adaptive.service';
 import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { PersonalRecordsService } from '../../services/personal-records.service';
+import { HapticsService } from '../../services/haptics.service';
 
 type BlitzState = 'idle' | 'playing' | 'done';
 
@@ -41,6 +42,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     private streak: StreakService,
     private milestone: MilestoneService,
     private records: PersonalRecordsService,
+    private haptics: HapticsService,
   ) {}
 
   ngOnInit() { this.notes = this.theory.getChromaticNotes(); }
@@ -86,6 +88,8 @@ export class BlitzModePage implements OnInit, OnDestroy {
   selectNote(note: NoteLabel) {
     if (this.state !== 'playing' || !this.question) return;
     const correct = note === this.question.answer;
+    if (correct) this.haptics.success();
+    else this.haptics.error();
     this.lastCorrect = correct;
     this.lastAnswer = note;
     this.totalAnswered++;

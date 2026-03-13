@@ -1,21 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&display=swap');
 
 /* ─── CSS Variables ─────────────────────────────────────────── */
 :root {
-  --df-bg:        #0d0d12;
-  --df-surface:   #16161f;
-  --df-surface2:  #1e1e2a;
-  --df-border:    rgba(255,255,255,0.08);
-  --df-accent:    #a78bfa;
-  --df-accent2:   #7c3aed;
-  --df-green:     #4ade80;
-  --df-amber:     #fbbf24;
-  --df-red:       #f87171;
-  --df-blue:      #60a5fa;
-  --df-text:      #f1f0fb;
-  --df-text2:     #a1a1aa;
-  --df-radius:    14px;
-  --df-radius-sm: 8px;
+  --df-bg:        #050b16;
+  --df-surface:   #101c31;
+  --df-surface2:  #162742;
+  --df-border:    rgba(113, 206, 255, 0.2);
+  --df-accent:    #1ad1ff;
+  --df-accent2:   #10b8ff;
+  --df-green:     #49f5a6;
+  --df-amber:     #ffb957;
+  --df-red:       #ff6f78;
+  --df-blue:      #63c4ff;
+  --df-text:      #edf8ff;
+  --df-text2:     #93adbf;
+  --df-radius:    16px;
+  --df-radius-sm: 11px;
+  --df-display-font: 'Chakra Petch', sans-serif;
 
   /* Ionic overrides */
   --ion-background-color:       var(--df-bg);
@@ -28,7 +29,7 @@
   --ion-color-success:          var(--df-green);
   --ion-color-danger:           var(--df-red);
   --ion-color-warning:          var(--df-amber);
-  --ion-font-family:            'Inter', sans-serif;
+  --ion-font-family:            'Space Grotesk', sans-serif;
 
   /* Device safe areas — feeds Ionic ion-header and ion-content offsets */
   --ion-safe-area-top:    env(safe-area-inset-top, 0px);
@@ -41,15 +42,29 @@
 * { box-sizing: border-box; }
 
 body, html {
-  font-family: 'Inter', sans-serif;
-  background: var(--df-bg);
+  font-family: 'Space Grotesk', sans-serif;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(26, 209, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 92% 0%, rgba(255, 185, 87, 0.16), transparent 30%),
+    linear-gradient(180deg, #050b16 0%, #0b1426 45%, #050b16 100%);
   color: var(--df-text);
   margin: 0;
   padding: 0;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 0.55px, transparent 0.55px);
+  background-size: 18px 18px;
+  opacity: 0.14;
+  z-index: -1;
+}
+
 ion-content {
-  --background: var(--df-bg);
+  --background: transparent;
 }
 
 /* Replaces ion-content on game pages to avoid Ionic shadow DOM intercepting click events */
@@ -82,14 +97,17 @@ ion-content {
   bottom: 0;
   left: 0;
   right: 0;
-  /* 60px button area + Android navbar / gesture-bar safe zone */
-  height: calc(60px + env(safe-area-inset-bottom, 0px));
-  background: var(--df-surface);
-  border-top: 1px solid var(--df-border);
+  /* 66px button area + Android navbar / gesture-bar safe zone */
+  height: calc(66px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(22, 39, 66, 0.92), rgba(11, 20, 36, 0.96));
+  border-top: 1px solid rgba(113, 206, 255, 0.25);
   display: flex;
   /* buttons sit in the upper 60px; safe area is empty space below */
   align-items: flex-start;
   z-index: 1000;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .page-shell {
@@ -109,10 +127,12 @@ ion-content {
   align-items: flex-start;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(167, 139, 250, 0.28);
+  border: 1px solid rgba(113, 206, 255, 0.35);
   background:
-    radial-gradient(circle at top right, rgba(167, 139, 250, 0.22), transparent 42%),
-    linear-gradient(180deg, rgba(30, 30, 42, 0.94), rgba(22, 22, 31, 0.96));
+    radial-gradient(circle at top right, rgba(26, 209, 255, 0.22), transparent 44%),
+    radial-gradient(circle at bottom left, rgba(255, 185, 87, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(19, 31, 52, 0.94), rgba(13, 23, 40, 0.97));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
 }
 
 .mission-hud-compact {
@@ -149,8 +169,8 @@ ion-content {
 }
 
 .mission-chip {
-  border: 1px solid rgba(167, 139, 250, 0.36);
-  background: rgba(167, 139, 250, 0.16);
+  border: 1px solid rgba(113, 206, 255, 0.45);
+  background: rgba(26, 209, 255, 0.14);
   color: var(--df-text);
   border-radius: 999px;
   padding: 4px 10px;
@@ -179,8 +199,9 @@ ion-content {
 
 .dashboard-quest-card {
   background:
-    radial-gradient(circle at top right, rgba(167, 139, 250, 0.22), transparent 34%),
-    linear-gradient(180deg, rgba(167, 139, 250, 0.08), rgba(22, 22, 31, 0.96));
+    radial-gradient(circle at top right, rgba(26, 209, 255, 0.22), transparent 36%),
+    radial-gradient(circle at bottom left, rgba(255, 185, 87, 0.13), transparent 36%),
+    linear-gradient(180deg, rgba(16, 28, 49, 0.96), rgba(10, 18, 32, 0.98));
 }
 
 .hero-stat-grid {
@@ -195,8 +216,8 @@ ion-content {
   gap: 3px;
   padding: 10px 8px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 16, 30, 0.62);
+  border: 1px solid rgba(113, 206, 255, 0.2);
   text-align: center;
 }
 
@@ -204,6 +225,7 @@ ion-content {
   font-size: 1rem;
   font-weight: 900;
   color: var(--df-text);
+  font-family: var(--df-display-font);
 }
 
 .hero-stat-label {
@@ -222,7 +244,7 @@ ion-content {
 
 .choice-chip {
   border: 1px solid var(--df-border);
-  background: var(--df-surface2);
+  background: linear-gradient(180deg, rgba(22, 39, 66, 0.9), rgba(15, 27, 48, 0.95));
   color: var(--df-text2);
   padding: 10px 12px;
   border-radius: 999px;
@@ -232,9 +254,10 @@ ion-content {
 }
 
 .choice-chip.active {
-  border-color: rgba(167, 139, 250, 0.5);
-  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(26, 209, 255, 0.52);
+  background: rgba(26, 209, 255, 0.16);
   color: var(--df-text);
+  box-shadow: 0 0 0 1px rgba(26, 209, 255, 0.25) inset;
 }
 
 .builder-grid {
@@ -264,8 +287,8 @@ ion-content {
 .mini-visual-token {
   padding: 5px 9px;
   border-radius: 999px;
-  border: 1px solid rgba(167, 139, 250, 0.22);
-  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(26, 209, 255, 0.25);
+  background: rgba(26, 209, 255, 0.12);
   color: var(--df-text);
   font-size: 0.72rem;
   font-weight: 700;
@@ -273,7 +296,7 @@ ion-content {
 
 .tab-btn {
   flex: 1;
-  height: 60px; /* always 60px — independent of safe area padding below */
+  height: 66px; /* always 66px — independent of safe area padding below */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -293,14 +316,15 @@ ion-content {
 .tab-btn.active::before {
   content: '';
   position: absolute;
-  top: 7px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 38px;
-  height: 28px;
-  background: rgba(167, 139, 250, 0.14);
+  width: 40px;
+  height: 30px;
+  background: rgba(26, 209, 255, 0.18);
   border-radius: 10px;
   pointer-events: none;
+  box-shadow: 0 0 18px rgba(26, 209, 255, 0.32);
 }
 
 .tab-icon {
@@ -323,11 +347,16 @@ ion-content {
 }
 
 ion-header ion-toolbar {
-  --background: var(--df-surface);
+  --background: rgba(13, 23, 40, 0.86);
   --border-style: none;
   --padding-start: 16px;
   --padding-end: 16px;
-  box-shadow: 0 1px 0 var(--df-border);
+  border: 1px solid rgba(113, 206, 255, 0.2);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 ion-header ion-title {
@@ -335,6 +364,7 @@ ion-header ion-title {
   font-weight: 800;
   color: var(--df-text);
   letter-spacing: -0.02em;
+  font-family: var(--df-display-font);
 }
 
 ion-tab-bar {
@@ -353,16 +383,16 @@ ion-tab-button {
 
 /* ─── Cards ─────────────────────────────────────────────────── */
 .df-card {
-  background: var(--df-surface);
+  background: linear-gradient(180deg, rgba(18, 32, 55, 0.95), rgba(13, 24, 41, 0.98));
   border: 1px solid var(--df-border);
   border-radius: var(--df-radius);
   padding: 20px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
 }
 
 .df-card-glass {
-  background: rgba(30,30,42,0.7);
+  background: rgba(15, 28, 48, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--df-border);
@@ -379,10 +409,10 @@ ion-tab-button {
   gap: 8px;
   padding: 14px 24px;
   border-radius: var(--df-radius-sm);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--df-display-font);
   font-size: 0.95rem;
   font-weight: 600;
-  border: none;
+  border: 1px solid rgba(113, 206, 255, 0.22);
   cursor: pointer;
   transition: all 0.18s ease;
   text-decoration: none;
@@ -391,13 +421,18 @@ ion-tab-button {
 
 .df-btn-primary {
   background: linear-gradient(135deg, var(--df-accent), var(--df-accent2));
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(167,139,250,0.3);
+  color: #032335;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 20px rgba(16, 184, 255, 0.34);
 }
 
 .df-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 28px rgba(167,139,250,0.45);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 10px 26px rgba(16, 184, 255, 0.4);
+}
+
+.df-btn:active {
+  transform: translateY(1px) scale(0.99);
 }
 
 .df-btn-outline {
@@ -407,13 +442,32 @@ ion-tab-button {
 }
 
 .df-btn-outline:hover {
-  background: rgba(167,139,250,0.1);
+  background: rgba(26, 209, 255, 0.12);
 }
 
 .df-btn-ghost {
-  background: var(--df-surface2);
+  background: rgba(22, 39, 66, 0.72);
   color: var(--df-text);
   border: 1px solid var(--df-border);
+}
+
+input,
+select,
+textarea {
+  font-family: 'Space Grotesk', sans-serif;
+  background: rgba(8, 16, 30, 0.92);
+  color: var(--df-text);
+  border: 1px solid rgba(113, 206, 255, 0.28);
+  border-radius: 12px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(26, 209, 255, 0.75);
+  box-shadow: 0 0 0 3px rgba(26, 209, 255, 0.18);
 }
 
 .df-btn:disabled {
@@ -435,27 +489,29 @@ ion-tab-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--df-surface2);
-  border: 1.5px solid var(--df-border);
+  background: linear-gradient(180deg, rgba(24, 40, 66, 0.96), rgba(15, 27, 46, 0.98));
+  border: 1.5px solid rgba(113, 206, 255, 0.36);
   border-radius: 12px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--df-display-font);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--df-text);
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   /* Remove touch delay on mobile */
   -webkit-touch-callout: none;
+  box-shadow: 0 6px 0 rgba(6, 13, 24, 0.8), 0 8px 18px rgba(0, 0, 0, 0.26);
 }
 
 .note-btn:hover, .note-btn:active {
-  background: var(--df-accent);
-  color: #fff;
-  border-color: var(--df-accent);
-  transform: scale(0.96);
+  background: linear-gradient(180deg, rgba(26, 209, 255, 0.92), rgba(16, 184, 255, 0.94));
+  color: #032335;
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(6, 13, 24, 0.85), 0 4px 10px rgba(0, 0, 0, 0.22);
 }
 
 .note-btn.correct {
@@ -603,9 +659,9 @@ ion-tab-button {
 }
 
 .badge-icon.earned {
-  background: rgba(167,139,250,0.15);
+  background: rgba(26, 209, 255, 0.15);
   border-color: var(--df-accent);
-  box-shadow: 0 0 12px rgba(167,139,250,0.3);
+  box-shadow: 0 0 12px rgba(26, 209, 255, 0.32);
 }
 
 .badge-label {
@@ -645,9 +701,9 @@ ion-tab-button {
 }
 
 .badge-tile.earned .badge-tile-icon {
-  background: rgba(167,139,250,0.16);
-  border-color: rgba(167,139,250,0.5);
-  box-shadow: 0 0 14px rgba(167,139,250,0.25);
+  background: rgba(26, 209, 255, 0.16);
+  border-color: rgba(26, 209, 255, 0.5);
+  box-shadow: 0 0 14px rgba(26, 209, 255, 0.25);
 }
 
 .badge-tile-label {
@@ -727,8 +783,8 @@ ion-tab-button {
 
 /* ─── Lesson card ──────────────────────────────────────────────── */
 .lesson-card {
-  background: rgba(167,139,250,0.07);
-  border: 1px solid rgba(167,139,250,0.18);
+  background: rgba(26, 209, 255, 0.08);
+  border: 1px solid rgba(26, 209, 255, 0.24);
   border-left: 3px solid var(--df-accent);
   border-radius: 0 var(--df-radius) var(--df-radius) 0;
   padding: 18px 20px;
@@ -744,8 +800,10 @@ ion-tab-button {
 
 /* ─── Question display ──────────────────────────────────────────── */
 .question-card {
-  background: linear-gradient(160deg, var(--df-surface) 76%, rgba(167,139,250,0.05));
-  border: 1.5px solid rgba(167,139,250,0.18);
+  background:
+    radial-gradient(circle at top right, rgba(26, 209, 255, 0.2), transparent 36%),
+    linear-gradient(160deg, rgba(17, 30, 51, 0.96) 76%, rgba(11, 21, 37, 0.98));
+  border: 1.5px solid rgba(26, 209, 255, 0.3);
   border-radius: var(--df-radius);
   padding: 28px 20px;
   text-align: center;
@@ -766,6 +824,7 @@ ion-tab-button {
   font-weight: 700;
   color: var(--df-text);
   letter-spacing: -0.02em;
+  font-family: var(--df-display-font);
 }
 
 .question-meta {
@@ -835,7 +894,7 @@ ion-tab-button {
 .stage-dot.unlocked {
   border-color: var(--df-accent);
   color: var(--df-accent);
-  background: rgba(167,139,250,0.1);
+  background: rgba(26, 209, 255, 0.12);
 }
 
 .stage-dot.completed {
@@ -908,7 +967,7 @@ ion-tab-button {
 .mode-card:hover {
   transform: translateY(-3px);
   border-color: var(--df-accent);
-  box-shadow: 0 8px 24px rgba(167,139,250,0.18);
+  box-shadow: 0 8px 24px rgba(26, 209, 255, 0.2);
 }
 .mode-card.locked { opacity: 0.4; cursor: not-allowed; }
 
@@ -930,7 +989,7 @@ ion-tab-button {
 }
 
 .mode-tag {
-  background: rgba(167,139,250,0.15);
+  background: rgba(26, 209, 255, 0.15);
   color: var(--df-accent);
   font-size: 0.6rem;
   font-weight: 700;
@@ -990,8 +1049,8 @@ ion-tab-button {
 .arcade-mode-card:hover,
 .arcade-mode-card:active {
   transform: translateY(-2px);
-  border-color: rgba(167,139,250,0.4);
-  box-shadow: 0 6px 20px rgba(167,139,250,0.16);
+  border-color: rgba(26, 209, 255, 0.42);
+  box-shadow: 0 6px 20px rgba(26, 209, 255, 0.18);
 }
 .arcade-mode-card.locked {
   opacity: 0.55;

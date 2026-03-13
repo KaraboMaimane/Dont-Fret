@@ -12,6 +12,7 @@ import { MilestoneService } from '../../services/milestone.service';
 import { MusicTheoryService, IntervalQuestion, NoteLabel } from '../../services/music-theory.service';
 import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
+import { HapticsService } from '../../services/haptics.service';
 
 type AnswerState = 'unanswered' | 'correct' | 'incorrect';
 type PracticeGoal = 'warmup' | 'accuracy' | 'review' | 'weak-spots';
@@ -71,6 +72,7 @@ export class PracticePage implements OnInit, OnDestroy {
     public milestone: MilestoneService,
     private learningPath: LearningPathService,
     private presetStore: DrillPresetService,
+    private haptics: HapticsService,
     private router: Router,
     private route: ActivatedRoute,
   ) {}
@@ -347,8 +349,10 @@ export class PracticePage implements OnInit, OnDestroy {
     this.answerState = correct ? 'correct' : 'incorrect';
 
     if (correct) {
+      this.haptics.success();
       this.feedbackText = `✅ Correct! ${this.question.key} ${this.question.intervalName} = ${this.question.answer} (${(this.responseMs / 1000).toFixed(1)}s)`;
     } else {
+      this.haptics.error();
       const actualInterval = this.theory.getIntervalNameForNote(this.question.key, note);
       const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
       this.feedbackText = `❌ Wrong${clue} — the ${this.question.intervalName} of ${this.question.key} is ${this.question.answer}`;

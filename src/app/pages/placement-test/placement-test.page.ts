@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
 import { IntervalQuestion, MusicTheoryService, NoteLabel } from '../../services/music-theory.service';
 import { LearningPathService, Stage } from '../../services/learning-path.service';
+import { HapticsService } from '../../services/haptics.service';
 
 interface PlacementQuestion extends IntervalQuestion {
   tier: 1 | 2 | 3;
@@ -41,6 +42,7 @@ export class PlacementTestPage {
   constructor(
     private theory: MusicTheoryService,
     private learningPath: LearningPathService,
+    private haptics: HapticsService,
     public router: Router,
   ) {
     this.notes = this.theory.getChromaticNotes();
@@ -70,8 +72,10 @@ export class PlacementTestPage {
     this.results.push({ question, selected: note, correct, responseMs });
 
     if (correct) {
+      this.haptics.success();
       this.feedback = '✅ Correct';
     } else {
+      this.haptics.error();
       this.feedback = `❌ Correct answer: ${question.answer}`;
     }
 

@@ -17,6 +17,7 @@ import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { LearningPathService, Stage, LearningStage } from '../../services/learning-path.service';
+import { HapticsService } from '../../services/haptics.service';
 
 @Component({
   selector: 'app-foundations',
@@ -88,6 +89,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     private learningPath: LearningPathService,
     private router: Router,
     private route: ActivatedRoute,
+    private haptics: HapticsService,
   ) {}
 
   ngOnInit() {
@@ -262,12 +264,14 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.recordAndFeedback(q.key, 'Key Sig', correct);
 
     if (correct) {
+      this.haptics.success();
       this.clearTimer();
       this.answerState = 'complete';
       this.feedbackText = n === 0
         ? `✅ Correct! ${q.key} major has no accidentals.`
         : `✅ Correct! ${q.key} major has ${q.answer} ${q.accidentalType}${q.answer === 1 ? '' : 's'}.`;
     } else {
+      this.haptics.error();
       q.hadError = true;
       const type = q.accidentalType === 'none' ? 'accidentals' : `${q.accidentalType}s`;
       this.feedbackText = `❌ Not quite — ${q.key} major has ${q.answer} ${type}. Try again!`;
@@ -280,6 +284,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.recordAndFeedback(q.key, 'Scale Fill', correct);
 
     if (correct) {
+      this.haptics.success();
       q.scale[targetIdx] = note;
       q.currentBlankIndex++;
       this.selectedNote = note;
@@ -305,6 +310,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
         }, 600);
       }
     } else {
+      this.haptics.error();
       q.hadError = true;
       this.selectedNote = note;
       this.answerState = 'incorrect';
@@ -318,11 +324,13 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.recordAndFeedback(q.key, `Degree ${q.degree}`, correct);
 
     if (correct) {
+      this.haptics.success();
       this.clearTimer();
       this.answerState = 'complete';
       this.feedbackText = `✅ Correct! Degree ${q.degree} of ${q.key} major = ${q.answer}`;
       if (q.hadError) this.mistakes.push(q);
     } else {
+      this.haptics.error();
       q.hadError = true;
       this.answerState = 'incorrect';
       this.feedbackText = `❌ Not quite — think about the ${q.key} major scale.`;
@@ -335,6 +343,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.recordAndFeedback(q.key, 'Key Sig', correct);
 
     if (correct) {
+      this.haptics.success();
       q.currentIndex++;
       this.answerState = 'correct';
 
@@ -355,6 +364,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
         }, 600);
       }
     } else {
+      this.haptics.error();
       q.hadError = true;
       this.answerState = 'incorrect';
       this.feedbackText = `❌ Wrong — the ${q.accidentalType}s go in a fixed order. Think!`;
@@ -449,6 +459,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
       : this.question.type === 'degree' ? `Degree ${(this.question as DegreeQuestion).degree}`
       : 'Key Sig';
     this.recordAndFeedback(this.question.key, cellName, false);
+    this.haptics.error();
     this.answerState = 'incorrect';
     this.feedbackText = '⏰ Time\'s up!';
     setTimeout(() => { if (this.answerState === 'incorrect') this.nextQuestion(); }, 1500);

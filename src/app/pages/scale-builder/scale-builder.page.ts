@@ -6,6 +6,7 @@ import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
+import { HapticsService } from '../../services/haptics.service';
 
 type BuilderState = 'building' | 'complete' | 'boss';
 
@@ -33,6 +34,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     private streak: StreakService,
     private learningPath: LearningPathService,
     private milestone: MilestoneService,
+    private haptics: HapticsService,
   ) {}
 
   ngOnInit() {
@@ -67,6 +69,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     const correct = note === expected;
 
     if (correct) {
+      this.haptics.success();
       this.builtScale.push(expected);
       this.lastFeedback = 'correct';
       this.progress.recordAnswer(this.currentKey, 'Major Scale', true, 0);
@@ -78,6 +81,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
         this.milestone.checkAutoMilestones(this.streak.getState().currentStreak, this.progress.getAverageResponseMs());
       }
     } else {
+      this.haptics.error();
       this.lastFeedback = 'incorrect';
       this.progress.recordAnswer(this.currentKey, 'Major Scale', false, 0);
       this.sessionTotal++;
