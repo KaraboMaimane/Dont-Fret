@@ -18,9 +18,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ── 0. Run Unit Tests ─────────────────────────────────────────────────────
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --watch=false
+
   # ── 1. Build Web ────────────────────────────────────────────────────────────
   build-web:
     name: Build Web
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -80,7 +101,7 @@ jobs:
   # ── 3. Build Android debug APK ──────────────────────────────────────────────
   build-android:
     name: Build Android APK
-    needs: build-web
+    needs: [test, build-web]
     runs-on: ubuntu-latest
 
     steps:

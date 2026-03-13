@@ -132,16 +132,17 @@ Or copy the APK to the phone and open it (requires *Install unknown apps* enable
 
 | Workflow | File | Trigger | Output |
 |---|---|---|---|
-| **Build All Platforms** | `build.yml` | Push or PR to `master` | GitHub Pages deploy + debug APK artifact |
+| **Build All Platforms** | `build.yml` | Push or PR to `master` | Unit tests + GitHub Pages deploy + debug APK artifact |
 | **Build iOS** | `build-ios.yml` | Manual (`workflow_dispatch`) | Simulator validation (signed IPA when secrets configured) |
 
 ### How it works
 
-Every push (or PR) to `master` runs three parallel jobs in `build.yml`:
+Every push (or PR) to `master` runs these jobs in `build.yml`:
 
-1. **`build-web`** — Installs dependencies, runs `ng build`, uploads the output as a GitHub Pages artifact and shares the dist folder with the Android job.
-2. **`deploy-web`** *(push to master only)* — Deploys the Pages artifact to **https://karabomaimane.github.io/Dont-Fret/**. Pull requests build but do not deploy.
-3. **`build-android`** — Downloads the pre-built dist, syncs Capacitor, assembles a debug APK — no second Angular build needed.
+1. **`test`** — Runs the unit test suite (`npm test -- --watch=false`) and gates downstream build jobs.
+2. **`build-web`** — Installs dependencies, runs `ng build`, uploads the output as a GitHub Pages artifact, and shares the dist folder with the Android job.
+3. **`deploy-web`** *(push to master only)* — Deploys the Pages artifact to **https://karabomaimane.github.io/Dont-Fret/**. Pull requests build but do not deploy.
+4. **`build-android`** — Downloads the pre-built dist, syncs Capacitor, assembles a debug APK — no second Angular build needed.
 
 ### Versioning
 
@@ -160,7 +161,7 @@ Both values are injected into `android/app/build.gradle` at build time — no ma
 
 1. Go to **Actions → Build iOS**
 2. Click **Run workflow** → **Run workflow**
-3. The build validates against the iOS Simulator with no code-signing required
+3. The workflow runs unit tests first, then validates against the iOS Simulator with no code-signing required
 4. To export a real-device IPA, add the four secrets below and uncomment the export steps in `build-ios.yml`
 
 | Secret | How to generate |
