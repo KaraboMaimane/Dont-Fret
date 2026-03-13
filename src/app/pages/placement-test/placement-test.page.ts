@@ -5,6 +5,8 @@ import { IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar 
 import { IntervalQuestion, MusicTheoryService, NoteLabel } from '../../services/music-theory.service';
 import { LearningPathService, Stage } from '../../services/learning-path.service';
 import { HapticsService } from '../../services/haptics.service';
+import { GameHudComponent } from '../../components/game-hud/game-hud.component';
+import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
 
 interface PlacementQuestion extends IntervalQuestion {
   tier: 1 | 2 | 3;
@@ -20,7 +22,7 @@ interface PlacementResult {
 @Component({
   selector: 'app-placement-test',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, GameHudComponent, ModeIntroComponent],
   templateUrl: './placement-test.page.html',
 })
 export class PlacementTestPage {
@@ -33,6 +35,10 @@ export class PlacementTestPage {
   currentIndex = 0;
   feedback = '';
   selectedNote: NoteLabel | null = null;
+  currentStreak = 0;
+  questionFlip = false;
+
+  readonly introFacts = ['12 adaptive prompts', 'All three difficulty tiers', 'Auto stage recommendation'];
 
   recommendedStage: Stage = 1;
   recommendedStageName = '';
@@ -55,6 +61,8 @@ export class PlacementTestPage {
     this.currentIndex = 0;
     this.feedback = '';
     this.selectedNote = null;
+    this.currentStreak = 0;
+    this.questionFlip = false;
     this.state = 'playing';
     this.haptics.startRound();
     this.notes = this.questions.length > 0
@@ -80,6 +88,7 @@ export class PlacementTestPage {
         // Keep placement flow moving if feedback hardware/audio fails.
       }
       this.feedback = '✅ Correct';
+      this.currentStreak++;
     } else {
       try {
         this.haptics.error();
@@ -87,6 +96,7 @@ export class PlacementTestPage {
         // Keep placement flow moving if feedback hardware/audio fails.
       }
       this.feedback = `❌ Correct answer: ${question.answer}`;
+      this.currentStreak = 0;
     }
 
     setTimeout(() => {
@@ -97,6 +107,7 @@ export class PlacementTestPage {
         this.finish();
       } else {
         this.notes = this.theory.getChromaticNotesForKey(this.questions[this.currentIndex].key);
+        this.questionFlip = !this.questionFlip;
         this.questionStart = Date.now();
       }
 
@@ -136,6 +147,29 @@ export class PlacementTestPage {
 
   get currentQuestion(): PlacementQuestion | null {
     return this.questions[this.currentIndex] ?? null;
+  }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    const remaining = this.totalQuestions - this.currentIndex;
+    if (this.currentStreak >= 4) return 'fever';
+    if (remaining <= 2) return 'danger';
+    if (remaining <= 5) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    const remaining = this.totalQuestions - this.currentIndex;
+    if (remaining <= 2) return 'danger';
+    if (this.currentStreak >= 3 || remaining <= 5) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    const remaining = this.totalQuestions - this.currentIndex;
+    if (remaining <= 2) return 'Final Calls';
+    if (remaining <= 5) return 'Closing In';
+    if (this.currentStreak >= 4) return 'Perfect Flow';
+    return 'Calibration';
   }
 
   private estimateStage(): Stage {

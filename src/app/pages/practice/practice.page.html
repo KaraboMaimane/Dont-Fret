@@ -188,10 +188,18 @@
         </div>
       </div>
 
-      <div class="question-card">
-        <div class="question-key">Key of {{ question.key }}</div>
-        <div class="question-text">What is the<br><strong style="color:var(--df-accent);">{{ question.intervalName }}?</strong></div>
-        <div class="question-meta">{{ question.intervalType === 'harmonic' ? 'Harmonic Interval' : 'Diatonic Interval' }}</div>
+      <div class="mode-runtime-shell" style="margin-bottom:10px;">
+        <div class="mode-fx-layer" [class.warning]="fxLayerClass === 'warning'" [class.danger]="fxLayerClass === 'danger'" [class.fever]="fxLayerClass === 'fever'"></div>
+        <div class="runtime-metrics">
+          <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+          <span class="runtime-chip" [class.hot]="pressureChipClass === 'hot'" [class.danger]="pressureChipClass === 'danger'">{{ pressureLabel }}</span>
+        </div>
+
+        <div class="question-card runtime-card" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
+          <div class="question-key">Key of {{ question.key }}</div>
+          <div class="question-text">What is the<br><strong style="color:var(--df-accent);">{{ question.intervalName }}?</strong></div>
+          <div class="question-meta">{{ question.intervalType === 'harmonic' ? 'Harmonic Interval' : 'Diatonic Interval' }}</div>
+        </div>
       </div>
 
       <div *ngIf="answerState !== 'unanswered'"

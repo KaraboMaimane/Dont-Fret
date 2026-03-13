@@ -7,13 +7,14 @@ import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { HapticsService } from '../../services/haptics.service';
+import { GameHudComponent } from '../../components/game-hud/game-hud.component';
 
 type BuilderState = 'building' | 'complete' | 'boss';
 
 @Component({
   selector: 'app-scale-builder',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, GameHudComponent],
   templateUrl: './scale-builder.page.html',
 })
 export class ScaleBuilderPage implements OnInit, OnDestroy {
@@ -26,6 +27,8 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
   state: BuilderState = 'building';
   sessionCorrect = 0;
   sessionTotal = 0;
+  currentStreak = 0;
+  questionFlip = false;
   private sessionStart = 0;
 
   constructor(
@@ -58,6 +61,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     this.targetScale = this.theory.generateMajorScale(this.currentKey);
     this.notes = this.theory.getChromaticNotesForKey(this.currentKey);
     this.builtScale = [];
+    this.questionFlip = !this.questionFlip;
     this.lastFeedback = null;
     this.state = 'building';
     this.haptics.startRound();
@@ -71,6 +75,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
 
     if (correct) {
       this.haptics.success();
+      this.currentStreak++;
       this.builtScale.push(expected);
       this.lastFeedback = 'correct';
       this.progress.recordAnswer(this.currentKey, 'Major Scale', true, 0);
@@ -83,6 +88,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
       }
     } else {
       this.haptics.error();
+      this.currentStreak = 0;
       this.lastFeedback = 'incorrect';
       this.progress.recordAnswer(this.currentKey, 'Major Scale', false, 0);
       this.sessionTotal++;
@@ -104,7 +110,28 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     this.targetScale = this.theory.generateMajorScale(this.currentKey);
     this.notes = this.theory.getChromaticNotesForKey(this.currentKey);
     this.builtScale = [];
+    this.currentStreak = 0;
     this.lastFeedback = null;
     this.state = 'building';
+  }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    if (this.currentStreak >= 4) return 'fever';
+    if (this.builtScale.length >= 5) return 'danger';
+    if (this.builtScale.length >= 3) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    if (this.builtScale.length >= 5) return 'danger';
+    if (this.currentStreak >= 3 || this.builtScale.length >= 3) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    if (this.builtScale.length >= 5) return 'Final Degrees';
+    if (this.currentStreak >= 4) return 'Perfect Chain';
+    if (this.builtScale.length >= 3) return 'Mid Build';
+    return 'Scale Forge';
   }
 }

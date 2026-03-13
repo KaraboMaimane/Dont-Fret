@@ -10,6 +10,8 @@ import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { HapticsService } from '../../services/haptics.service';
+import { GameHudComponent } from '../../components/game-hud/game-hud.component';
+import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -18,7 +20,7 @@ interface IntervalStat { name: string; correct: number; total: number; }
 @Component({
   selector: 'app-worksheet-challenge',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, GameHudComponent, ModeIntroComponent],
   templateUrl: './worksheet-challenge.page.html',
 })
 export class WorksheetChallengePage implements OnInit, OnDestroy {
@@ -29,10 +31,13 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
   selectedNote: NoteLabel | null = null;
   isCorrect: boolean | null = null;
   sessionCorrect = 0;
+  currentStreak = 0;
+  questionFlip = false;
   sessionStart = 0;
   readonly Math = Math;
   private questionStart = 0;
   intervalStats: IntervalStat[] = [];
+  readonly introFacts = ['40 adaptive prompts', 'No timer pressure', 'Detailed interval debrief'];
 
   constructor(
     private theory: MusicTheoryService,
@@ -59,6 +64,8 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
       ? this.theory.getChromaticNotesForKey(this.questions[0].key)
       : this.theory.getChromaticNotes();
     this.sessionCorrect = 0;
+    this.currentStreak = 0;
+    this.questionFlip = false;
     this.sessionStart = Date.now();
     this.selectedNote = null;
     this.isCorrect = null;
@@ -80,7 +87,15 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     this.state = 'answered';
     this.progress.recordAnswer(q.key, q.intervalName, this.isCorrect, responseMs);
     this.streak.incrementDailyGoal(1);
-    if (this.isCorrect) this.sessionCorrect++;
+    if (this.isCorrect) {
+      this.sessionCorrect++;
+      this.currentStreak++;
+      if (this.currentStreak > 0 && this.currentStreak % 4 === 0) {
+        this.haptics.streak(this.currentStreak / 4);
+      }
+    } else {
+      this.currentStreak = 0;
+    }
   }
 
   next() {
@@ -89,6 +104,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
       this.finishSession();
     } else {
       this.notes = this.theory.getChromaticNotesForKey(this.questions[this.currentIndex].key);
+      this.questionFlip = !this.questionFlip;
       this.state = 'playing';
       this.selectedNote = null;
       this.isCorrect = null;
@@ -124,6 +140,29 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
   get currentQuestion(): IntervalQuestion { return this.questions[this.currentIndex]; }
   get progressPct(): number { return ((this.currentIndex + 1) / this.questions.length) * 100; }
   get overallAccuracy(): number { return Math.round((this.sessionCorrect / this.questions.length) * 100); }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    const remaining = this.questions.length - this.currentIndex;
+    if (this.currentStreak >= 5) return 'fever';
+    if (remaining <= 5) return 'danger';
+    if (remaining <= 12) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    const remaining = this.questions.length - this.currentIndex;
+    if (remaining <= 5) return 'danger';
+    if (remaining <= 12 || this.currentStreak >= 3) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    const remaining = this.questions.length - this.currentIndex;
+    if (remaining <= 5) return 'Final Set';
+    if (remaining <= 12) return 'Mid Push';
+    if (this.currentStreak >= 5) return 'Locked In';
+    return 'Steady Drill';
+  }
 
   getNoteClass(note: NoteLabel): string {
     if (this.state !== 'answered') return '';

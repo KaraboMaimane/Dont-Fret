@@ -67,6 +67,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
 
   // ── Hot streak ───────────────────────────────────────────────────────────
   hotStreak = 0;
+  questionFlip = false;
 
   // ── Boss round ──────────────────────────────────────────────────────────
   isBossRound = false;
@@ -130,6 +131,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.poolIndex = 0;
     this.bossComplete = false;
     this.hotStreak = 0;
+    this.questionFlip = false;
     this.haptics.startRound();
 
     const stageId = this.currentStage.id as Stage;
@@ -169,6 +171,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
         return;
       }
       this.question = this.mistakeQueue.shift()!;
+      this.questionFlip = !this.questionFlip;
       this.resetQuestion(this.question);
       this.notes = this.theory.getChromaticNotesForKey(this.question.key);
       if (this.isBossRound) this.startTimer();
@@ -190,6 +193,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     }
 
     this.question = this.pool[this.poolIndex++];
+    this.questionFlip = !this.questionFlip;
     this.resetQuestion(this.question);
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
     if (this.isBossRound) this.startTimer();
@@ -201,6 +205,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.poolIndex = 0;
     this.mistakes = [];
     this.question = this.pool[this.poolIndex++];
+    this.questionFlip = !this.questionFlip;
     this.resetQuestion(this.question);
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
     if (this.isBossRound) this.startTimer();
@@ -530,6 +535,28 @@ export class FoundationsPage implements OnInit, OnDestroy {
   }
 
   get mistakesRemaining(): number { return this.mistakeQueue.length; }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    if (this.hotStreak >= 5 && !this.isBossRound) return 'fever';
+    if (this.isBossRound && this.timeLeft <= 3) return 'danger';
+    if (this.isBossRound && this.timeLeft <= 6) return 'warning';
+    if (this.hotStreak >= 3) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    if (this.isBossRound && this.timeLeft <= 3) return 'danger';
+    if (this.hotStreak >= 3 || (this.isBossRound && this.timeLeft <= 6)) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    if (this.isBossRound && this.timeLeft <= 3) return 'Critical Timer';
+    if (this.isBossRound && this.timeLeft <= 6) return 'Boss Pressure';
+    if (this.hotStreak >= 5) return 'Fluent Run';
+    if (this.hotStreak >= 3) return 'Momentum';
+    return 'Foundation Build';
+  }
 
   isActiveBlank(slotIndex: number): boolean {
     if (!this.question || this.question.type !== 'scale-fill') return false;

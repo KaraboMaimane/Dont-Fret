@@ -8,10 +8,16 @@
 </ion-header>
 
 <ion-content>
-  <!-- Session bar -->
-  <div style="padding:12px 16px 0; display:flex; justify-content:space-between;">
-    <span style="font-size:0.8rem; color:var(--df-text2);">Built: <strong style="color:var(--df-text);">{{ sessionCorrect }}</strong></span>
-    <span style="font-size:0.8rem; color:var(--df-text2);">Attempts: <strong style="color:var(--df-text);">{{ sessionTotal }}</strong></span>
+  <div style="padding:12px 16px 0;" class="activity-shell">
+    <app-game-hud
+      kicker="Scale Forge"
+      title="Build each major scale in order"
+      [chip]="sessionCorrect + ' clears'"
+      icon="🧱"
+      [compact]="true"
+      theme="timed"
+      style="margin-bottom:10px; display:block;">
+    </app-game-hud>
   </div>
 
   <div style="padding:16px;" class="fade-in-up">
@@ -26,13 +32,21 @@
       </button>
     </div>
 
-    <!-- Challenge Card -->
-    <div class="question-card">
-      <div class="question-key">Build the Scale</div>
-      <div class="question-text" style="font-size:2rem; font-weight:900; letter-spacing:-0.04em; color:var(--df-accent);">
-        {{ currentKey }} Major
+    <div class="mode-runtime-shell" style="margin-bottom:12px;">
+      <div class="mode-fx-layer" [class.warning]="fxLayerClass === 'warning'" [class.danger]="fxLayerClass === 'danger'" [class.fever]="fxLayerClass === 'fever'"></div>
+      <div class="runtime-metrics">
+        <span class="runtime-chip" [class.hot]="currentStreak >= 3">Streak x{{ currentStreak }}</span>
+        <span class="runtime-chip" [class.hot]="pressureChipClass === 'hot'" [class.danger]="pressureChipClass === 'danger'">{{ pressureLabel }}</span>
       </div>
-      <div class="question-meta">Select the 7 notes in order</div>
+
+      <!-- Challenge Card -->
+      <div class="question-card runtime-card" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
+        <div class="question-key">Build the Scale</div>
+        <div class="question-text" style="font-size:2rem; font-weight:900; letter-spacing:-0.04em; color:var(--df-accent);">
+          {{ currentKey }} Major
+        </div>
+        <div class="question-meta">Select the 7 notes in order</div>
+      </div>
     </div>
 
     <!-- Progress bar -->

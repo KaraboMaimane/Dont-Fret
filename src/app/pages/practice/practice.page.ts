@@ -62,6 +62,8 @@ export class PracticePage implements OnInit, OnDestroy {
   private poolIndex = 0;
   public mistakes: IntervalQuestion[] = [];
   isReplayMode = false;
+  currentStreak = 0;
+  questionFlip = false;
   private sessionMode: SessionMode = 'recommended';
 
   constructor(
@@ -300,6 +302,8 @@ export class PracticePage implements OnInit, OnDestroy {
     this.answerState = 'unanswered';
     this.feedbackText = '';
     this.showHint = false;
+    this.currentStreak = 0;
+    this.questionFlip = false;
     this.question = null;
     this.haptics.startRound();
     this.nextQuestion();
@@ -337,6 +341,7 @@ export class PracticePage implements OnInit, OnDestroy {
     }
 
     this.notes = this.theory.getChromaticNotesForKey(this.question.key);
+    this.questionFlip = !this.questionFlip;
 
     this.questionStart = Date.now();
   }
@@ -350,9 +355,11 @@ export class PracticePage implements OnInit, OnDestroy {
     this.answerState = correct ? 'correct' : 'incorrect';
 
     if (correct) {
+      this.currentStreak++;
       this.haptics.success();
       this.feedbackText = `✅ Correct! ${this.question.key} ${this.question.intervalName} = ${this.question.answer} (${(this.responseMs / 1000).toFixed(1)}s)`;
     } else {
+      this.currentStreak = 0;
       this.haptics.error();
       const actualInterval = this.theory.getIntervalNameForNote(this.question.key, note);
       const clue = actualInterval ? ` (${note} is the ${actualInterval})` : '';
@@ -363,6 +370,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.sessionTotal++;
     if (correct) {
       this.sessionCorrect++;
+      if (this.currentStreak > 0 && this.currentStreak % 4 === 0) this.haptics.streak(this.currentStreak / 4);
       if (this.sessionCorrect % 5 === 0) this.haptics.streak(this.sessionCorrect / 5);
       this.milestone.unlock('first_note');
       this.streak.incrementDailyGoal(1);
@@ -468,6 +476,26 @@ export class PracticePage implements OnInit, OnDestroy {
       default:
         return 'Quick reps tuned to your current stage.';
     }
+  }
+
+  get fxLayerClass(): '' | 'warning' | 'danger' | 'fever' {
+    if (this.currentStreak >= 5) return 'fever';
+    if (this.questionsLeft <= 2) return 'danger';
+    if (this.questionsLeft <= 5) return 'warning';
+    return '';
+  }
+
+  get pressureChipClass(): '' | 'hot' | 'danger' {
+    if (this.questionsLeft <= 2) return 'danger';
+    if (this.currentStreak >= 3 || this.questionsLeft <= 5) return 'hot';
+    return '';
+  }
+
+  get pressureLabel(): string {
+    if (this.questionsLeft <= 2) return 'Final Set';
+    if (this.questionsLeft <= 5) return 'Closing Push';
+    if (this.currentStreak >= 5) return 'Perfect Flow';
+    return 'Training Pace';
   }
 
   private getPracticeKeysForStage(stageId: Stage): NoteLabel[] {

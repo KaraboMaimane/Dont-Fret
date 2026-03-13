@@ -103,12 +103,20 @@
 
     <!-- ── Main question area ─────────────────────────────────────────── -->
     <ng-container *ngIf="!bossComplete && !showMistakeReplay && question">
-      <!-- Timer bar (boss only) -->
-      <div *ngIf="isBossRound"
-           style="height:5px; background:var(--df-surface2); border-radius:3px; overflow:hidden; margin-bottom:12px;">
-        <div style="height:100%; border-radius:3px; transition:width 1.05s linear;"
-             [style.width.%]="timerPct"
-             [style.background]="timeLeft <= 3 ? 'var(--df-red)' : timeLeft <= 5 ? 'var(--df-amber)' : 'var(--df-accent)'">
+      <div class="mode-runtime-shell" style="margin-bottom:10px;">
+        <div class="mode-fx-layer" [class.warning]="fxLayerClass === 'warning'" [class.danger]="fxLayerClass === 'danger'" [class.fever]="fxLayerClass === 'fever'"></div>
+        <div class="runtime-metrics">
+          <span class="runtime-chip" [class.hot]="hotStreak >= 3">Streak x{{ hotStreak }}</span>
+          <span class="runtime-chip" [class.hot]="pressureChipClass === 'hot'" [class.danger]="pressureChipClass === 'danger'">{{ pressureLabel }}</span>
+        </div>
+
+        <!-- Timer bar (boss only) -->
+        <div *ngIf="isBossRound"
+             style="height:5px; background:var(--df-surface2); border-radius:3px; overflow:hidden; margin-bottom:12px;">
+          <div style="height:100%; border-radius:3px; transition:width 1.05s linear;"
+               [style.width.%]="timerPct"
+               [style.background]="timeLeft <= 3 ? 'var(--df-red)' : timeLeft <= 5 ? 'var(--df-amber)' : 'var(--df-accent)'">
+          </div>
         </div>
       </div>
 
@@ -129,7 +137,7 @@
       <!-- SCALE FILL question                                        -->
       <!-- ────────────────────────────────────────────────────────── -->
       <ng-container *ngIf="question.type === 'scale-fill'">
-        <div class="question-card">
+        <div class="question-card runtime-card" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
           <div class="question-key">{{ asScaleFill(question).key }} Major Scale</div>
           <div class="question-meta">Fill in the missing notes</div>
 
@@ -175,7 +183,7 @@
       <!-- DEGREE question                                            -->
       <!-- ────────────────────────────────────────────────────────── -->
       <ng-container *ngIf="question.type === 'degree'">
-        <div class="question-card">
+        <div class="question-card runtime-card" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
           <div class="question-key">{{ asDegree(question).key }} Major</div>
           <div class="question-text" style="font-size:1.3rem; font-weight:800; color:var(--df-text);">
             What is <span style="color:var(--df-accent);">degree {{ asDegree(question).degree }}</span>?
@@ -190,7 +198,7 @@
       <!-- KEY SIG COUNT question                                     -->
       <!-- ────────────────────────────────────────────────────────── -->
       <ng-container *ngIf="question.type === 'key-sig-count'">
-        <div class="question-card">
+        <div class="question-card runtime-card" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
           <div class="question-key">{{ asKeySigCount(question).key }} Major</div>
           <div class="question-text" style="font-size:1.15rem; font-weight:800; color:var(--df-text);">
             <ng-container [ngSwitch]="asKeySigCount(question).accidentalType">
@@ -207,7 +215,7 @@
       <!-- KEY SIG LIST question                                      -->
       <!-- ────────────────────────────────────────────────────────── -->
       <ng-container *ngIf="question.type === 'key-sig-list'">
-        <div class="question-card">
+        <div class="question-card runtime-card" [class.question-enter-a]="questionFlip" [class.question-enter-b]="!questionFlip">
           <div class="question-key">{{ asKeySigList(question).key }} Major</div>
           <div class="question-text" style="font-size:1.1rem; font-weight:800; color:var(--df-text);">
             Name the <span style="color:var(--df-accent);">{{ asKeySigList(question).accidentalType }}s</span> in order
