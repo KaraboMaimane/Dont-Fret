@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start-debug": "ng serve --build-target dont-fret:build:debug-unlocked",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
