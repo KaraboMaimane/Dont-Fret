@@ -301,6 +301,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.feedbackText = '';
     this.showHint = false;
     this.question = null;
+    this.haptics.startRound();
     this.nextQuestion();
     this.streak.recordActivity();
   }
@@ -362,6 +363,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.sessionTotal++;
     if (correct) {
       this.sessionCorrect++;
+      if (this.sessionCorrect % 5 === 0) this.haptics.streak(this.sessionCorrect / 5);
       this.milestone.unlock('first_note');
       this.streak.incrementDailyGoal(1);
     } else {

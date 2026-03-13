@@ -9,13 +9,26 @@ import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { PersonalRecordsService } from '../../services/personal-records.service';
 import { HapticsService } from '../../services/haptics.service';
+import { GameHudComponent } from '../../components/game-hud/game-hud.component';
+import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
 
 type BlitzState = 'idle' | 'playing' | 'done';
 
 @Component({
   selector: 'app-blitz-mode',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [
+    CommonModule,
+    RouterLink,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonBackButton,
+    IonButtons,
+    GameHudComponent,
+    ModeIntroComponent,
+  ],
   templateUrl: './blitz-mode.page.html',
 })
 export class BlitzModePage implements OnInit, OnDestroy {
@@ -34,6 +47,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
   private poolIdx = 0;
   private sessionStart = 0;
   sessionCorrect = 0;
+  readonly introFacts = ['60 second sprint', '+2 sec on every hit', 'Chain for max score'];
 
   constructor(
     private theory: MusicTheoryService,
@@ -62,6 +76,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     this.lastAnswer = null;
     this.sessionStart = Date.now();
     this.state = 'playing';
+    this.haptics.startRound();
     this.streak.recordActivity();
     this.nextQuestion();
     this.startTimer();
@@ -98,6 +113,7 @@ export class BlitzModePage implements OnInit, OnDestroy {
     if (correct) {
       this.score++;
       this.sessionCorrect++;
+      if (this.score % 5 === 0) this.haptics.streak(this.score / 5);
       this.timeLeft = Math.min(this.timeLeft + 2, 90); // +2s, cap at 90
     }
     setTimeout(() => this.nextQuestion(), 300);

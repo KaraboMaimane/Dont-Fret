@@ -23,6 +23,20 @@
           </ion-label>
           <ion-toggle [ngModel]="preferFlats" (ngModelChange)="onPreferFlatsChange($event)" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-accent);"></ion-toggle>
         </ion-item>
+        <ion-item lines="full" style="--background:transparent; --border-color:var(--df-border);">
+          <ion-label>
+            <div style="font-weight:600; color:var(--df-text); font-size:0.9rem;">Sound FX</div>
+            <div style="font-size:0.75rem; color:var(--df-text2);">Play micro audio feedback in game interactions</div>
+          </ion-label>
+          <ion-toggle [ngModel]="soundEnabled" (ngModelChange)="onSoundEnabledChange($event)" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-accent);"></ion-toggle>
+        </ion-item>
+        <ion-item lines="full" style="--background:transparent; --border-color:var(--df-border);">
+          <ion-label>
+            <div style="font-weight:600; color:var(--df-text); font-size:0.9rem;">Haptics</div>
+            <div style="font-size:0.75rem; color:var(--df-text2);">Vibration pulses for tap, success, error and timeout</div>
+          </ion-label>
+          <ion-toggle [ngModel]="hapticsEnabled" (ngModelChange)="onHapticsEnabledChange($event)" slot="end" style="--track-background:var(--df-surface2); --track-background-checked:var(--df-accent);"></ion-toggle>
+        </ion-item>
         <ion-item lines="none" style="--background:transparent;">
           <ion-label>
             <div style="font-weight:600; color:var(--df-text); font-size:0.9rem;">Daily Goal</div>

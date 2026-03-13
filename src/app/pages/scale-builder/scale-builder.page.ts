@@ -60,6 +60,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     this.builtScale = [];
     this.lastFeedback = null;
     this.state = 'building';
+    this.haptics.startRound();
   }
 
   selectNote(note: NoteLabel) {

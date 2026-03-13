@@ -18,6 +18,8 @@ const PREFS_KEY = 'dont-fret-prefs';
 })
 export class SettingsPage {
   preferFlats = false;
+  soundEnabled = true;
+  hapticsEnabled = true;
   dailyGoal = 20;
   readonly GOAL_OPTIONS = [10, 20, 30, 50, 100];
   confirmReset = false;
@@ -33,6 +35,8 @@ export class SettingsPage {
     if (raw) {
       const prefs = JSON.parse(raw);
       this.preferFlats = prefs.preferFlats ?? false;
+      this.soundEnabled = prefs.soundEnabled ?? true;
+      this.hapticsEnabled = prefs.hapticsEnabled ?? true;
     }
     this.dailyGoal = this.streak.getState().dailyGoalTarget;
   }
@@ -40,10 +44,17 @@ export class SettingsPage {
   onPreferFlatsChange(value: boolean) {
     this.preferFlats = value;
     this.theory.preferFlats = value;
-    const raw = localStorage.getItem(PREFS_KEY);
-    const prefs = raw ? JSON.parse(raw) : {};
-    prefs.preferFlats = value;
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    this.persistPrefs({ preferFlats: value });
+  }
+
+  onSoundEnabledChange(value: boolean) {
+    this.soundEnabled = value;
+    this.persistPrefs({ soundEnabled: value });
+  }
+
+  onHapticsEnabledChange(value: boolean) {
+    this.hapticsEnabled = value;
+    this.persistPrefs({ hapticsEnabled: value });
   }
 
   setDailyGoal(goal: number) {
@@ -66,4 +77,11 @@ export class SettingsPage {
   }
 
   cancelReset() { this.confirmReset = false; }
+
+  private persistPrefs(patch: Record<string, unknown>) {
+    const raw = localStorage.getItem(PREFS_KEY);
+    const prefs = raw ? JSON.parse(raw) : {};
+    Object.assign(prefs, patch);
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  }
 }

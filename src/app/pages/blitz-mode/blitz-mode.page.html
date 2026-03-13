@@ -10,20 +10,15 @@
 <ion-content>
   <!-- Idle -->
   <div *ngIf="state === 'idle'" style="padding:24px 16px; text-align:center;" class="fade-in-up activity-shell">
-    <div class="mission-hud" style="margin-bottom:16px; text-align:left;">
-      <div>
-        <div class="mission-hud-label">Mission Brief</div>
-        <div class="mission-hud-title">Lightning Recall</div>
-        <div class="mission-hud-subtitle">60 seconds of rapid interval naming with time bonuses.</div>
-      </div>
-      <span class="mission-hud-icon">⚡</span>
-    </div>
+    <app-mode-intro
+      theme="blitz"
+      icon="⚡"
+      kicker="Arcade Rush"
+      title="Blitz Mode"
+      subtitle="Lightning recall under pressure. Every right answer extends your run."
+      [facts]="introFacts">
+    </app-mode-intro>
 
-    <div class="question-card">
-      <div style="font-size:3rem; margin-bottom:12px;">⚡</div>
-      <div class="question-text">Blitz Mode</div>
-      <div class="question-meta" style="margin-top:8px;">60 seconds. Correct answer = +2s.<br>How many can you name?</div>
-    </div>
     <button class="df-btn df-btn-primary" style="width:100%; font-size:1.1rem; padding:18px;" (click)="startGame()">
       ⚡ Start Blitz!
     </button>
@@ -31,13 +26,15 @@
 
   <!-- Playing -->
   <div *ngIf="state === 'playing' && question" style="padding:12px 16px;" class="fade-in-up activity-shell">
-    <div class="mission-hud mission-hud-compact" style="margin-bottom:10px;">
-      <div>
-        <div class="mission-hud-label">Live Blitz</div>
-        <div class="mission-hud-title">Keep the chain alive</div>
-      </div>
-      <span class="mission-chip">+2s per hit</span>
-    </div>
+    <app-game-hud
+      kicker="Live Blitz"
+      title="Keep the chain alive"
+      chip="+2s per hit"
+      icon="⚡"
+      [compact]="true"
+      theme="blitz"
+      style="margin-bottom:10px; display:block;">
+    </app-game-hud>
 
     <!-- Timer -->
     <div style="text-align:center; margin-bottom:16px;">
@@ -70,13 +67,15 @@
 
   <!-- Results -->
   <div *ngIf="state === 'done'" style="padding:24px 16px; text-align:center;" class="fade-in-up activity-shell">
-    <div class="mission-hud mission-hud-compact" style="margin-bottom:14px; text-align:left;">
-      <div>
-        <div class="mission-hud-label">Run Complete</div>
-        <div class="mission-hud-title">Blitz Debrief</div>
-      </div>
-      <span class="mission-chip">{{ accuracy }}% acc</span>
-    </div>
+    <app-game-hud
+      kicker="Run Complete"
+      title="Blitz Debrief"
+      [chip]="accuracy + '% acc'"
+      icon="🏁"
+      [compact]="true"
+      theme="blitz"
+      style="margin-bottom:14px; display:block; text-align:left;">
+    </app-game-hud>
 
     <div class="question-card" style="margin-bottom:20px;">
       <div style="font-size:3rem; margin-bottom:12px;">{{ score >= 20 ? '🏆' : score >= 10 ? '🎯' : '💪' }}</div>

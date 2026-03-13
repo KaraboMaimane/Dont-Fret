@@ -10,6 +10,8 @@ import { LearningPathService } from '../../services/learning-path.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { PersonalRecordsService } from '../../services/personal-records.service';
 import { HapticsService } from '../../services/haptics.service';
+import { GameHudComponent } from '../../components/game-hud/game-hud.component';
+import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
 
 type GameState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -23,7 +25,18 @@ interface QuestionResult {
 @Component({
   selector: 'app-timed-challenge',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [
+    CommonModule,
+    RouterLink,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonBackButton,
+    IonButtons,
+    GameHudComponent,
+    ModeIntroComponent,
+  ],
   templateUrl: './timed-challenge.page.html',
 })
 export class TimedChallengePage implements OnInit, OnDestroy {
@@ -42,6 +55,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
   private questionStart = 0;
   sessionStart = 0;
   timeLimitOptions = [5, 10, 15];
+  readonly introFacts = ['10 question gauntlet', 'Beat the countdown', 'Earn up to 3 stars'];
 
   constructor(
     private theory: MusicTheoryService,
@@ -66,6 +80,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.results = [];
     this.state = 'playing';
     this.sessionStart = Date.now();
+    this.haptics.startRound();
     this.streak.recordActivity();
     this.loadQuestion();
   }
@@ -83,6 +98,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
       this.countdownPct = (this.timeLeftSec / this.timeLimitSec) * 100;
       if (this.timeLeftSec <= 0) {
         this.clearTimer();
+        this.haptics.timeout();
         this.autoAnswer();
       }
     }, 1000);
@@ -109,10 +125,11 @@ export class TimedChallengePage implements OnInit, OnDestroy {
     this.progress.recordAnswer(q.key, q.intervalName, correct, responseMs);
     this.streak.incrementDailyGoal(1);
     if (note === null) {
-      this.haptics.error();
+      this.haptics.timeout();
       this.feedbackText = `⏱️ Time's up — the ${q.intervalName} of ${q.key} is ${q.answer}`;
     } else if (correct) {
       this.haptics.success();
+      if (this.correctCount % 3 === 0) this.haptics.streak(this.correctCount / 3);
       this.feedbackText = `✅ Correct! (${(responseMs / 1000).toFixed(1)}s)`;
     } else {
       this.haptics.error();

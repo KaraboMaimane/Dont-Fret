@@ -55,6 +55,7 @@ export class PlacementTestPage {
     this.feedback = '';
     this.selectedNote = null;
     this.state = 'playing';
+    this.haptics.startRound();
     this.notes = this.questions.length > 0
       ? this.theory.getChromaticNotesForKey(this.questions[0].key)
       : this.theory.getChromaticNotes();

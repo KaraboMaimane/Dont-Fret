@@ -9,6 +9,8 @@ import { StreakService } from '../../services/streak.service';
 import { MilestoneService } from '../../services/milestone.service';
 import { PersonalRecordsService } from '../../services/personal-records.service';
 import { HapticsService } from '../../services/haptics.service';
+import { GameHudComponent } from '../../components/game-hud/game-hud.component';
+import { ModeIntroComponent } from '../../components/mode-intro/mode-intro.component';
 
 type ExamState = 'idle' | 'playing' | 'answered' | 'done';
 
@@ -22,7 +24,18 @@ interface ExamResult {
 @Component({
   selector: 'app-exam',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [
+    CommonModule,
+    RouterLink,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonBackButton,
+    IonButtons,
+    GameHudComponent,
+    ModeIntroComponent,
+  ],
   templateUrl: './exam.page.html',
 })
 export class ExamPage implements OnInit, OnDestroy {
@@ -43,6 +56,7 @@ export class ExamPage implements OnInit, OnDestroy {
   sessionStart = 0;
   passed = false;
   readonly PASS_THRESHOLD = 0.8;
+  readonly introFacts = ['20 question checkpoint', '80% pass mark', 'No hints, no pause'];
 
   constructor(
     private theory: MusicTheoryService,
@@ -64,6 +78,7 @@ export class ExamPage implements OnInit, OnDestroy {
     this.results = [];
     this.state = 'playing';
     this.sessionStart = Date.now();
+    this.haptics.startRound();
     this.streak.recordActivity();
     this.loadQ();
   }
@@ -78,7 +93,11 @@ export class ExamPage implements OnInit, OnDestroy {
     this.timer = setInterval(() => {
       this.timeLeftSec--;
       this.countdownPct = (this.timeLeftSec / this.timePerQ) * 100;
-      if (this.timeLeftSec <= 0) { this.clearTimer(); this.submitAnswer(null); }
+      if (this.timeLeftSec <= 0) {
+        this.clearTimer();
+        this.haptics.timeout();
+        this.submitAnswer(null);
+      }
     }, 1000);
   }
 
@@ -98,10 +117,11 @@ export class ExamPage implements OnInit, OnDestroy {
     this.progress.recordAnswer(q.key, q.intervalName, correct, responseMs);
     this.streak.incrementDailyGoal(1);
     if (note === null) {
-      this.haptics.error();
+      this.haptics.timeout();
       this.feedbackText = `⏱️ Time's up — the ${q.intervalName} of ${q.key} is ${q.answer}`;
     } else if (correct) {
       this.haptics.success();
+      if (this.correctCount > 0 && this.correctCount % 5 === 0) this.haptics.streak(this.correctCount / 5);
       this.feedbackText = `✅ Correct! (${(responseMs / 1000).toFixed(1)}s)`;
     } else {
       this.haptics.error();

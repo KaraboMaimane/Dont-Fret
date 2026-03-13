@@ -64,6 +64,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     this.isCorrect = null;
     this.state = 'playing';
     this.intervalStats = [];
+    this.haptics.startRound();
     this.streak.recordActivity();
     this.questionStart = Date.now();
   }

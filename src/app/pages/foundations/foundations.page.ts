@@ -130,6 +130,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.poolIndex = 0;
     this.bossComplete = false;
     this.hotStreak = 0;
+    this.haptics.startRound();
 
     const stageId = this.currentStage.id as Stage;
     if (this.isBossRound) {
@@ -459,7 +460,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
       : this.question.type === 'degree' ? `Degree ${(this.question as DegreeQuestion).degree}`
       : 'Key Sig';
     this.recordAndFeedback(this.question.key, cellName, false);
-    this.haptics.error();
+    this.haptics.timeout();
     this.answerState = 'incorrect';
     this.feedbackText = '⏰ Time\'s up!';
     setTimeout(() => { if (this.answerState === 'incorrect') this.nextQuestion(); }, 1500);

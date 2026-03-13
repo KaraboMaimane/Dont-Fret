@@ -11,20 +11,14 @@
 
   <!-- ── Idle: Config Screen ── -->
   <div *ngIf="state === 'idle'" style="padding: 24px 16px;" class="fade-in-up activity-shell">
-    <div class="mission-hud" style="margin-bottom:16px;">
-      <div>
-        <div class="mission-hud-label">Mission Brief</div>
-        <div class="mission-hud-title">Clockwork Intervals</div>
-        <div class="mission-hud-subtitle">Answer 10 questions before each timer expires.</div>
-      </div>
-      <span class="mission-hud-icon">⏱️</span>
-    </div>
-
-    <div class="question-card" style="margin-bottom:24px;">
-      <div style="font-size:2.5rem; margin-bottom:12px;">⏱️</div>
-      <div class="question-text">Timed Challenge</div>
-      <div class="question-meta">10 questions. Beat the clock. Earn stars.</div>
-    </div>
+    <app-mode-intro
+      theme="timed"
+      icon="⏱️"
+      kicker="Precision Run"
+      title="Timed Challenge"
+      subtitle="Every second counts. Stay cool, read fast, and chain clean answers."
+      [facts]="introFacts">
+    </app-mode-intro>
 
     <div style="margin-bottom:20px;">
       <div style="font-size:0.75rem; font-weight:700; color:var(--df-text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Time per question</div>
@@ -46,13 +40,15 @@
 
   <!-- ── Playing ── -->
   <div *ngIf="state === 'playing' || state === 'answered'" style="padding: 12px 16px;" class="fade-in-up activity-shell">
-    <div class="mission-hud mission-hud-compact" style="margin-bottom:10px;">
-      <div>
-        <div class="mission-hud-label">Live Run</div>
-        <div class="mission-hud-title">Stars at stake: {{ stars }}/3</div>
-      </div>
-      <span class="mission-chip">{{ timeLimitSec }}s per question</span>
-    </div>
+    <app-game-hud
+      kicker="Live Run"
+      [title]="'Stars at stake: ' + stars + '/3'"
+      [chip]="timeLimitSec + 's per question'"
+      icon="⏱️"
+      [compact]="true"
+      theme="timed"
+      style="margin-bottom:10px; display:block;">
+    </app-game-hud>
 
     <!-- Progress -->
     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
@@ -106,13 +102,15 @@
 
   <!-- ── Results ── -->
   <div *ngIf="state === 'done'" style="padding: 24px 16px;" class="fade-in-up activity-shell">
-    <div class="mission-hud mission-hud-compact" style="margin-bottom:14px;">
-      <div>
-        <div class="mission-hud-label">Run Complete</div>
-        <div class="mission-hud-title">Timed Challenge Results</div>
-      </div>
-      <span class="mission-chip">{{ Math.round(correctCount / questions.length * 100) }}%</span>
-    </div>
+    <app-game-hud
+      kicker="Run Complete"
+      title="Timed Challenge Results"
+      [chip]="Math.round(correctCount / questions.length * 100) + '%'"
+      icon="🏁"
+      [compact]="true"
+      theme="timed"
+      style="margin-bottom:14px; display:block;">
+    </app-game-hud>
 
     <div class="question-card" style="margin-bottom:20px;">
       <div style="font-size:2rem; margin-bottom:8px;">{{ stars === 3 ? '🥇' : stars === 2 ? '🥈' : stars === 1 ? '🥉' : '😔' }}</div>
