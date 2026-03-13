@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
@@ -43,6 +43,7 @@ export class PlacementTestPage {
     private theory: MusicTheoryService,
     private learningPath: LearningPathService,
     private haptics: HapticsService,
+    private cdr: ChangeDetectorRef,
     public router: Router,
   ) {
     this.notes = this.theory.getChromaticNotes();
@@ -73,10 +74,18 @@ export class PlacementTestPage {
     this.results.push({ question, selected: note, correct, responseMs });
 
     if (correct) {
-      this.haptics.success();
+      try {
+        this.haptics.success();
+      } catch {
+        // Keep placement flow moving if feedback hardware/audio fails.
+      }
       this.feedback = '✅ Correct';
     } else {
-      this.haptics.error();
+      try {
+        this.haptics.error();
+      } catch {
+        // Keep placement flow moving if feedback hardware/audio fails.
+      }
       this.feedback = `❌ Correct answer: ${question.answer}`;
     }
 
@@ -90,6 +99,9 @@ export class PlacementTestPage {
         this.notes = this.theory.getChromaticNotesForKey(this.questions[this.currentIndex].key);
         this.questionStart = Date.now();
       }
+
+      // Ensure the next question renders immediately even when timers do not auto-trigger CD.
+      this.cdr.detectChanges();
     }, 450);
   }
 
