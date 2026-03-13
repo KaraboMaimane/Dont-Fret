@@ -333,6 +333,8 @@ export class PracticePage implements OnInit, OnDestroy {
       this.question = this.pool[this.poolIndex++];
     }
 
+    this.notes = this.theory.getChromaticNotesForKey(this.question.key);
+
     this.questionStart = Date.now();
   }
 
@@ -341,7 +343,7 @@ export class PracticePage implements OnInit, OnDestroy {
 
     this.responseMs = Date.now() - this.questionStart;
     this.selectedNote = note;
-    const correct = this.theory.areEnharmonicEquals(note, this.question.answer);
+    const correct = note === this.question.answer;
     this.answerState = correct ? 'correct' : 'incorrect';
 
     if (correct) {
@@ -433,7 +435,7 @@ export class PracticePage implements OnInit, OnDestroy {
   getNoteClass(note: NoteLabel): string {
     if (!this.selectedNote || this.answerState === 'unanswered') return '';
     if (note === this.selectedNote) return this.answerState;
-    if (this.answerState === 'incorrect' && this.question && this.theory.areEnharmonicEquals(note, this.question.answer)) return 'correct';
+    if (this.answerState === 'incorrect' && this.question && note === this.question.answer) return 'correct';
     return '';
   }
 

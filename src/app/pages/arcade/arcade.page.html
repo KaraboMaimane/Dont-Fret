@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Arcade 🎮</ion-title>
+    <ion-title>Arcade</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -26,10 +26,10 @@
       <span class="section-title">Game Modes</span>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px;">
-      <div *ngFor="let card of modeCards"
-           (click)="navigateTo(card)"
-           [style.opacity]="card.locked ? '0.55' : '1'"
-           style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+       <div *ngFor="let card of modeCards"
+         (click)="navigateTo(card)"
+         class="arcade-mode-card"
+         [class.locked]="card.locked">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
           <span style="font-size:1.8rem; line-height:1;">{{ card.icon }}</span>
           <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
@@ -50,8 +50,7 @@
       <span class="section-title">Study Tools</span>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px;">
-      <div (click)="router.navigateByUrl('/reference')"
-           style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+      <div (click)="router.navigateByUrl('/reference')" class="arcade-mode-card">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
           <span style="font-size:1.8rem; line-height:1;">📖</span>
           <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
@@ -64,7 +63,7 @@
       </div>
 
       <div (click)="router.navigateByUrl('/records')"
-           style="background:var(--df-surface); border:1px solid var(--df-border); border-radius:14px; padding:14px 12px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+           class="arcade-mode-card">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
           <span style="font-size:1.8rem; line-height:1;">🏅</span>
           <span style="font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;

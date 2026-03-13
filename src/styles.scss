@@ -281,30 +281,44 @@ ion-content {
   gap: 1px;
   text-decoration: none;
   color: var(--df-text2);
-  transition: color 0.15s ease;
+  transition: color 0.18s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .tab-btn.active {
   color: var(--df-accent);
 }
 
+.tab-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 28px;
+  background: rgba(167, 139, 250, 0.14);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
 .tab-icon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   line-height: 1;
 }
 
 .tab-label {
-  font-size: 0.56rem;
-  font-weight: 600;
+  font-size: 0.62rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 390px) {
   .tab-label {
-    font-size: 0.5rem;
-    letter-spacing: 0.04em;
+    font-size: 0.56rem;
+    letter-spacing: 0.03em;
   }
 }
 
@@ -317,8 +331,8 @@ ion-header ion-toolbar {
 }
 
 ion-header ion-title {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: var(--df-text);
   letter-spacing: -0.02em;
 }
@@ -344,6 +358,7 @@ ion-tab-button {
   border-radius: var(--df-radius);
   padding: 20px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
 .df-card-glass {
@@ -416,15 +431,15 @@ ion-tab-button {
 }
 
 .note-btn {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--df-surface2);
   border: 1.5px solid var(--df-border);
-  border-radius: var(--df-radius-sm);
+  border-radius: 12px;
   font-family: 'Inter', sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--df-text);
   cursor: pointer;
@@ -514,15 +529,14 @@ ion-tab-button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 20px 12px;
+  padding: 18px 20px 10px;
 }
 
 .section-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--df-text2);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--df-text);
+  letter-spacing: -0.01em;
 }
 
 /* ─── Progress bar ─────────────────────────────────────────────── */
@@ -713,10 +727,11 @@ ion-tab-button {
 
 /* ─── Lesson card ──────────────────────────────────────────────── */
 .lesson-card {
-  background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(124,58,237,0.08));
-  border: 1px solid rgba(167,139,250,0.25);
-  border-radius: var(--df-radius);
-  padding: 20px;
+  background: rgba(167,139,250,0.07);
+  border: 1px solid rgba(167,139,250,0.18);
+  border-left: 3px solid var(--df-accent);
+  border-radius: 0 var(--df-radius) var(--df-radius) 0;
+  padding: 18px 20px;
   margin-bottom: 16px;
 }
 
@@ -729,10 +744,10 @@ ion-tab-button {
 
 /* ─── Question display ──────────────────────────────────────────── */
 .question-card {
-  background: var(--df-surface);
-  border: 1px solid var(--df-border);
+  background: linear-gradient(160deg, var(--df-surface) 76%, rgba(167,139,250,0.05));
+  border: 1.5px solid rgba(167,139,250,0.18);
   border-radius: var(--df-radius);
-  padding: 24px 20px;
+  padding: 28px 20px;
   text-align: center;
   margin-bottom: 20px;
 }
@@ -774,12 +789,14 @@ ion-tab-button {
   background: rgba(74,222,128,0.15);
   border: 1px solid var(--df-green);
   color: var(--df-green);
+  box-shadow: 0 0 24px rgba(74,222,128,0.12);
 }
 
 .feedback-banner.incorrect {
   background: rgba(248,113,113,0.15);
   border: 1px solid var(--df-red);
   color: var(--df-red);
+  box-shadow: 0 0 24px rgba(248,113,113,0.12);
 }
 
 /* ─── Stage item (learning-path) ────────────────────────────────── */
@@ -793,17 +810,22 @@ ion-tab-button {
 }
 
 .stage-item:hover { background: var(--df-surface2); }
+.stage-item.locked {
+  opacity: 0.45;
+  cursor: default;
+}
+.stage-item.locked:hover { background: transparent; }
 
 .stage-dot {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid var(--df-border);
   background: var(--df-surface2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 800;
   flex-shrink: 0;
   color: var(--df-text2);
@@ -823,7 +845,7 @@ ion-tab-button {
 }
 
 .stage-info { flex: 1; min-width: 0; }
-.stage-title { font-weight: 700; font-size: 0.95rem; color: var(--df-text); margin-bottom: 2px; }
+.stage-title { font-weight: 800; font-size: 0.98rem; color: var(--df-text); margin-bottom: 3px; }
 .stage-subtitle { font-size: 0.75rem; color: var(--df-text2); }
 .stage-lock { font-size: 0.8rem; color: var(--df-text2); margin-top: 4px; }
 
@@ -883,7 +905,11 @@ ion-tab-button {
   gap: 8px;
 }
 
-.mode-card:hover { transform: translateY(-2px); border-color: var(--df-accent); }
+.mode-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--df-accent);
+  box-shadow: 0 8px 24px rgba(167,139,250,0.18);
+}
 .mode-card.locked { opacity: 0.4; cursor: not-allowed; }
 
 .mode-icon {
@@ -946,6 +972,36 @@ ion-tab-button {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
+}
+
+/* ─── Arcade / section game cards ──────────────────────────────── */
+.arcade-mode-card {
+  background: var(--df-surface);
+  border: 1px solid var(--df-border);
+  border-radius: 14px;
+  padding: 14px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+.arcade-mode-card:hover,
+.arcade-mode-card:active {
+  transform: translateY(-2px);
+  border-color: rgba(167,139,250,0.4);
+  box-shadow: 0 6px 20px rgba(167,139,250,0.16);
+}
+.arcade-mode-card.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.arcade-mode-card.locked:hover,
+.arcade-mode-card.locked:active {
+  transform: none;
+  border-color: var(--df-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
 }
 
 @media (min-width: 768px) {

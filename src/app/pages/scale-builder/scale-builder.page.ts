@@ -36,7 +36,6 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.notes = this.theory.getChromaticNotes();
     const stage = this.learningPath.getCurrentStage();
     this.stageKeys = (stage.keys.length ? stage.keys : this.theory.ALL_KEYS) as NoteLabel[];
     this.sessionStart = Date.now();
@@ -55,6 +54,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     const keys = stage.keys.length ? stage.keys : this.theory.ALL_KEYS;
     this.currentKey = keys[Math.floor(Math.random() * keys.length)];
     this.targetScale = this.theory.generateMajorScale(this.currentKey);
+    this.notes = this.theory.getChromaticNotesForKey(this.currentKey);
     this.builtScale = [];
     this.lastFeedback = null;
     this.state = 'building';
@@ -64,10 +64,10 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     if (this.state !== 'building') return;
     const expectedIndex = this.builtScale.length;
     const expected = this.targetScale[expectedIndex];
-    const correct = this.theory.areEnharmonicEquals(note, expected);
+    const correct = note === expected;
 
     if (correct) {
-      this.builtScale.push(note);
+      this.builtScale.push(expected);
       this.lastFeedback = 'correct';
       this.progress.recordAnswer(this.currentKey, 'Major Scale', true, 0);
       if (this.builtScale.length === 7) {
@@ -87,7 +87,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
   getNoteState(note: NoteLabel): 'correct' | 'incorrect' | '' {
     if (this.state !== 'building' || !this.lastFeedback) return '';
     const expected = this.targetScale[this.builtScale.length];
-    if (this.lastFeedback === 'incorrect' && this.theory.areEnharmonicEquals(note, expected)) return 'correct';
+    if (this.lastFeedback === 'incorrect' && note === expected) return 'correct';
     return '';
   }
 
@@ -97,6 +97,7 @@ export class ScaleBuilderPage implements OnInit, OnDestroy {
     if (this.state === 'building' && this.builtScale.length > 0) return; // mid-answer, don't interrupt
     this.currentKey = key;
     this.targetScale = this.theory.generateMajorScale(this.currentKey);
+    this.notes = this.theory.getChromaticNotesForKey(this.currentKey);
     this.builtScale = [];
     this.lastFeedback = null;
     this.state = 'building';

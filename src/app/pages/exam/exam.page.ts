@@ -68,6 +68,7 @@ export class ExamPage implements OnInit, OnDestroy {
 
   loadQ() {
     this.selectedNote = null;
+    this.notes = this.theory.getChromaticNotesForKey(this.currentQ.key);
     this.timeLeftSec = this.timePerQ;
     this.countdownPct = 100;
     this.questionStart = Date.now();
@@ -88,7 +89,7 @@ export class ExamPage implements OnInit, OnDestroy {
   submitAnswer(note: NoteLabel | null) {
     const q = this.questions[this.currentIndex];
     const responseMs = Date.now() - this.questionStart;
-    const correct = note !== null && this.theory.areEnharmonicEquals(note, q.answer);
+    const correct = note !== null && note === q.answer;
     this.selectedNote = note;
     this.state = 'answered';
     this.results.push({ question: q, selected: note, correct, responseMs });
@@ -159,7 +160,7 @@ export class ExamPage implements OnInit, OnDestroy {
     if (this.state !== 'answered') return '';
     const last = this.results[this.results.length-1];
     if (note === this.selectedNote) return last.correct ? 'correct' : 'incorrect';
-    if (this.questions[this.currentIndex] && this.theory.areEnharmonicEquals(note, this.questions[this.currentIndex].answer)) return 'correct';
+    if (this.questions[this.currentIndex] && note === this.questions[this.currentIndex].answer) return 'correct';
     return '';
   }
 

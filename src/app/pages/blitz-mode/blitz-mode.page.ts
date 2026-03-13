@@ -78,13 +78,14 @@ export class BlitzModePage implements OnInit, OnDestroy {
       this.poolIdx = 0;
     }
     this.question = this.pool[this.poolIdx++];
+    this.notes = this.theory.getChromaticNotesForKey(this.question.key);
     this.lastCorrect = null;
     this.lastAnswer = null;
   }
 
   selectNote(note: NoteLabel) {
     if (this.state !== 'playing' || !this.question) return;
-    const correct = this.theory.areEnharmonicEquals(note, this.question.answer);
+    const correct = note === this.question.answer;
     this.lastCorrect = correct;
     this.lastAnswer = note;
     this.totalAnswered++;

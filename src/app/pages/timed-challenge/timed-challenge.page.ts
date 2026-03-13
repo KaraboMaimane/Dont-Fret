@@ -70,6 +70,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
 
   loadQuestion() {
     this.selectedNote = null;
+    this.notes = this.theory.getChromaticNotesForKey(this.currentQuestion.key);
     this.timeLeftSec = this.timeLimitSec;
     this.countdownPct = 100;
     this.questionStart = Date.now();
@@ -99,7 +100,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
   submitAnswer(note: NoteLabel | null) {
     const q = this.questions[this.currentIndex];
     const responseMs = Date.now() - this.questionStart;
-    const correct = note !== null && this.theory.areEnharmonicEquals(note, q.answer);
+    const correct = note !== null && note === q.answer;
     this.selectedNote = note;
     this.state = 'answered';
     this.results.push({ question: q, selected: note, correct, responseMs });
@@ -159,7 +160,7 @@ export class TimedChallengePage implements OnInit, OnDestroy {
   getNoteClass(note: NoteLabel): string {
     if (this.state !== 'answered') return '';
     if (note === this.selectedNote) return this.results[this.results.length-1].correct ? 'correct' : 'incorrect';
-    if (this.currentQuestion && this.theory.areEnharmonicEquals(note, this.currentQuestion.answer)) return 'correct';
+    if (this.currentQuestion && note === this.currentQuestion.answer) return 'correct';
     return '';
   }
 }

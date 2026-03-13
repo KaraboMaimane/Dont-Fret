@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { IonContent } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
 import { ProgressService } from '../../services/progress.service';
 import { StreakService } from '../../services/streak.service';
 import { LearningPathService } from '../../services/learning-path.service';
@@ -53,7 +53,7 @@ interface WelcomeBanner {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, IonContent],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent],
   templateUrl: './dashboard.page.html',
 })
 export class DashboardPage implements OnInit {

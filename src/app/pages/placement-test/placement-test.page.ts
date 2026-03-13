@@ -53,6 +53,9 @@ export class PlacementTestPage {
     this.feedback = '';
     this.selectedNote = null;
     this.state = 'playing';
+    this.notes = this.questions.length > 0
+      ? this.theory.getChromaticNotesForKey(this.questions[0].key)
+      : this.theory.getChromaticNotes();
     this.questionStart = Date.now();
   }
 
@@ -62,7 +65,7 @@ export class PlacementTestPage {
     if (!question) return;
 
     this.selectedNote = note;
-    const correct = this.theory.areEnharmonicEquals(note, question.answer);
+    const correct = note === question.answer;
     const responseMs = Date.now() - this.questionStart;
     this.results.push({ question, selected: note, correct, responseMs });
 
@@ -79,6 +82,7 @@ export class PlacementTestPage {
       if (this.currentIndex >= this.questions.length) {
         this.finish();
       } else {
+        this.notes = this.theory.getChromaticNotesForKey(this.questions[this.currentIndex].key);
         this.questionStart = Date.now();
       }
     }, 450);

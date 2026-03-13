@@ -53,6 +53,9 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
   startSession() {
     this.questions = this.adaptive.buildQuestionPool(undefined, 40);
     this.currentIndex = 0;
+    this.notes = this.questions.length > 0
+      ? this.theory.getChromaticNotesForKey(this.questions[0].key)
+      : this.theory.getChromaticNotes();
     this.sessionCorrect = 0;
     this.sessionStart = Date.now();
     this.selectedNote = null;
@@ -68,7 +71,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     const q = this.currentQuestion;
     const responseMs = Date.now() - this.questionStart;
     this.selectedNote = note;
-    this.isCorrect = this.theory.areEnharmonicEquals(note, q.answer);
+    this.isCorrect = note === q.answer;
     this.state = 'answered';
     this.progress.recordAnswer(q.key, q.intervalName, this.isCorrect, responseMs);
     this.streak.incrementDailyGoal(1);
@@ -80,6 +83,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     if (this.currentIndex >= this.questions.length) {
       this.finishSession();
     } else {
+      this.notes = this.theory.getChromaticNotesForKey(this.questions[this.currentIndex].key);
       this.state = 'playing';
       this.selectedNote = null;
       this.isCorrect = null;
@@ -120,7 +124,7 @@ export class WorksheetChallengePage implements OnInit, OnDestroy {
     if (this.state !== 'answered') return '';
     const q = this.currentQuestion;
     if (note === this.selectedNote) return this.isCorrect ? 'correct' : 'incorrect';
-    if (this.theory.areEnharmonicEquals(note, q.answer)) return 'correct';
+    if (note === q.answer) return 'correct';
     return '';
   }
 }

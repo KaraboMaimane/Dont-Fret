@@ -71,19 +71,31 @@ export type FoundationQuestion =
 
 @Injectable({ providedIn: 'root' })
 export class MusicTheoryService {
-  // The chromatic scale using both sharp and flat names
-  private readonly CHROMATIC: NoteLabel[] = [
-    'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'
+  // Keep sharp and flat spellings separate so each key can stay consistent.
+  private readonly SHARP_CHROMATIC: NoteLabel[] = [
+    'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
   ];
+
+  private readonly FLAT_CHROMATIC: NoteLabel[] = [
+    'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'
+  ];
+
+  private readonly LETTER_SEQUENCE: NoteLabel[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  private readonly NATURAL_PITCH: Record<NoteLabel, number> = {
+    C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+  };
 
   // Enharmonic equivalents map
   private readonly ENHARMONIC: Record<string, string> = {
     'C#': 'Db', 'Db': 'C#',
     'D#': 'Eb', 'Eb': 'D#',
     'E#': 'F',  'F':  'E#',   // needed for F# major (6th sharp = E#)
+    'Fb': 'E',  'E':  'Fb',
     'F#': 'Gb', 'Gb': 'F#',
     'G#': 'Ab', 'Ab': 'G#',
     'A#': 'Bb', 'Bb': 'A#',
+    'B': 'Cb',  'Cb': 'B',
+    'C': 'B#',  'B#': 'C',
   };
 
   // All 12 major key roots (preferred spelling)
@@ -161,33 +173,68 @@ export class MusicTheoryService {
     if (raw) this.preferFlats = JSON.parse(raw).preferFlats ?? false;
   }
 
+  private getAccidentalFamilyForKey(key: NoteLabel): 'sharp' | 'flat' {
+    return this.FLAT_KEYS.includes(key) ? 'flat' : 'sharp';
+  }
+
+  private getChromaticScaleForKey(key: NoteLabel): NoteLabel[] {
+    const base = this.getAccidentalFamilyForKey(key) === 'flat'
+      ? [...this.FLAT_CHROMATIC]
+      : [...this.SHARP_CHROMATIC];
+
+    // F# major needs E# instead of F in key-consistent displays/answers.
+    if (key === 'F#') base[5] = 'E#';
+    return base;
+  }
+
+  private spellMajorScaleDegree(targetPitch: number, letter: NoteLabel): NoteLabel {
+    const natural = this.NATURAL_PITCH[letter];
+    const diff = (targetPitch - natural + 12) % 12;
+    if (diff === 0) return letter;
+    if (diff === 1) return `${letter}#`;
+    if (diff === 11) return `${letter}b`;
+
+    // Fallback for unsupported theoretical keys (double accidentals).
+    return this.SHARP_CHROMATIC[targetPitch];
+  }
+
   private chromaticIndexOf(note: NoteLabel): number {
-    const idx = this.CHROMATIC.indexOf(note);
-    if (idx !== -1) return idx;
+    const sharpIdx = this.SHARP_CHROMATIC.indexOf(note);
+    if (sharpIdx !== -1) return sharpIdx;
+
+    const flatIdx = this.FLAT_CHROMATIC.indexOf(note);
+    if (flatIdx !== -1) return flatIdx;
+
     // Try enharmonic
     const enh = this.ENHARMONIC[note];
-    return enh ? this.CHROMATIC.indexOf(enh) : -1;
+    if (!enh) return -1;
+
+    const enhSharpIdx = this.SHARP_CHROMATIC.indexOf(enh);
+    if (enhSharpIdx !== -1) return enhSharpIdx;
+
+    return this.FLAT_CHROMATIC.indexOf(enh);
   }
 
   /**
    * Generates a Major Scale from a root note using W-W-H-W-W-W-H
    */
   generateMajorScale(root: NoteLabel): NoteLabel[] {
-    const startIdx = this.chromaticIndexOf(root);
-    if (startIdx === -1) throw new Error(`Unknown note: ${root}`);
+    const rootPitch = this.chromaticIndexOf(root);
+    if (rootPitch === -1) throw new Error(`Unknown note: ${root}`);
 
-    const scale: NoteLabel[] = [root];
-    let current = startIdx;
+    const rootLetter = root[0] as NoteLabel;
+    const rootLetterIndex = this.LETTER_SEQUENCE.indexOf(rootLetter);
+    if (rootLetterIndex === -1) throw new Error(`Unknown key letter: ${root}`);
 
-    for (let i = 0; i < 6; i++) {
-      current = (current + this.MAJOR_SCALE_STEPS[i]) % 12;
-      let note = this.CHROMATIC[current];
-      // Prefer flat spelling for flat keys
-      if (this.FLAT_KEYS.includes(root) && this.ENHARMONIC[note] && note.includes('#')) {
-        note = this.ENHARMONIC[note];
-      }
-      scale.push(note);
+    const offsets = [0, 2, 4, 5, 7, 9, 11];
+    const scale: NoteLabel[] = [];
+
+    for (let i = 0; i < offsets.length; i++) {
+      const letter = this.LETTER_SEQUENCE[(rootLetterIndex + i) % this.LETTER_SEQUENCE.length];
+      const targetPitch = (rootPitch + offsets[i]) % 12;
+      scale.push(this.spellMajorScaleDegree(targetPitch, letter));
     }
+
     return scale;
   }
 
@@ -197,26 +244,26 @@ export class MusicTheoryService {
   getNoteAtInterval(root: NoteLabel, semitones: number, preferFlat = false): NoteLabel {
     const startIdx = this.chromaticIndexOf(root);
     const targetIdx = (startIdx + semitones) % 12;
-    let note = this.CHROMATIC[targetIdx];
-    if (preferFlat && this.ENHARMONIC[note] && note.includes('#')) {
-      note = this.ENHARMONIC[note];
-    }
-    return note;
+    const chromatic = preferFlat ? this.FLAT_CHROMATIC : this.getChromaticScaleForKey(root);
+    return chromatic[targetIdx];
   }
 
   /**
    * Get an interval answer for a given key + interval name
    */
   getIntervalAnswer(key: NoteLabel, intervalName: string): NoteLabel {
-    const preferFlat = this.preferFlats || this.FLAT_KEYS.includes(key);
     const diatonic = this.DIATONIC_INTERVALS.find(i => i.name === intervalName);
     if (diatonic) {
-      return this.getNoteAtInterval(key, diatonic.semitones, preferFlat);
+      const majorScale = this.generateMajorScale(key);
+      return majorScale[diatonic.degree - 1];
     }
+
     const harmonic = this.HARMONIC_INTERVALS.find(i => i.name === intervalName);
     if (harmonic) {
+      const preferFlat = this.getAccidentalFamilyForKey(key) === 'flat';
       return this.getNoteAtInterval(key, harmonic.semitones, preferFlat);
     }
+
     throw new Error(`Unknown interval: ${intervalName}`);
   }
 
@@ -250,16 +297,21 @@ export class MusicTheoryService {
    * All chromatic notes for the note button grid
    */
   getChromaticNotes(): NoteLabel[] {
-    if (!this.preferFlats) return [...this.CHROMATIC];
-    return this.CHROMATIC.map(n => n === 'C#' ? 'Db' : n === 'F#' ? 'Gb' : n);
+    return this.preferFlats ? [...this.FLAT_CHROMATIC] : [...this.SHARP_CHROMATIC];
+  }
+
+  /** Chromatic button labels aligned to a specific key's accidental system. */
+  getChromaticNotesForKey(key: NoteLabel): NoteLabel[] {
+    return this.getChromaticScaleForKey(key);
   }
 
   /**
    * Check if two note names are enharmonically equivalent
    */
   areEnharmonicEquals(a: NoteLabel, b: NoteLabel): boolean {
-    if (a === b) return true;
-    return this.ENHARMONIC[a] === b || this.ENHARMONIC[b] === a;
+    const aIdx = this.chromaticIndexOf(a);
+    const bIdx = this.chromaticIndexOf(b);
+    return aIdx !== -1 && aIdx === bIdx;
   }
 
   /**

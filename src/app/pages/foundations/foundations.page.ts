@@ -167,6 +167,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
       }
       this.question = this.mistakeQueue.shift()!;
       this.resetQuestion(this.question);
+      this.notes = this.theory.getChromaticNotesForKey(this.question.key);
       if (this.isBossRound) this.startTimer();
       return;
     }
@@ -187,6 +188,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
 
     this.question = this.pool[this.poolIndex++];
     this.resetQuestion(this.question);
+    this.notes = this.theory.getChromaticNotesForKey(this.question.key);
     if (this.isBossRound) this.startTimer();
   }
 
@@ -197,6 +199,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
     this.mistakes = [];
     this.question = this.pool[this.poolIndex++];
     this.resetQuestion(this.question);
+    this.notes = this.theory.getChromaticNotesForKey(this.question.key);
     if (this.isBossRound) this.startTimer();
   }
 
@@ -272,7 +275,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
   }
 
   private handleScaleFillNote(q: ScaleFillQuestion, note: NoteLabel) {
-    const correct = this.theory.areEnharmonicEquals(note, q.answer);
+    const correct = note === q.answer;
     const targetIdx = q.blankIndexes[q.currentBlankIndex];
     this.recordAndFeedback(q.key, 'Scale Fill', correct);
 
@@ -310,7 +313,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
   }
 
   private handleDegreeNote(q: DegreeQuestion, note: NoteLabel) {
-    const correct = this.theory.areEnharmonicEquals(note, q.answer);
+    const correct = note === q.answer;
     this.selectedNote = note;
     this.recordAndFeedback(q.key, `Degree ${q.degree}`, correct);
 
@@ -327,7 +330,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
   }
 
   private handleKeySigListNote(q: KeySigListQuestion, note: NoteLabel) {
-    const correct = this.theory.areEnharmonicEquals(note, q.answer);
+    const correct = note === q.answer;
     this.selectedNote = note;
     this.recordAndFeedback(q.key, 'Key Sig', correct);
 
@@ -532,7 +535,7 @@ export class FoundationsPage implements OnInit, OnDestroy {
   getNoteClass(note: NoteLabel): string {
     if (this.answerState === 'unanswered') return '';
     if (!this.selectedNote) return '';
-    if (this.theory.areEnharmonicEquals(note, this.selectedNote)) {
+    if (note === this.selectedNote) {
       return this.answerState === 'correct' || this.answerState === 'complete'
         ? 'correct' : 'incorrect';
     }
