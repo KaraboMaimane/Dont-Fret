@@ -29,6 +29,12 @@
   --ion-color-danger:           var(--df-red);
   --ion-color-warning:          var(--df-amber);
   --ion-font-family:            'Inter', sans-serif;
+
+  /* Device safe areas — feeds Ionic ion-header and ion-content offsets */
+  --ion-safe-area-top:    env(safe-area-inset-top, 0px);
+  --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --ion-safe-area-left:   env(safe-area-inset-left, 0px);
+  --ion-safe-area-right:  env(safe-area-inset-right, 0px);
 }
 
 /* ─── Base reset ────────────────────────────────────────────── */
@@ -53,10 +59,10 @@ ion-content {
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--df-bg);
-  /* Push content below the ion-header (which is ~56px) */
-  top: 56px;
-  /* Push content above the ion-tab-bar (60px) */
-  bottom: 60px;
+  /* ion-header toolbar + status bar safe area */
+  top: calc(56px + env(safe-area-inset-top, 0px));
+  /* custom tab bar + Android navbar safe area */
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
@@ -76,13 +82,14 @@ ion-content {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  /* 60px button area + Android navbar / gesture-bar safe zone */
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
   background: var(--df-surface);
   border-top: 1px solid var(--df-border);
   display: flex;
-  align-items: stretch;
+  /* buttons sit in the upper 60px; safe area is empty space below */
+  align-items: flex-start;
   z-index: 1000;
-  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .page-shell {
@@ -266,6 +273,7 @@ ion-content {
 
 .tab-btn {
   flex: 1;
+  height: 60px; /* always 60px — independent of safe area padding below */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -318,8 +326,8 @@ ion-header ion-title {
 ion-tab-bar {
   --background: var(--df-surface);
   border-top: 1px solid var(--df-border);
-  height: 60px;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 ion-tab-button {
